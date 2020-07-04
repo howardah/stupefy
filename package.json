@@ -1,0 +1,25 @@
+{
+  "name": "stupefy-backend",
+  "version": "2.0.0",
+  "description": "The Server for the Stupefy card game App",
+  "main": "server.js",
+  "scripts": {
+    "deploy": "gcloud app deploy",
+    "start": "node server",
+    "dev": "nodemon server"
+  },
+  "author": "Adam Howard",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "lodash": "^4.17.15",
+    "mongodb": "^3.5.7",
+    "socket.io": "^2.3.0",
+    "socket.io-redis": "^5.3.0",
+    "sticky-session": "^1.1.2"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.2"
+  }
+}

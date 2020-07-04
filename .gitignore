@@ -1,0 +1,5 @@
+node_modules/
+archives/
+.DS_Store
+.env
+app.yaml
