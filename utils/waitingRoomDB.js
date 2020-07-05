@@ -225,7 +225,7 @@ async function joinRoom(client, info) {
 
   let players = current_object.players;
 
-  players.push({ name: info.player, id: idGenerator([]) });
+  players.push({ name: info.player, id: idGenerator(current_object.players) });
 
   let new_object = Object.assign(current_object, { players });
 
