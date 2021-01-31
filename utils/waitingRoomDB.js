@@ -1,6 +1,6 @@
-const MongoClient = require("mongodb").MongoClient;
 const camelCase = require("lodash/camelCase");
 const { idGenerator, decode } = require("./db-tools");
+const { dbRequest } = require("./make_db_connection");
 
 // const { initialise } = require("../utils/card-setup");
 //Prevent problems by postponing db requests until
@@ -21,7 +21,7 @@ async function getWaitRoom(data) {
     async function askForRoom(thisRoom) {
       console.log("call begins");
       console.log(thisRoom);
-      let dataObj = await roomRequest("get", data).catch(console.error);
+      let dataObj = await dbRequest(fetchWaitRoom, data).catch(console.error);
       console.log("call ended");
       resolve(dataObj);
     }
@@ -36,7 +36,7 @@ async function joinWaitRoom(data) {
     async function askForRoom(thisRoom) {
       console.log("call begins");
       console.log(thisRoom);
-      let dataObj = await roomRequest("join", data).catch(console.error);
+      let dataObj = await dbRequest(joinRoom, data).catch(console.error);
       console.log("call ended");
       resolve(dataObj);
     }
@@ -51,7 +51,7 @@ async function updateActive(data) {
     async function askForRoom(thisRoom) {
       console.log("call begins");
       console.log(thisRoom);
-      let dataObj = await roomRequest("active", data).catch(console.error);
+      let dataObj = await dbRequest(setWaitingRoom, data).catch(console.error);
       console.log("call ended");
       resolve(dataObj);
     }
@@ -61,7 +61,7 @@ async function updateActive(data) {
 
 async function addChat(data) {
   console.log("call begins");
-  let dataObj = await roomRequest("chat", data).catch(console.error);
+  let dataObj = await dbRequest(addChatToRoom, data).catch(console.error);
   console.log("call ended");
   return dataObj[0].chat;
 }
@@ -90,68 +90,16 @@ async function makeWaitRoom(info) {
     async function askForRoom(thisRoom) {
       console.log("call begins");
       console.log(thisRoom);
-      let dataObj = await roomRequest("make", { roomKey, room: newRoom }).catch(
-        console.error
-      );
+      let dataObj = await dbRequest(createWaitingRoom, {
+        roomKey,
+        room: newRoom,
+      }).catch(console.error);
       console.log("call ended");
       queue[currentRoom] = { busy: false, data: {} };
       resolve(dataObj);
     }
     askForRoom(currentRoom);
   });
-}
-
-async function roomRequest(request, details) {
-  /**
-   * Connection URI. Update <username>, <password>, and <your-cluster-url> to reflect your cluster.
-   * See https://docs.mongodb.com/ecosystem/drivers/node/ for more details
-   */
-  const stupefyUri =
-    "mongodb+srv://" +
-    process.env.MONGO_STUPEFY_UN +
-    ":" +
-    process.env.MONGO_STUPEFY_PW +
-    "@" +
-    process.env.MONGO_STUPEFY_CLUSTER +
-    ".mongodb.net/stupefy?retryWrites=true&w=majority";
-  let data;
-  const client = new MongoClient(stupefyUri);
-
-  try {
-    // Connect to the MongoDB cluster
-    await client.connect();
-
-    // Make the appropriate DB calls
-    switch (request) {
-      case "update":
-        data = await setRoom(client, details);
-        break;
-      case "join":
-        data = await joinRoom(client, details);
-        break;
-      case "get":
-        data = await fetchWaitRoom(client, details);
-        break;
-      case "active":
-        data = await setWaitingRoom(client, details);
-        break;
-      case "chat":
-        data = await addChatToRoom(client, details);
-        break;
-      case "make":
-        data = await createWaitingRoom(client, details);
-        break;
-      default:
-        console.log("No valid request specified");
-        break;
-    }
-  } catch (e) {
-    console.error(e);
-  } finally {
-    await client.close();
-  }
-
-  return data;
 }
 
 async function fetchRoom(client, info) {

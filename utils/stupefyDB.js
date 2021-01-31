@@ -1,6 +1,6 @@
-const MongoClient = require("mongodb").MongoClient;
 const { initialise } = require("./card-setup");
 const { camelCase } = require("lodash");
+const { dbRequest } = require("./make_db_connection");
 
 // const { initialise } = require("../utils/card-setup");
 //Prevent problems by postponing db requests until
@@ -24,7 +24,7 @@ async function getRoom(room) {
         console.log("call begins");
         console.log(thisRoom);
         queue[currentRoom].busy = true;
-        let dataObj = await roomRequest("get", { room: thisRoom }).catch(
+        let dataObj = await dbRequest(fetchRoom, { room: thisRoom }).catch(
           console.error
         );
         console.log("call ended");
@@ -47,7 +47,7 @@ async function updateRoom(room, data) {
   if (!queue[currentRoom].busy) {
     console.log("call begins");
     queue[currentRoom].busy = true;
-    let dataObj = await roomRequest("update", { room: room, data: data }).catch(
+    let dataObj = await dbRequest(setRoom, { room: room, data: data }).catch(
       console.error
     );
     console.log("call ended");
@@ -75,7 +75,7 @@ async function makeRoom(room) {
     async function askForRoom(thisRoom) {
       console.log("call begins");
       console.log(thisRoom);
-      let dataObj = await roomRequest("make", { room: thisRoom }).catch(
+      let dataObj = await dbRequest(createRoom, { room: thisRoom }).catch(
         console.error
       );
       console.log("call ended");
@@ -84,50 +84,6 @@ async function makeRoom(room) {
     }
     askForRoom(currentRoom);
   });
-}
-
-async function roomRequest(request, details) {
-  /**
-   * Connection URI. Update <username>, <password>, and <your-cluster-url> to reflect your cluster.
-   * See https://docs.mongodb.com/ecosystem/drivers/node/ for more details
-   */
-  const stupefyUri =
-    "mongodb+srv://" +
-    process.env.MONGO_STUPEFY_UN +
-    ":" +
-    process.env.MONGO_STUPEFY_PW +
-    "@" +
-    process.env.MONGO_STUPEFY_CLUSTER +
-    ".mongodb.net/stupefy?retryWrites=true&w=majority";
-  let data;
-  const client = new MongoClient(stupefyUri);
-
-  try {
-    // Connect to the MongoDB cluster
-    await client.connect();
-
-    // Make the appropriate DB calls
-    switch (request) {
-      case "update":
-        data = await setRoom(client, details);
-        break;
-      case "get":
-        data = await fetchRoom(client, details);
-        break;
-      case "make":
-        data = await createRoom(client, details);
-        break;
-      default:
-        console.log("No valid request specified");
-        break;
-    }
-  } catch (e) {
-    console.error(e);
-  } finally {
-    await client.close();
-  }
-
-  return data;
 }
 
 async function fetchRoom(client, info) {
