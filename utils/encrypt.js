@@ -32,20 +32,18 @@ const decode = (message, key) => {
 };
 
 const indexArr = [
-  ..."abcdefghijklmnopqrstuvwxyz".split(''),
-  ..."ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(''),
-  ..."ÁÀÂÄÃÅÆÇÉÈÊËÍÌÎÏÑÓÒÔÖÕØŒÚÙÛÜ".split(''),
-  ..."áàâäãåæçéèêëíìîïñóòôöõøœßúùûü".split(''),
-  ..."1234567890!@$%^&*()_+,.<>".split(''),
-  ..."æçœåßÀÜÎïŒØÆĘÇ∂".split(''),
+  ..."abcdefghijklmnopqrstuvwxyz".split(""),
+  ..."ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(""),
+  ..."ÁÀÂÄÃÅÆÇÉÈÊËÍÌÎÏÑÓÒÔÖÕØŒÚÙÛÜ".split(""),
+  ..."áàâäãåæçéèêëíìîïñóòôöõøœßúùûü".split(""),
+  ..."1234567890!@$%^&*()_+,.<> ∂".split(""),
 ];
 const printArr = [
-  ..."abcdefghijklmnopqrstuvwxyz".split(''),
-  ..."ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(''),
-  ..."ÁÀÂÄÃÅÆÇÉÈÊËÍÌÎÏÑÓÒÔÖÕØŒÚÙÛÜ".split(''),
-  ..."áàâäãåæçéèêëíìîïñóòôöõøœßúùûü".split(''),
-  ..."1234567890!@$%^&*()_+,.<>".split(''),
-  ..."æçœåßÀÜÎïŒØÆĘÇ∂".split(''),
+  ..."abcdefghijklmnopqrstuvwxyz".split(""),
+  ..."áàâäãåæçéèêëíìîïñóòôöõøœßúùûü".split(""),
+  ..."ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(""),
+  ..."ÁÀÂÄÃÅÆÇÉÈÊËÍÌÎÏÑÓÒÔÖÕØŒÚÙÛÜ".split(""),
+  ..."1234567890!@$%^&*()_+,.<> ∂".split(""),
 ];
 
 module.exports = { encode, decode };
