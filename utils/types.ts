@@ -48,7 +48,7 @@ export interface DeckState {
 export interface TurnCycle {
   action: string;
   cards: GameCard[];
-  felix: GameCard[];
+  felix: PlayerState[];
   draw: number;
   hotseat: number;
   phase: string;

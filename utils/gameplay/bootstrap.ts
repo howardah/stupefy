@@ -65,11 +65,21 @@ function cloneTurnCyclePlayerState(value: unknown): unknown {
   };
 }
 
+function cloneFelixPlayers(players: PlayerState[]): PlayerState[] {
+  return players.map((player) => ({
+    ...player,
+    character: cloneCharacter(player.character),
+    hand: player.hand.map(cloneCard),
+    power: [...player.power],
+    tableau: player.tableau.map(cloneCard),
+  }));
+}
+
 export function cloneTurnCycle(turnCycle: TurnCycle): TurnCycle {
   const clone: TurnCycle = {
     ...turnCycle,
     cards: turnCycle.cards.map(cloneCard),
-    felix: turnCycle.felix.map(cloneCard),
+    felix: cloneFelixPlayers(turnCycle.felix),
     used: [...turnCycle.used],
   };
 

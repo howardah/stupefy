@@ -121,7 +121,7 @@ function asTurnCycle(value: unknown): TurnCycle {
     action: typeof value.action === "string" ? value.action : "",
     cards: Array.isArray(value.cards) ? value.cards.map(asGameCard) : [],
     draw: typeof value.draw === "number" ? value.draw : 0,
-    felix: Array.isArray(value.felix) ? value.felix.map(asGameCard) : [],
+    felix: Array.isArray(value.felix) ? value.felix.map(asPlayerState) : [],
     hotseat: typeof value.hotseat === "number" ? value.hotseat : -1,
     phase: typeof value.phase === "string" ? value.phase : "unset",
     shots: typeof value.shots === "number" ? value.shots : 0,

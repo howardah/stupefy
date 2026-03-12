@@ -49,6 +49,7 @@ const {
   availableTargets,
   boardState,
   canEndTurn,
+  chooseAction,
   chooseCharacter,
   clearResolutionAction,
   endTurn,
@@ -139,17 +140,6 @@ async function persistBoardState() {
       icon: "i-lucide-octagon-alert",
     });
   }
-}
-
-function logUnsupportedAction(action: string, index: number) {
-  console.warn("[play] Action option selected before rule port:", { action, index });
-  toast.add({
-    title: "Action not yet available",
-    description:
-      "This popup came from the migrated event queue, but its card-rule handler is still pending in a later roadmap phase.",
-    color: "info",
-    icon: "i-lucide-hourglass",
-  });
 }
 
 function onTableClick(card: GameCard) {
@@ -269,7 +259,7 @@ onBeforeUnmount(() => {
         :ordered-players="orderedPlayers"
         :room-name="playQuery.room"
         :targets="availableTargets"
-        @choose-action="logUnsupportedAction"
+        @choose-action="chooseAction"
         @choose-character="chooseCharacter"
         @clear-action="clearResolutionAction"
         @click-character="handleCharacterClick"

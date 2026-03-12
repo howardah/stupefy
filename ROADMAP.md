@@ -134,16 +134,18 @@ This roadmap tracks the full migration from the legacy React/Express application
 
 ## Phase 8: Card Rule and Gameplay Integrity
 
-- [ ] Port the card-rule modules from the recovered React source into typed TypeScript modules.
-- [ ] Add focused tests for:
+- [~] Port the card-rule modules from the recovered React source into typed TypeScript modules.
+  - [x] Port the core card interaction and popup-resolution paths into typed shared helpers.
+  - [ ] Finish the advanced death-trigger character branches that were previously intertwined with the legacy board class.
+- [x] Add focused tests for:
   - target selection
   - damage and protection resolution
   - turn transitions
   - death handling
   - discard/draw accounting
-- [ ] Verify that total card counts remain stable across all major turn paths.
-- [ ] Audit character-specific powers and document which are incomplete or broken today.
-- [ ] Fix existing rule bugs as they are discovered, but only once parity with the legacy behavior is understood.
+- [x] Verify that total card counts remain stable across all major turn paths.
+- [x] Audit character-specific powers and document which are incomplete or broken today.
+- [x] Fix existing rule bugs as they are discovered, but only once parity with the legacy behavior is understood.
 
 ## Phase 9: Backend Reliability and Cleanup
 
@@ -179,8 +181,9 @@ This roadmap tracks the full migration from the legacy React/Express application
 
 ## Deferred Logic Notes
 
-- The migrated Vue board now renders and supports the already-ported turn-cycle flows locally, but most spell/event click paths still depend on the legacy `card-rules/*` modules. Those paths now raise explicit UI and console feedback instead of silently doing nothing.
+- The migrated Vue board now routes the main spell, popup, and reaction flows through typed shared rule helpers, but the advanced death-trigger branches still depend on follow-up Phase 8 work for full parity.
 - Gameplay state on `/play` now syncs through a server-authoritative polling path instead of remaining local-only after load. The remaining gap is granularity: updates still write validated whole-room snapshots rather than smaller command-level mutations.
 - `turnCycle` and several event payloads still rely on dynamic per-player keys such as `id11` and free-form string phases. They are typed safely enough for the current port, but they remain a structural cleanup target for a later refactor because they make deeper rule migration more error-prone.
 - Card visibility is still based on whatever the loaded room snapshot contains. The current “hide other hands” toggle only changes presentation; it does not enforce backend privacy guarantees.
 - Phase 7 now uses a typed polling transport with optimistic concurrency on `last_updated`, which fixes the previous local-only board divergence. The larger remaining limitation is that updates still write whole-room snapshots, so high-contention gameplay phases should eventually move to smaller action-level mutations or a stronger server-side command model.
+- Phase 8 now ports the core popup, targeting, and reaction rules into shared TypeScript modules, but the advanced death-trigger character powers are still only partially migrated. That remaining logic is documented in [`docs/character-power-audit.md`](/Users/innocentsmith/Sites/node/stupefy/docs/character-power-audit.md).

@@ -25,6 +25,10 @@ export default class Deck<T> {
     this.discards.unshift(card);
   }
 
+  serveCards(cards: T[]): void {
+    this.discards.unshift(...cards);
+  }
+
   shuffle(): void {
     const toShuffle = [...this.cards, ...this.discards];
 

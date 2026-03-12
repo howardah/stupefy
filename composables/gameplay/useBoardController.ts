@@ -9,6 +9,14 @@ import type {
 import Deck from "~/utils/deck";
 import { cloneBoardViewState } from "~/utils/gameplay/bootstrap";
 import { rotatePlayersForViewer } from "~/utils/gameplay/board-ui";
+import {
+  handleRuleCharacterClick,
+  handleRuleDeckClick,
+  handleRuleHandClick,
+  handleRulePopupChoice,
+  handleRuleTableClick,
+  handleRuleTableauClick,
+} from "~/utils/gameplay/card-rules";
 import { cardIndex, cardsInclude, getPrimaryCharacter, playerIndex } from "~/utils/gameplay/core";
 import { getPopupState, tableauProblems } from "~/utils/gameplay/events";
 import { getGameplaySyncSignature } from "~/utils/gameplay/sync";
@@ -332,10 +340,13 @@ export function useBoardController(sourceBoardState: ComputedRef<BoardViewState 
   function handleHandClick(playerId: number, card: GameCard) {
     withBoardState((state) => {
       if (playerId !== state.playerId) {
-        pushAlert(
-          "Targeting cards in another player's hand still depends on the unported rule engine.",
-          "info"
-        );
+        const handled = handleRuleHandClick(state, playerId, card);
+        if (!handled.handled) {
+          pushAlert(
+            "This hand interaction is not available for the current card state.",
+            "info"
+          );
+        }
         return true;
       }
 
@@ -348,6 +359,11 @@ export function useBoardController(sourceBoardState: ComputedRef<BoardViewState 
   function handleTableauClick(playerId: number, card: GameCard) {
     withBoardState((state) => {
       const { turnCycle } = state;
+
+      const handledRule = handleRuleTableauClick(state, playerId, card);
+      if (handledRule.handled) {
+        return true;
+      }
 
       if (playerId === state.playerId) {
         if (turnCycle.phase === "initial") {
@@ -404,7 +420,7 @@ export function useBoardController(sourceBoardState: ComputedRef<BoardViewState 
       }
 
       pushAlert(
-        "This tableau interaction still depends on the unported card-rule engine.",
+        "This tableau interaction is not available for the current card state.",
         "info"
       );
       return true;
@@ -416,15 +432,19 @@ export function useBoardController(sourceBoardState: ComputedRef<BoardViewState 
       if (
         state.turnCycle.phase === "selected" &&
         (actionTargets.value.includes("my-tableau-empty") ||
-          actionTargets.value.includes("tableau-empty"))
+          actionTargets.value.includes("tableau-empty")) &&
+        state.turnCycle.cards[0]?.name !== "fiendfyre"
       ) {
         return placeSelectedCardOnTableau(state, playerId);
       }
 
-      pushAlert(
-        "Character targeting is not fully ported yet because the card-rule handlers still need migration.",
-        "info"
-      );
+      const handled = handleRuleCharacterClick(state, playerId, pushAlert);
+      if (!handled.handled) {
+        pushAlert(
+          "Character targeting is not available for the current card state.",
+          "info"
+        );
+      }
       return true;
     });
   }
@@ -435,11 +455,8 @@ export function useBoardController(sourceBoardState: ComputedRef<BoardViewState 
         return discardSelectedCards(state);
       }
 
-      if (card.fileName === "" && availableTargets.value.includes("table-empty")) {
-        pushAlert(
-          "Table event resolution still depends on the unported card-rule engine.",
-          "info"
-        );
+      const handled = handleRuleTableClick(state, card, pushAlert);
+      if (handled.handled) {
         return true;
       }
 
@@ -470,8 +487,9 @@ export function useBoardController(sourceBoardState: ComputedRef<BoardViewState 
         return true;
       }
 
-      if (pile === "discard" && availableTargets.value.includes("discard")) {
-        return discardSelectedCards(state);
+      const handled = handleRuleDeckClick(state, pile, pushAlert);
+      if (handled.handled) {
+        return true;
       }
 
       pushAlert(
@@ -489,6 +507,19 @@ export function useBoardController(sourceBoardState: ComputedRef<BoardViewState 
       }
 
       state.events.shift();
+    });
+  }
+
+  function chooseAction(action: string, index: number) {
+    withBoardState((state) => {
+      const handled = handleRulePopupChoice(state, action, index, pushAlert);
+      if (!handled.handled) {
+        pushAlert(
+          "This action is not available for the current event state.",
+          "info"
+        );
+      }
+      return true;
     });
   }
 
@@ -535,6 +566,7 @@ export function useBoardController(sourceBoardState: ComputedRef<BoardViewState 
     availableTargets,
     boardState,
     canEndTurn,
+    chooseAction,
     chooseCharacter,
     choosingCharacter,
     clearResolutionAction,
