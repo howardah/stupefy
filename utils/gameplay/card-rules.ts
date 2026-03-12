@@ -24,10 +24,7 @@ import {
   protegoOptions,
   tableauProblems,
 } from "./events";
-import {
-  cycleCleanse,
-  incrementTurn,
-} from "./turn-cycle";
+import { cycleCleanse, incrementTurn } from "./turn-cycle";
 
 type AlertTone = NonNullable<BoardAlert["tone"]>;
 type PushAlert = (message: string, tone?: AlertTone) => void;
@@ -102,10 +99,7 @@ function discardSelected(state: BoardViewState) {
   return { deck, player };
 }
 
-function createBystanderPopup(
-  message: string,
-  popupType: "resolution" | "subtle" = "resolution"
-) {
+function createBystanderPopup(message: string, popupType: "resolution" | "subtle" = "resolution") {
   return {
     message,
     options: [] as PopupOption[],
@@ -117,7 +111,7 @@ function createDeathPrompt(
   message: string,
   target: PlayerState,
   options: PopupOption[],
-  bystanders?: string
+  bystanders?: string,
 ): GameEvent {
   const event: GameEvent = {
     popup: {
@@ -188,9 +182,7 @@ function clearCurrentEvent(state: BoardViewState) {
 }
 
 function restoreTurnCycleAfterDeath(state: BoardViewState) {
-  const afterDeath = state.turnCycle.afterDeath as
-    | { action?: string; phase?: string }
-    | undefined;
+  const afterDeath = state.turnCycle.afterDeath as { action?: string; phase?: string } | undefined;
 
   if (!afterDeath?.phase) {
     return;
@@ -204,7 +196,7 @@ function restoreTurnCycleAfterDeath(state: BoardViewState) {
 function finishEventForPlayer(
   state: BoardViewState,
   resolutionEvent: GameEvent | null,
-  multiTargetPrefix?: string
+  multiTargetPrefix?: string,
 ) {
   const event = getCurrentEvent(state);
 
@@ -226,8 +218,8 @@ function finishEventForPlayer(
         createResolutionEvent(
           summarizeDamagedPlayers(state, multiTargetPrefix),
           [state.playerId],
-          summarizeDamagedPlayers(state, multiTargetPrefix)
-        )
+          summarizeDamagedPlayers(state, multiTargetPrefix),
+        ),
       );
     }
   } else {
@@ -244,10 +236,7 @@ function finishEventForPlayer(
 function getDyingPlayers(state: BoardViewState) {
   return state.players.filter((player) => {
     const character = getPrimaryCharacter(player);
-    return (
-      Boolean(character && character.health === 0) &&
-      !state.deadPlayers.includes(player.id)
-    );
+    return Boolean(character && character.health === 0) && !state.deadPlayers.includes(player.id);
   });
 }
 
@@ -269,19 +258,15 @@ function queueLilySavePrompts(state: BoardViewState, dyingPlayer: PlayerState) {
           { label: "Yes", function: "lily_yes" },
           { label: "No", function: "lily_no" },
         ],
-        `${getPrimaryCharacter(lilyPlayer)?.shortName || lilyPlayer.name} has a chance to save ${getPrimaryCharacter(dyingPlayer)?.shortName || dyingPlayer.name}.`
-      )
+        `${getPrimaryCharacter(lilyPlayer)?.shortName || lilyPlayer.name} has a chance to save ${getPrimaryCharacter(dyingPlayer)?.shortName || dyingPlayer.name}.`,
+      ),
     );
   }
 
   return lilyPlayers.length > 0;
 }
 
-function applyFinalDeathConsequences(
-  state: BoardViewState,
-  player: PlayerState,
-  options?: string
-) {
+function applyFinalDeathConsequences(state: BoardViewState, player: PlayerState, options?: string) {
   const deck = cloneDeckState(state);
   state.deadPlayers.push(player.id);
 
@@ -289,8 +274,8 @@ function applyFinalDeathConsequences(
     createResolutionEvent(
       "You are now out, but you can still influence the game! As a House Ghost, you may empower another player each turn.",
       [player.id],
-      `${getPrimaryCharacter(player)?.shortName || player.name} has been defeated.`
-    )
+      `${getPrimaryCharacter(player)?.shortName || player.name} has been defeated.`,
+    ),
   );
 
   for (const powerPlayer of state.players) {
@@ -314,8 +299,8 @@ function applyFinalDeathConsequences(
           "You can choose a player to give your cards to or decide to pass.",
           player,
           [{ label: "skip", function: "molly" }],
-          "Molly has died and is choosing who to will her cards to."
-        )
+          "Molly has died and is choosing who to will her cards to.",
+        ),
       );
       state.deck = deck;
       return { interrupted: true };
@@ -325,7 +310,7 @@ function applyFinalDeathConsequences(
       (powerPlayer) =>
         powerPlayer.id !== player.id &&
         !state.deadPlayers.includes(powerPlayer.id) &&
-        powerPlayer.power.includes("dolores_umbridge")
+        powerPlayer.power.includes("dolores_umbridge"),
     );
 
     if (umbridge) {
@@ -375,8 +360,8 @@ function applyAdvancedDeaths(state: BoardViewState, options?: string) {
         createResolutionEvent(
           "You drank a butterbeer and were spared from death.",
           [player.id],
-          `${getPrimaryCharacter(player)?.shortName || player.name} drank a butterbeer and was spared from death.`
-        )
+          `${getPrimaryCharacter(player)?.shortName || player.name} drank a butterbeer and was spared from death.`,
+        ),
       );
       restoreTurnCycleAfterDeath(state);
       continue;
@@ -384,7 +369,9 @@ function applyAdvancedDeaths(state: BoardViewState, options?: string) {
 
     if (player.power.includes("harry_potter")) {
       const character = getPrimaryCharacter(player) as
-        | ({ end?: { deaths?: number; killer?: number } } & NonNullable<ReturnType<typeof getPrimaryCharacter>>)
+        | ({ end?: { deaths?: number; killer?: number } } & NonNullable<
+            ReturnType<typeof getPrimaryCharacter>
+          >)
         | null;
 
       if (character && (!character.end || character.end.deaths === 0)) {
@@ -461,7 +448,7 @@ function resolveProtectionChoice(
   state: BoardViewState,
   action: string,
   actionIndex: number,
-  pushAlert: PushAlert
+  pushAlert: PushAlert,
 ) {
   const player = viewerPlayer(state);
   const event = getCurrentEvent(state);
@@ -553,31 +540,31 @@ function resolveStupefyResolution(state: BoardViewState, lastAction: string) {
       return createResolutionEvent(
         "You have successfully hidden and the spell missed.",
         [subject.id],
-        `${subjectName} hid in a vanishing cabinet and ${instigatorName}'s Stupefy missed.`
+        `${subjectName} hid in a vanishing cabinet and ${instigatorName}'s Stupefy missed.`,
       );
     case "takeHit":
       return createResolutionEvent(
         "You have taken a hit!",
         [subject.id],
-        `${subjectName} was hit by ${instigatorName}'s Stupefy.`
+        `${subjectName} was hit by ${instigatorName}'s Stupefy.`,
       );
     case "playProtego":
       return createResolutionEvent(
         "You have successfully cast Protego.",
         [subject.id],
-        `${subjectName} used Protego and blocked ${instigatorName}'s Stupefy.`
+        `${subjectName} used Protego and blocked ${instigatorName}'s Stupefy.`,
       );
     case "invisibilityHide":
       return createResolutionEvent(
         "You have successfully hidden and the spell missed.",
         [subject.id],
-        `${subjectName} hid in an invisibility cloak and ${instigatorName}'s Stupefy missed.`
+        `${subjectName} hid in an invisibility cloak and ${instigatorName}'s Stupefy missed.`,
       );
     case "clearEvent":
       return createResolutionEvent(
         "The spell missed.",
         [subject.id],
-        `${subjectName} is untouchable and ${instigatorName}'s Stupefy missed.`
+        `${subjectName} is untouchable and ${instigatorName}'s Stupefy missed.`,
       );
     default:
       return null;
@@ -614,11 +601,11 @@ function startStupefy(state: BoardViewState, subject: PlayerState) {
       target: [subject.id],
       bystanders: createBystanderPopup(
         `${getPrimaryCharacter(instigator)?.shortName || instigator.name} has fired a Stupefy at ${getPrimaryCharacter(subject)?.shortName || subject.name}!`,
-        "subtle"
+        "subtle",
       ),
       [`bystanders-${instigator.id}`]: createBystanderPopup(
         `You have fired a Stupefy at ${getPrimaryCharacter(subject)?.shortName || subject.name}!`,
-        "subtle"
+        "subtle",
       ),
     },
   ];
@@ -638,7 +625,7 @@ function startFelixSelection(state: BoardViewState, subject: PlayerState, pushAl
   } else {
     pushAlert(
       "You can only target a maximum of two players with Felix Felicis. Deselect another player first.",
-      "warning"
+      "warning",
     );
     return false;
   }
@@ -684,11 +671,11 @@ function startWizardsDuel(state: BoardViewState, subject: PlayerState) {
       },
       [`bystanders-${instigator.id}`]: createBystanderPopup(
         `You have challenged ${getPrimaryCharacter(subject)?.shortName || subject.name} to a Wizard's Duel!`,
-        "subtle"
+        "subtle",
       ),
       bystanders: createBystanderPopup(
         `${getPrimaryCharacter(instigator)?.shortName || instigator.name} has challenged ${getPrimaryCharacter(subject)?.shortName || subject.name} to a Wizard's Duel!`,
-        "subtle"
+        "subtle",
       ),
       instigator,
       cardType: "wizards_duel",
@@ -730,7 +717,7 @@ function startFiendfyre(state: BoardViewState, subjectPlayerId: number) {
     },
     bystanders: createBystanderPopup(
       `${getPrimaryCharacter(instigator)?.shortName || instigator.name} has cast Fiendfyre at ${getPrimaryCharacter(subject)?.shortName || subject.name}! They must draw to try to get past.`,
-      "subtle"
+      "subtle",
     ),
     instigator,
     cardType: "fiendfyre",
@@ -740,11 +727,7 @@ function startFiendfyre(state: BoardViewState, subjectPlayerId: number) {
   return true;
 }
 
-function resolveAccio(
-  state: BoardViewState,
-  subject: PlayerState,
-  card: GameCard
-) {
+function resolveAccio(state: BoardViewState, subject: PlayerState, card: GameCard) {
   const discarded = discardSelected(state);
   const instigator = viewerPlayer(state);
 
@@ -771,18 +754,14 @@ function resolveAccio(
     createResolutionEvent(
       `${getPrimaryCharacter(instigator)?.shortName || instigator.name} used a summoning charm to steal your ${titleCase(card.name.replaceAll("_", " "))}.`,
       [subject.id],
-      `${getPrimaryCharacter(instigator)?.shortName || instigator.name} used a summoning charm to steal ${hand ? "from " : ""}${getPrimaryCharacter(subject)?.shortName || subject.name}'s ${hand ? "hand." : `${titleCase(card.name.replaceAll("_", " "))}.`}`
-    )
+      `${getPrimaryCharacter(instigator)?.shortName || instigator.name} used a summoning charm to steal ${hand ? "from " : ""}${getPrimaryCharacter(subject)?.shortName || subject.name}'s ${hand ? "hand." : `${titleCase(card.name.replaceAll("_", " "))}.`}`,
+    ),
   );
   state.turnCycle = cycleCleanse(state.turnCycle, state.players, state.turn);
   return true;
 }
 
-function resolveExpelliarmus(
-  state: BoardViewState,
-  subject: PlayerState,
-  card: GameCard
-) {
+function resolveExpelliarmus(state: BoardViewState, subject: PlayerState, card: GameCard) {
   const instigator = viewerPlayer(state);
 
   if (!instigator) {
@@ -816,8 +795,8 @@ function resolveExpelliarmus(
     createResolutionEvent(
       `${getPrimaryCharacter(instigator)?.shortName || instigator.name} discarded your ${titleCase(card.name.replaceAll("_", " "))}.`,
       [subject.id],
-      `${getPrimaryCharacter(instigator)?.shortName || instigator.name} discarded ${getPrimaryCharacter(subject)?.shortName || subject.name}'s ${titleCase(card.name.replaceAll("_", " "))}.`
-    )
+      `${getPrimaryCharacter(instigator)?.shortName || instigator.name} discarded ${getPrimaryCharacter(subject)?.shortName || subject.name}'s ${titleCase(card.name.replaceAll("_", " "))}.`,
+    ),
   );
   state.turnCycle = cycleCleanse(state.turnCycle, state.players, state.turn);
   return true;
@@ -836,7 +815,7 @@ function startMassEvent(state: BoardViewState, cardType: "dementors" | "garrotin
     .filter((player) =>
       cardType === "dementors"
         ? player.id !== instigator.id && !cardsIncludeName(player.tableau, "expecto_patronum")
-        : true
+        : true,
     )
     .map((player) => player.id);
 
@@ -860,8 +839,10 @@ function startMassEvent(state: BoardViewState, cardType: "dementors" | "garrotin
             ],
     },
     bystanders: createBystanderPopup(
-      cardType === "dementors" ? "Whoosh, you're past the Dementors now!" : "Whoosh, you're safe now!",
-      "subtle"
+      cardType === "dementors"
+        ? "Whoosh, you're past the Dementors now!"
+        : "Whoosh, you're safe now!",
+      "subtle",
     ),
     instigator,
     cardType,
@@ -880,7 +861,13 @@ function startSelfBuff(state: BoardViewState, drawBonus: number, message: string
 
   state.deck = discarded.deck;
   state.turnCycle.draw += drawBonus;
-  state.events.push(createResolutionEvent(message, [player.id], message.replace("You", getPrimaryCharacter(player)?.shortName || player.name)));
+  state.events.push(
+    createResolutionEvent(
+      message,
+      [player.id],
+      message.replace("You", getPrimaryCharacter(player)?.shortName || player.name),
+    ),
+  );
   state.turnCycle = cycleCleanse(state.turnCycle, state.players, state.turn);
   return true;
 }
@@ -904,8 +891,8 @@ function startThreeBroomsticks(state: BoardViewState) {
     createResolutionEvent(
       "You played the Three Broomsticks and everyone has been healed for 1 point!",
       [bartender.id],
-      `${getPrimaryCharacter(bartender)?.shortName || bartender.name} played the Three Broomsticks and everyone has been healed for 1 point!`
-    )
+      `${getPrimaryCharacter(bartender)?.shortName || bartender.name} played the Three Broomsticks and everyone has been healed for 1 point!`,
+    ),
   );
   state.turnCycle = cycleCleanse(state.turnCycle, state.players, state.turn);
   return true;
@@ -946,13 +933,13 @@ function startDiagonAlley(state: BoardViewState) {
         isCurrentPlayer
           ? "Diagon Alley! Take a card from the table!"
           : `${getPrimaryCharacter(instigator)?.shortName || instigator.name} has played Diagon Alley! Your turn to take a card!`,
-        "subtle"
+        "subtle",
       ),
       bystanders: createBystanderPopup(
         isCurrentPlayer
           ? "Everyone else is choosing their cards."
           : `${getPrimaryCharacter(instigator)?.shortName || instigator.name} has played Diagon Alley!`,
-        "subtle"
+        "subtle",
       ),
       instigator,
       cardType: "diagon_alley",
@@ -970,7 +957,7 @@ function startDiagonAlley(state: BoardViewState) {
 export function handleRuleCharacterClick(
   state: BoardViewState,
   targetPlayerId: number,
-  pushAlert: PushAlert
+  pushAlert: PushAlert,
 ): RuleResult {
   const currentEvent = getCurrentEvent(state);
   const targetPlayer = getPlayerById(state, targetPlayerId);
@@ -1020,8 +1007,8 @@ export function handleRuleCharacterClick(
         createResolutionEvent(
           "You drank butterbeer and were healed for 1 point!",
           [targetPlayer.id],
-          `${character.shortName} drank butterbeer and was healed for 1 point!`
-        )
+          `${character.shortName} drank butterbeer and was healed for 1 point!`,
+        ),
       );
       state.turnCycle = cycleCleanse(state.turnCycle, state.players, state.turn);
       return { handled: true };
@@ -1042,7 +1029,7 @@ export function handleRuleCharacterClick(
 export function handleRuleHandClick(
   state: BoardViewState,
   targetPlayerId: number,
-  card: GameCard
+  card: GameCard,
 ): RuleResult {
   const targetPlayer = getPlayerById(state, targetPlayerId);
   if (!targetPlayer) {
@@ -1062,7 +1049,7 @@ export function handleRuleHandClick(
 export function handleRuleTableauClick(
   state: BoardViewState,
   targetPlayerId: number,
-  card: GameCard
+  card: GameCard,
 ): RuleResult {
   if (card.fileName === "" && state.turnCycle.cards[0]?.name === "fiendfyre") {
     return { handled: startFiendfyre(state, targetPlayerId) };
@@ -1086,7 +1073,7 @@ export function handleRuleTableauClick(
 export function handleRuleTableClick(
   state: BoardViewState,
   card: GameCard,
-  pushAlert: PushAlert
+  pushAlert: PushAlert,
 ): RuleResult {
   if (
     (state.turnCycle.phase === "ressurection_stone" ||
@@ -1125,8 +1112,8 @@ export function handleRuleTableClick(
       createResolutionEvent(
         `You took a ${titleCase(card.name.replaceAll("_", " "))} from the discard.`,
         [player.id],
-        `${getPrimaryCharacter(player)?.shortName || player.name} resurrected a card from the discard with the Resurrection Stone.`
-      )
+        `${getPrimaryCharacter(player)?.shortName || player.name} resurrected a card from the discard with the Resurrection Stone.`,
+      ),
     );
     state.turnCycle.used.push("ressurection_stone");
     state.turnCycle.draw = Math.max(0, state.turnCycle.draw - 1);
@@ -1156,8 +1143,8 @@ export function handleRuleTableClick(
         createResolutionEvent(
           "All players have taken their cards from Diagon Alley!",
           [player.id],
-          "All players have taken their cards from Diagon Alley!"
-        )
+          "All players have taken their cards from Diagon Alley!",
+        ),
       );
       state.turnCycle = cycleCleanse(state.turnCycle, state.players, state.turn);
     }
@@ -1181,7 +1168,7 @@ export function handleRuleTableClick(
         handled: startSelfBuff(
           state,
           2,
-          "You have played Honeydukes and get to draw two more cards."
+          "You have played Honeydukes and get to draw two more cards.",
         ),
       };
     case "weasleys_wizard_weezes":
@@ -1189,7 +1176,7 @@ export function handleRuleTableClick(
         handled: startSelfBuff(
           state,
           3,
-          "You have played Weasleys' Wizard Weezes and get to draw three more cards."
+          "You have played Weasleys' Wizard Weezes and get to draw three more cards.",
         ),
       };
     case "three_broomsticks":
@@ -1204,7 +1191,7 @@ export function handleRulePopupChoice(
   state: BoardViewState,
   action: string,
   actionIndex: number,
-  pushAlert: PushAlert
+  pushAlert: PushAlert,
 ): RuleResult {
   const event = getCurrentEvent(state);
   const player = viewerPlayer(state);
@@ -1241,8 +1228,8 @@ export function handleRulePopupChoice(
         createResolutionEvent(
           `${getPrimaryCharacter(lily)?.shortName || lily.name} sacrificed a life point to save your life!`,
           [dyingPlayer.id],
-          `${getPrimaryCharacter(lily)?.shortName || lily.name} sacrificed a life point to save ${getPrimaryCharacter(dyingPlayer)?.shortName || dyingPlayer.name}'s life.`
-        )
+          `${getPrimaryCharacter(lily)?.shortName || lily.name} sacrificed a life point to save ${getPrimaryCharacter(dyingPlayer)?.shortName || dyingPlayer.name}'s life.`,
+        ),
       );
       restoreTurnCycleAfterDeath(state);
       return { handled: true };
@@ -1332,7 +1319,9 @@ export function handleRulePopupChoice(
       finishEventForPlayer(
         state,
         null,
-        state.turnCycle.action === "garroting_gas" ? "The gas is cleared." : "The Dementors have passed."
+        state.turnCycle.action === "garroting_gas"
+          ? "The gas is cleared."
+          : "The Dementors have passed.",
       );
       return { handled: true };
     }
@@ -1354,8 +1343,8 @@ export function handleRulePopupChoice(
             createResolutionEvent(
               `You beat ${getPrimaryCharacter(loser)?.shortName || loser.name} in a Wizard's Duel.`,
               [instigator.id],
-              `${getPrimaryCharacter(instigator)?.shortName || instigator.name} beat ${getPrimaryCharacter(loser)?.shortName || loser.name} in a Wizard's Duel.`
-            )
+              `${getPrimaryCharacter(instigator)?.shortName || instigator.name} beat ${getPrimaryCharacter(loser)?.shortName || loser.name} in a Wizard's Duel.`,
+            ),
           );
         }
         state.turnCycle = cycleCleanse(state.turnCycle, state.players, state.turn);
@@ -1389,11 +1378,11 @@ export function handleRulePopupChoice(
           },
           [`bystanders-${player.id}`]: createBystanderPopup(
             `You've cast a Stupefy at ${getPrimaryCharacter(defender)?.shortName || defender.name}!`,
-            "subtle"
+            "subtle",
           ),
           bystanders: createBystanderPopup(
             `${getPrimaryCharacter(player)?.shortName || player.name} and ${getPrimaryCharacter(defender)?.shortName || defender.name} are fighting a Wizard's Duel!`,
-            "subtle"
+            "subtle",
           ),
           instigator: player,
           cardType: "wizards_duel",
@@ -1459,8 +1448,8 @@ export function handleRulePopupChoice(
             [instigator.id],
             state.turnCycle.felix.length === 2
               ? `${getPrimaryCharacter(state.turnCycle.felix[0]!)?.shortName || ""} and ${getPrimaryCharacter(state.turnCycle.felix[1]!)?.shortName || ""} were both shot by ${getPrimaryCharacter(instigator)?.shortName || instigator.name}'s Felix-fortified Stupefy.`
-              : `${getPrimaryCharacter(state.turnCycle.felix[0]!)?.shortName || ""} was shot by ${getPrimaryCharacter(instigator)?.shortName || instigator.name}'s Felix-fortified Stupefy.`
-          )
+              : `${getPrimaryCharacter(state.turnCycle.felix[0]!)?.shortName || ""} was shot by ${getPrimaryCharacter(instigator)?.shortName || instigator.name}'s Felix-fortified Stupefy.`,
+          ),
         );
         state.turnCycle = cycleCleanse(state.turnCycle, state.players, state.turn);
         return { handled: true };
@@ -1498,8 +1487,8 @@ export function handleRulePopupChoice(
           createResolutionEvent(
             "You have extinguished the Fiendfyre!",
             [burningPlayer.id],
-            `${getPrimaryCharacter(burningPlayer)?.shortName || burningPlayer.name} extinguished the Fiendfyre!`
-          )
+            `${getPrimaryCharacter(burningPlayer)?.shortName || burningPlayer.name} extinguished the Fiendfyre!`,
+          ),
         );
         state.turnCycle = cycleCleanse(state.turnCycle, state.players, state.turn);
         return { handled: true };
@@ -1510,11 +1499,7 @@ export function handleRulePopupChoice(
         burningCharacter.health -= 1;
       }
 
-      const nextTargetId = incrementTurn(
-        burningPlayer.id,
-        state.turnOrder,
-        state.deadPlayers
-      );
+      const nextTargetId = incrementTurn(burningPlayer.id, state.turnOrder, state.deadPlayers);
       const nextTarget = getPlayerById(state, nextTargetId);
       if (nextTarget && fireCard) {
         nextTarget.tableau.push(fireCard);
@@ -1528,7 +1513,7 @@ export function handleRulePopupChoice(
         },
         bystanders: createBystanderPopup(
           `${getPrimaryCharacter(instigator)?.shortName || instigator.name} cast Fiendfyre and ${getPrimaryCharacter(burningPlayer)?.shortName || burningPlayer.name} has been burnt! ${getPrimaryCharacter(nextTarget!)?.shortName || nextTarget?.name || "The next player"} must now draw to try to get past.`,
-          "subtle"
+          "subtle",
         ),
         instigator,
         cardType: "fiendfyre",
@@ -1548,7 +1533,7 @@ export function handleRulePopupChoice(
 export function handleRuleDeckClick(
   state: BoardViewState,
   pile: "draw" | "discard",
-  pushAlert: PushAlert
+  pushAlert: PushAlert,
 ): RuleResult {
   if (pile === "discard" && state.turnCycle.phase === "selected") {
     state.events.push({
@@ -1595,8 +1580,8 @@ export function handleRuleDeckClick(
         createResolutionEvent(
           `Hooray! You drew a ${result.house} and escaped Azkaban.`,
           [player.id],
-          `${getPrimaryCharacter(player)?.shortName || player.name} drew a ${result.house} and escaped Azkaban.`
-        )
+          `${getPrimaryCharacter(player)?.shortName || player.name} drew a ${result.house} and escaped Azkaban.`,
+        ),
       );
       state.turnCycle = cycleCleanse(state.turnCycle, state.players, state.turn);
       return { handled: true };
@@ -1606,8 +1591,8 @@ export function handleRuleDeckClick(
       createResolutionEvent(
         `Bummer! You drew a ${result.house} and are still in Azkaban. You've lost this turn.`,
         [player.id],
-        `${getPrimaryCharacter(player)?.shortName || player.name} failed to escape Azkaban and their turn has been skipped.`
-      )
+        `${getPrimaryCharacter(player)?.shortName || player.name} failed to escape Azkaban and their turn has been skipped.`,
+      ),
     );
     state.turnCycle.phase = "stuck-in-azkaban";
     pushAlert("You failed to escape Azkaban and have lost this turn.", "warning");
