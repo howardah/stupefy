@@ -40,6 +40,9 @@ export interface PlayerState {
 export interface DeckState {
   cards: GameCard[];
   discards: GameCard[];
+  drawCards?: (number: number, discard?: boolean) => GameCard[];
+  getLength?: () => number;
+  shuffle?: () => void;
 }
 
 export interface TurnCycle {
@@ -123,6 +126,7 @@ export interface WaitingChatMessage {
 
 export interface WaitingRoomState {
   active?: Record<string, number | string>;
+  activeUpdatedAt?: Record<string, number>;
   chat: WaitingChatMessage[];
   last_updated?: number;
   password: false | string;

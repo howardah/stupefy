@@ -7,6 +7,8 @@ import type {
 } from "./types";
 
 type DeckConstructor = new <T>(cards?: T[], discards?: T[]) => {
+  cards: T[];
+  discards: T[];
   drawCards(number: number, discard?: boolean): T[];
   shuffle(): void;
 };

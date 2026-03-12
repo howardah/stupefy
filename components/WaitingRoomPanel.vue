@@ -6,6 +6,9 @@ const props = defineProps<{
   canStart: boolean;
   chat: WaitingChatMessage[];
   currentPlayerId: number;
+  emptyMessage?: string;
+  errorMessage?: string;
+  isRefreshing: boolean;
   message: string;
   room: string;
 }>();
@@ -35,13 +38,22 @@ function playerName(message: WaitingChatMessage) {
           <UButton
             color="neutral"
             icon="i-lucide-refresh-cw"
+            :loading="isRefreshing"
             variant="ghost"
             @click="emit('refresh')"
           />
         </div>
       </template>
 
-      <div class="space-y-3">
+      <UAlert
+        v-if="errorMessage"
+        color="error"
+        variant="soft"
+        :title="errorMessage"
+        class="mb-4"
+      />
+
+      <div v-if="activePlayers.length" class="space-y-3">
         <div
           v-for="player in activePlayers"
           :key="player.id"
@@ -52,6 +64,12 @@ function playerName(message: WaitingChatMessage) {
             {{ player.id === currentPlayerId ? "You" : "Connected player" }}
           </div>
         </div>
+      </div>
+      <div
+        v-else
+        class="rounded-2xl border border-dashed border-[rgba(33,22,15,0.14)] bg-white/40 px-4 py-6 text-sm text-[rgba(33,22,15,0.6)]"
+      >
+        {{ emptyMessage || "No connected players yet." }}
       </div>
 
       <template #footer>
@@ -77,7 +95,7 @@ function playerName(message: WaitingChatMessage) {
         </div>
       </template>
 
-      <div class="max-h-[420px] space-y-3 overflow-y-auto pr-1">
+      <div v-if="chat.length" class="max-h-[420px] space-y-3 overflow-y-auto pr-1">
         <div
           v-for="entry in chat"
           :key="`${entry.player}-${entry.time}`"
@@ -92,6 +110,12 @@ function playerName(message: WaitingChatMessage) {
           </div>
           <div class="text-sm">{{ entry.text }}</div>
         </div>
+      </div>
+      <div
+        v-else
+        class="rounded-2xl border border-dashed border-[rgba(33,22,15,0.14)] bg-white/40 px-4 py-6 text-sm text-[rgba(33,22,15,0.6)]"
+      >
+        No chat yet. Break the silence.
       </div>
 
       <template #footer>

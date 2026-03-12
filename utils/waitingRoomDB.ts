@@ -76,6 +76,24 @@ async function updateActive(data: {
   });
 }
 
+async function removeActiveSession(data: {
+  room: string;
+  sessionId: string;
+}): Promise<WaitingRoomResult | undefined> {
+  return new Promise(function (resolve) {
+    const currentRoom = data.room;
+
+    async function askForRoom(thisRoom: string): Promise<void> {
+      console.log("call begins");
+      console.log(thisRoom);
+      const dataObj = await roomRequest("remove-active", data);
+      console.log("call ended");
+      resolve(dataObj || undefined);
+    }
+    void askForRoom(currentRoom);
+  });
+}
+
 async function addChat(data: {
   newChat: WaitingChatMessage;
   room: string;
@@ -123,13 +141,21 @@ async function makeWaitRoom(
 }
 
 async function roomRequest(
-  request: "active" | "chat" | "get" | "join" | "make" | "update",
+  request:
+    | "active"
+    | "chat"
+    | "get"
+    | "join"
+    | "make"
+    | "remove-active"
+    | "update",
   details:
     | WaitingRoomCreateQuery
     | WaitingRoomGetQuery
     | WaitingRoomJoinQuery
     | { data: Partial<WaitingRoomState>; room: string }
     | { newChat: WaitingChatMessage; room: string }
+    | { room: string; sessionId: string }
     | { room: WaitingRoomState; roomKey: string }
 ): Promise<WaitingRoomResult | false | undefined> {
   let data: WaitingRoomResult | false | undefined;
@@ -163,6 +189,12 @@ async function roomRequest(
         data = await addChatToRoom(client, details as {
           newChat: WaitingChatMessage;
           room: string;
+        });
+        break;
+      case "remove-active":
+        data = await clearWaitingRoomSession(client, details as {
+          room: string;
+          sessionId: string;
         });
         break;
       case "make":
@@ -330,7 +362,27 @@ async function setWaitingRoom(
 
   const current_object = (await collection.findOne()) ?? ({} as WaitingRoomState);
 
-  const new_object = Object.assign(current_object, info.data);
+  const active = {
+    ...(current_object.active || {}),
+    ...(info.data.active || {}),
+  };
+  const activeUpdatedAt = {
+    ...(current_object.activeUpdatedAt || {}),
+    ...(info.data.activeUpdatedAt || {}),
+  };
+  const now = Date.now();
+
+  for (const sessionId of Object.keys(activeUpdatedAt)) {
+    if (now - Number(activeUpdatedAt[sessionId]) > 15000) {
+      delete activeUpdatedAt[sessionId];
+      delete active[sessionId];
+    }
+  }
+
+  const new_object = Object.assign(current_object, info.data, {
+    active,
+    activeUpdatedAt,
+  });
 
   await collection.updateOne(
     {},
@@ -339,6 +391,34 @@ async function setWaitingRoom(
   );
 
   return [new_object];
+}
+
+async function clearWaitingRoomSession(
+  client: MongoClient,
+  info: { room: string; sessionId: string }
+): Promise<WaitingRoomResult> {
+  const db = await client.db("waiting_room"),
+    collection = (await db.collection(
+      camelCase(info.room)
+    )) as Collection<WaitingRoomState>;
+
+  const currentObject = await collection.findOne();
+  if (!currentObject) return [{ error: "room not found" }];
+
+  const active = { ...(currentObject.active || {}) };
+  const activeUpdatedAt = { ...(currentObject.activeUpdatedAt || {}) };
+
+  delete active[info.sessionId];
+  delete activeUpdatedAt[info.sessionId];
+
+  const newObject = Object.assign(currentObject, {
+    active,
+    activeUpdatedAt,
+  });
+
+  await collection.updateOne({}, { $set: newObject }, { upsert: true });
+
+  return [newObject];
 }
 
 async function createWaitingRoom(
@@ -415,6 +495,7 @@ module.exports = {
   getWaitRoom,
   joinWaitRoom,
   makeWaitRoom,
+  removeActiveSession,
   updateActive,
   addChat,
 };

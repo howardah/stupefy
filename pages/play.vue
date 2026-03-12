@@ -6,6 +6,9 @@ import {
 } from "~/utils/gameplay/bootstrap";
 
 const camelCase = require("lodash/camelCase") as (value: string) => string;
+definePageMeta({
+  middleware: "play-query",
+});
 const route = useRoute();
 const api = useDatabaseApi();
 

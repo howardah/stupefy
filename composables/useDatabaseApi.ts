@@ -13,12 +13,19 @@ export function useDatabaseApi() {
     $fetch<WaitingRoomResponse>("/database/wait/join/", { params });
 
   const updateActive = (body: {
-    active: Record<string, number | string>;
+    playerId: number | string;
     room: string;
+    sessionId: string;
   }) =>
     $fetch<WaitingRoomResponse>("/database/wait/active/", {
       body,
       method: "POST",
+    });
+
+  const removeActive = (body: { room: string; sessionId: string }) =>
+    $fetch<WaitingRoomResponse>("/database/wait/active/", {
+      body,
+      method: "DELETE",
     });
 
   const addChat = (body: { newChat: WaitingChatMessage; room: string }) =>
@@ -42,6 +49,7 @@ export function useDatabaseApi() {
     getGameRoom,
     getWaitingRoom,
     joinRoom,
+    removeActive,
     startGame,
     updateActive,
   };

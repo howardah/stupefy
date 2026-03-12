@@ -36,10 +36,10 @@ This roadmap tracks the full migration from the legacy React/Express application
 - [x] Port the welcome/create/join screens into Vue components.
 - [x] Port the waiting-room screen into Vue using polling and Nitro endpoints.
 - [x] Add a frontend API wrapper in [`composables/useDatabaseApi.ts`](/Users/innocentsmith/Sites/node/stupefy/composables/useDatabaseApi.ts).
-- [ ] Replace the temporary polling-based active-user write with a more robust presence mechanism.
-- [ ] Add route guards and validation for missing/invalid `room`, `id`, and `key` query params.
-- [ ] Add proper loading, empty, and retry states for the waiting-room page.
-- [ ] Confirm parity with the recovered React lobby behavior:
+- [x] Replace the temporary polling-based active-user write with a more robust presence mechanism.
+- [x] Add route guards and validation for missing/invalid `room`, `id`, and `key` query params.
+- [x] Add proper loading, empty, and retry states for the waiting-room page.
+- [x] Confirm parity with the recovered React lobby behavior:
   - room creation rules
   - join-room error messages
   - password handling

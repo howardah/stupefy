@@ -1,4 +1,8 @@
 <script setup lang="ts">
+defineProps<{
+  busy?: boolean;
+}>();
+
 const emit = defineEmits<{
   create: [payload: { player: string; pw?: string; room: string }];
   join: [payload: { player: string; pw?: string; room: string }];
@@ -18,6 +22,22 @@ const joinState = reactive({
 
 const canCreate = computed(() => createState.player && createState.room);
 const canJoin = computed(() => joinState.player && joinState.room);
+
+function emitCreate() {
+  emit("create", {
+    player: createState.player.trim(),
+    pw: createState.pw.trim() || undefined,
+    room: createState.room.trim(),
+  });
+}
+
+function emitJoin() {
+  emit("join", {
+    player: joinState.player.trim(),
+    pw: joinState.pw.trim() || undefined,
+    room: joinState.room.trim(),
+  });
+}
 </script>
 
 <template>
@@ -48,6 +68,7 @@ const canJoin = computed(() => joinState.player && joinState.room);
         label="Create Room"
         size="xl"
         class="min-h-28 rounded-3xl"
+        :disabled="busy"
         @click="mode = 'create'"
       />
       <UButton
@@ -56,6 +77,7 @@ const canJoin = computed(() => joinState.player && joinState.room);
         label="Join Room"
         size="xl"
         class="min-h-28 rounded-3xl"
+        :disabled="busy"
         @click="mode = 'join'"
       />
     </div>
@@ -79,9 +101,10 @@ const canJoin = computed(() => joinState.player && joinState.room);
         :disabled="!canCreate"
         block
         color="primary"
+        :loading="busy"
         label="Create"
         size="xl"
-        @click="emit('create', { ...createState })"
+        @click="emitCreate"
       />
     </div>
 
@@ -104,9 +127,10 @@ const canJoin = computed(() => joinState.player && joinState.room);
         :disabled="!canJoin"
         block
         color="secondary"
+        :loading="busy"
         label="Join"
         size="xl"
-        @click="emit('join', { ...joinState })"
+        @click="emitJoin"
       />
     </div>
   </UCard>

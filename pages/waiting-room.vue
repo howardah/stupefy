@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import type { WaitingPlayer, WaitingRoomState } from "~/utils/types";
 const camelCase = require("lodash/camelCase") as (value: string) => string;
+definePageMeta({
+  middleware: "waiting-room-query",
+});
 
 const route = useRoute();
 const router = useRouter();
@@ -14,6 +17,10 @@ const sessionId = useState("waiting-room-session-id", () => crypto.randomUUID())
 
 const roomState = ref<WaitingRoomState | null>(null);
 const message = ref("");
+const isRefreshing = ref(false);
+const isStarting = ref(false);
+const pageError = ref("");
+const hasLoaded = ref(false);
 
 const connectedPlayers = computed<WaitingPlayer[]>(() => {
   const currentRoom = roomState.value;
@@ -26,26 +33,52 @@ const connectedPlayers = computed<WaitingPlayer[]>(() => {
   return currentRoom.players.filter((player) => activeIds.has(Number(player.id)));
 });
 
+const canStart = computed(() => !isStarting.value && connectedPlayers.value.length > 0);
+
 function handleRoomError(result: unknown) {
   if (Array.isArray(result) && result[0] && "error" in result[0]) {
-    toast.add({ color: "error", title: String(result[0].error) });
+    pageError.value = String(result[0].error);
+    toast.add({ color: "error", title: pageError.value });
     return true;
   }
   return false;
 }
 
+async function heartbeat() {
+  await api.updateActive({
+    room: roomName.value,
+    playerId: currentPlayerId.value,
+    sessionId: sessionId.value,
+  });
+}
+
 async function refreshRoom() {
+  isRefreshing.value = true;
+  pageError.value = "";
+
   const result = await api.getWaitingRoom({
     id: currentPlayerId.value,
     key: roomKey.value,
     room: roomName.value,
   });
 
-  if (handleRoomError(result)) return;
+  if (handleRoomError(result)) {
+    hasLoaded.value = true;
+    isRefreshing.value = false;
+    return;
+  }
 
   const room = result[0];
-  if (!room || !("players" in room)) return;
+  if (!room || !("players" in room)) {
+    pageError.value = "This room could not be loaded.";
+    hasLoaded.value = true;
+    isRefreshing.value = false;
+    return;
+  }
   roomState.value = room;
+  hasLoaded.value = true;
+  await heartbeat();
+  isRefreshing.value = false;
 }
 
 async function sendChat() {
@@ -68,7 +101,8 @@ async function sendChat() {
 }
 
 async function startGame() {
-  if (!connectedPlayers.value.length) return;
+  if (!canStart.value) return;
+  isStarting.value = true;
 
   await api.startGame({
     room: camelCase(roomName.value),
@@ -86,6 +120,7 @@ async function startGame() {
     path: "/play",
     query: route.query,
   });
+  isStarting.value = false;
 }
 
 await refreshRoom();
@@ -93,34 +128,44 @@ await refreshRoom();
 let refreshTimer: ReturnType<typeof setInterval> | undefined;
 
 onMounted(async () => {
-  if (roomState.value) {
-    await api.updateActive({
-      room: roomName.value,
-      active: {
-        ...(roomState.value.active || {}),
-        [sessionId.value]: currentPlayerId.value,
-      },
-    });
-  }
-
   refreshTimer = setInterval(() => {
     refreshRoom();
   }, 4000);
 });
 
-onBeforeUnmount(() => {
+onBeforeUnmount(async () => {
   if (refreshTimer) clearInterval(refreshTimer);
+  await api.removeActive({
+    room: roomName.value,
+    sessionId: sessionId.value,
+  });
 });
 </script>
 
 <template>
   <div class="stu-shell">
     <AppHeader />
+    <UAlert
+      v-if="!roomName || !roomKey || !currentPlayerId"
+      color="error"
+      variant="soft"
+      title="Missing room information. Return to the lobby and rejoin the room."
+      class="mb-6"
+    />
+    <div
+      v-else-if="!hasLoaded && isRefreshing"
+      class="stu-panel mb-6 rounded-[2rem] px-6 py-8 text-center text-lg"
+    >
+      Loading waiting room...
+    </div>
     <WaitingRoomPanel
       :active-players="connectedPlayers"
-      :can-start="connectedPlayers.length > 0"
+      :can-start="canStart"
       :chat="roomState?.chat || []"
       :current-player-id="currentPlayerId"
+      :empty-message="hasLoaded ? 'No connected players yet. Waiting for the room to refresh.' : 'Loading players...'"
+      :error-message="pageError"
+      :is-refreshing="isRefreshing"
       :message="message"
       :room="roomName"
       @refresh="refreshRoom"

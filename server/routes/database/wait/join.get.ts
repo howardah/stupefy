@@ -1,6 +1,8 @@
 import { getQuery, setResponseHeader } from "h3";
 
-const { encode } = require("../../../../utils/encrypt") as typeof import("../../../../utils/encrypt");
+const { encode } = require("../../../../utils/encrypt") as {
+  encode(message: string, key: string): string;
+};
 const { joinWaitRoom } = require("../../../../utils/waitingRoomDB") as {
   joinWaitRoom(query: { player: string; pw?: string; room: string }): Promise<unknown>;
 };
