@@ -198,3 +198,10 @@ export interface WaitingRoomAccessState {
   hasPassword: boolean;
   roomName: string;
 }
+
+export interface OpenWaitingRoomSummary {
+  activeCount: number;
+  playerCount: number;
+  roomName: string;
+  updatedAt: number;
+}

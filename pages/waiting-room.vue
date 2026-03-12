@@ -146,7 +146,7 @@ onBeforeUnmount(async () => {
   <div class="stu-shell">
     <AppHeader />
     <UAlert
-      v-if="!roomName || !roomKey || !currentPlayerId"
+      v-if="!roomName || !currentPlayerId"
       color="error"
       variant="soft"
       title="Missing room information. Return to the lobby and rejoin the room."

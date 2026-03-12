@@ -2,6 +2,7 @@ import type { Collection, MongoClient } from "mongodb";
 import type {
   ErrorResult,
   GameState,
+  OpenWaitingRoomSummary,
   WaitingChatMessage,
   WaitingRoomAccessState,
   WaitingPlayer,
@@ -43,6 +44,13 @@ async function getGameCollection(
   room: string
 ): Promise<Collection<GameState>> {
   return client.db("stupefy").collection<GameState>(normalizeRoomKey(room));
+}
+
+async function listWaitingCollections(client: MongoClient): Promise<string[]> {
+  const collections = await client.db("waiting_room").listCollections().toArray();
+  return collections
+    .map((collection) => collection.name)
+    .filter((name): name is string => typeof name === "string" && name.length > 0);
 }
 
 function prunePresence(room: WaitingRoomState): WaitingRoomState {
@@ -124,6 +132,48 @@ async function getWaitRoomAccess(room: string): Promise<WaitingRoomAccessState> 
       hasPassword: typeof currentRoom.password === "string" && currentRoom.password.length > 0,
       roomName: currentRoom.roomName,
     };
+  });
+}
+
+async function listOpenWaitRooms(): Promise<OpenWaitingRoomSummary[]> {
+  return withClient(async (client) => {
+    const roomKeys = await listWaitingCollections(client);
+    const openRooms = await Promise.all(
+      roomKeys.map(async (roomKey) => {
+        const waitingCollection = await getWaitingCollection(client, roomKey);
+        const waitingRoom = parseWaitingRoomState(await waitingCollection.findOne());
+
+        if (!waitingRoom) return null;
+        if (typeof waitingRoom.password === "string" && waitingRoom.password.length > 0) {
+          return null;
+        }
+
+        const gameCollection = await getGameCollection(client, roomKey);
+        const existingGame = parseGameState(await gameCollection.findOne());
+        if (existingGame) {
+          return null;
+        }
+
+        const prunedRoom = prunePresence(waitingRoom);
+
+        return {
+          activeCount: Object.keys(prunedRoom.active || {}).length,
+          playerCount: prunedRoom.players.length,
+          roomName: prunedRoom.roomName,
+          updatedAt: Number(prunedRoom.last_updated || 0),
+        } satisfies OpenWaitingRoomSummary;
+      })
+    );
+
+    return openRooms
+      .filter((room): room is OpenWaitingRoomSummary => room !== null)
+      .sort((left, right) => {
+        if (right.updatedAt !== left.updatedAt) {
+          return right.updatedAt - left.updatedAt;
+        }
+
+        return left.roomName.localeCompare(right.roomName);
+      });
   });
 }
 
@@ -296,6 +346,7 @@ export {
   getWaitRoom,
   getWaitRoomAccess,
   joinWaitRoom,
+  listOpenWaitRooms,
   makeWaitRoom,
   removeActiveSession,
   updateActive,

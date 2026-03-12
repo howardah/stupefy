@@ -1,5 +1,6 @@
 import type {
   GameRoomApiResponse,
+  OpenWaitingRoomSummary,
   PlayerState,
   WaitingChatMessage,
   WaitingRoomApiResponse,
@@ -23,6 +24,9 @@ export function useDatabaseApi() {
 
   const joinRoom = (params: { player: string; pw?: string; room: string }) =>
     request<WaitingRoomApiResponse>("/database/wait/join/", { params });
+
+  const getOpenRooms = () =>
+    request<OpenWaitingRoomSummary[]>("/database/wait/open/");
 
   const updateActive = (body: {
     playerId: number | string;
@@ -59,6 +63,7 @@ export function useDatabaseApi() {
     addChat,
     createRoom,
     getGameRoom,
+    getOpenRooms,
     getWaitingRoom,
     joinRoom,
     removeActive,
