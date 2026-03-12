@@ -1,19 +1,36 @@
-const path = require("path");
-const http = require("http");
-const express = require("express");
-const socketio = require("socket.io");
+import type { Server as HttpServer } from "http";
+import type { Socket } from "socket.io";
+import type { WaitingChatMessage } from "./utils/types";
+
+const path = require("path") as typeof import("path");
+const http = require("http") as typeof import("http");
+const express = require("express") as typeof import("express");
+const { Server } = require("socket.io") as typeof import("socket.io");
 const redis = require("socket.io-redis");
-const sticky = require("sticky-session");
+const sticky = require("sticky-session") as {
+  listen(server: HttpServer, port: number | string): boolean;
+};
 
 // Import setup room functions
-const stupefyDB = require("./utils/stupefyDB.js");
-const { newRoom } = require("./utils/new-room.js");
-const { updateActive, addChat } = require("./utils/waitingRoomDB");
+const stupefyDB = require("./utils/stupefyDB.js") as {
+  updateRoom(room: string, data: Record<string, unknown>): Promise<unknown>;
+};
+const { newRoom } = require("./utils/new-room.js") as {
+  newRoom(data: { players: unknown[]; room: string }): Promise<unknown>;
+};
+const { updateActive, addChat } = require("./utils/waitingRoomDB") as {
+  addChat(data: { newChat: WaitingChatMessage; room: string }): Promise<unknown>;
+  updateActive(data: {
+    active?: Record<string, number | string>;
+    data: Record<string, unknown>;
+    room: string;
+  }): Promise<unknown>;
+};
 
 const app = express();
-const server = http.createServer(app);
+const server = http.createServer(app as never);
 
-const io = socketio(server);
+const io = new Server(server);
 // io.adapter(redis({ host: process.env.REDIS_ENDPOINT, port: 6379 }));
 
 const stuRouter = require("./routes/index");
@@ -30,16 +47,43 @@ app.use("/", stuRouter);
 app.use(express.static(path.join(__dirname, "public")));
 
 // Global object to store information about all rooms
-let rooms = {};
+interface WaitingRoomSocketState {
+  sockets: Record<string, unknown>;
+  users: Record<string, number | string>;
+}
 
-io.set("origins", "*:*");
+interface JoinWaitingRoomPayload {
+  id: number | string;
+  socketroom: string;
+}
+
+interface WaitingPlayersPayload {
+  players: unknown[];
+  socketroom: string;
+}
+
+interface RoomChangePayload {
+  room: string;
+  [key: string]: unknown;
+}
+
+interface TimedRoomPayload {
+  room: string;
+  time: number;
+}
+
+const rooms: Record<string, WaitingRoomSocketState> = {};
+
 // Run when client connects
-io.on("connection", (socket) => {
+io.on("connection", (socket: Socket) => {
+  const typedSocket = socket as Socket & {
+    nickname?: number | string;
+  };
   // Room variable for this connection
   let thisroom = "";
 
   // When user joins a room
-  socket.on("join-waiting-room", (data) => {
+  socket.on("join-waiting-room", (data: JoinWaitingRoomPayload) => {
     console.log("anybody there??");
     // Join the socket for this waiting room
     socket.join(data.socketroom);
@@ -52,39 +96,42 @@ io.on("connection", (socket) => {
       // If the room doesn't exist
       rooms[thisroom] = { users: {}, sockets: {} };
     }
+    const activeRoom = rooms[thisroom]!;
 
-    rooms[thisroom].users[socket.id] = data.id;
+    activeRoom.users[socket.id] = data.id;
     // add our id & the socket id to the object
     // so we can figure out who’s actively in the room
-    socket.nickname = data.id;
+    typedSocket.nickname = data.id;
     // rooms[thisroom].push({ sid: socket.id, cid: data.id });
-    let room = io.sockets.adapter.rooms[data.socketroom];
+    const room = io.sockets.adapter.rooms.get(data.socketroom);
 
-    rooms[thisroom].sockets = room.sockets;
+    activeRoom.sockets = room
+      ? Object.fromEntries(Array.from(room.values()).map((id) => [id, true]))
+      : {};
 
     // and send it to the other room members
     updateActive({
       room: thisroom.replace("-waiting", ""),
-      active: rooms[thisroom].users,
-      data: { active: rooms[thisroom].users },
+      active: activeRoom.users,
+      data: { active: activeRoom.users },
     });
     io.in(data.socketroom).emit("from-the-waiting-room", {
-      socket: rooms[thisroom],
+      socket: activeRoom,
     });
   });
 
-  socket.on("to-waiting-room", (data) => {
+  socket.on("to-waiting-room", (data: JoinWaitingRoomPayload) => {
     // and send it to the other room members
     socket.to(data.socketroom).emit("from-the-waiting-room", rooms[thisroom]);
   });
 
-  socket.on("waiting-players", (data) => {
+  socket.on("waiting-players", (data: WaitingPlayersPayload) => {
     socket
       .to(data.socketroom)
       .emit("from-the-waiting-room", { players: data.players });
   });
 
-  socket.on("waiting-chat", async (newChat) => {
+  socket.on("waiting-chat", async (newChat: WaitingChatMessage) => {
     console.log("got it.");
     const chat = await addChat({
       room: thisroom.replace("-waiting", ""),
@@ -93,7 +140,7 @@ io.on("connection", (socket) => {
     socket.to(thisroom).emit("from-the-waiting-room", { chat });
   });
 
-  socket.on("set-up-game", async (data) => {
+  socket.on("set-up-game", async (data: { players: unknown[]; room: string }) => {
     io.in(thisroom).emit("from-the-waiting-room", {
       startState: false,
     });
@@ -108,40 +155,41 @@ io.on("connection", (socket) => {
     });
   });
 
-  socket.on("stupefy", (change) => {
+  socket.on("stupefy", (change: RoomChangePayload) => {
     // Send all data to the database
     stupefyDB.updateRoom(change.room, Object.assign(change));
     // and send it to the other room members
     socket.to(change.room).emit("from-the-room", change);
   });
 
-  socket.on("join-room", (room) => {
+  socket.on("join-room", (room: string) => {
     socket.join(room);
     console.log("Room: " + room);
   });
 
-  socket.on("pause-room", (data) => {
+  socket.on("pause-room", (data: TimedRoomPayload) => {
     socket.to(data.room).emit("pause", data.time);
   });
 
-  socket.on("resume-room", (data) => {
+  socket.on("resume-room", (data: TimedRoomPayload) => {
     socket.to(data.room).emit("resume", data.time);
   });
 
   // when user leaves the room
-  socket.on("disconnect", (reason) => {
+  socket.on("disconnect", (reason: string) => {
     // Make sure the room exists
     console.log("server was disconnected");
 
     // Remove the current connection ID from the waiting room members
-    if (rooms[thisroom] && rooms[thisroom].users[socket.id]) {
-      delete rooms[thisroom].users[socket.id];
+    const activeRoom = rooms[thisroom];
+    if (activeRoom && activeRoom.users[socket.id]) {
+      delete activeRoom.users[socket.id];
       socket
         .to(thisroom)
-        .emit("from-the-waiting-room", { socket: rooms[thisroom] });
+        .emit("from-the-waiting-room", { socket: activeRoom });
       updateActive({
         room: thisroom.replace("-waiting", ""),
-        data: { active: rooms[thisroom].users },
+        data: { active: activeRoom.users },
       });
     }
     // rooms[thisroom].splice(rooms[thisroom].indexOf(socket.id), 1);
@@ -160,7 +208,7 @@ io.on("connection", (socket) => {
     // If it was the servers fault, reconnect them
     if (reason === "io server disconnect") {
       console.log("Reconnecting...");
-      socket.connect();
+      (typedSocket as unknown as { connect(): void }).connect?.();
     }
   });
 });

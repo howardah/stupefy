@@ -1,11 +1,15 @@
 const { encode, decode } = require("./encrypt");
 
-const idGenerator = (currentArr) => {
-  function createId() {
+type HasId = {
+  id: number;
+};
+
+const idGenerator = (currentArr: HasId[]): number => {
+  function createId(): number {
     return Math.floor(Math.random() * 100);
   }
 
-  function someoneElses(id) {
+  function someoneElses(id: number): boolean {
     return currentArr.some((obj) => obj.id === id);
   }
 

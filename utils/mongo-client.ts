@@ -1,6 +1,6 @@
 const { MongoClient } = require("mongodb");
 
-function getMongoUri() {
+function getMongoUri(): string {
   if (process.env.MONGO_URI) return process.env.MONGO_URI;
 
   return (

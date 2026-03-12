@@ -1,31 +1,33 @@
-const encode = (message, key) => {
+const encode = (message: string, key: string): string => {
   const messageArr = message.split("");
   const keyArr = key.split("");
 
-  let returnArr = [];
+  const returnArr: string[] = [];
 
   messageArr.forEach((letter, i) => {
-    let thisIn = indexArr.indexOf(letter),
-      keyIn = indexArr.indexOf(keyArr[i % keyArr.length]);
+    const thisIn = indexArr.indexOf(letter);
+    const keyIn = indexArr.indexOf(keyArr[i % keyArr.length]!);
 
-    returnArr.push(printArr[(thisIn + keyIn) % printArr.length]);
+    returnArr.push(printArr[(thisIn + keyIn) % printArr.length] ?? "");
   });
 
   return returnArr.join("");
 };
 
-const decode = (message, key) => {
+const decode = (message: string, key: string): string => {
   const messageArr = message.split("");
   const keyArr = key.split("");
 
-  let returnArr = [];
+  const returnArr: string[] = [];
 
   messageArr.forEach((letter, i) => {
-    let thisIn = printArr.indexOf(letter),
-      keyIn = indexArr.indexOf(keyArr[i % keyArr.length]),
-      length = indexArr.length;
+    const thisIn = printArr.indexOf(letter);
+    const keyIn = indexArr.indexOf(keyArr[i % keyArr.length]!);
+    const length = indexArr.length;
 
-    returnArr.push(indexArr[(((thisIn - keyIn) % length) + length) % length]);
+    returnArr.push(
+      indexArr[(((thisIn - keyIn) % length) + length) % length] ?? ""
+    );
   });
 
   return returnArr.join("");

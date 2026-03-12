@@ -1,5 +1,7 @@
-const roles = (length) => {
-  let characters = [];
+import type { Role } from "./types";
+
+const roles = (length: number): Role[] => {
+  let characters: Role[] = [];
 
   // setup the possible roles based on the number of players
   switch (length) {
@@ -71,13 +73,13 @@ const roles = (length) => {
       break;
   }
 
-  function shuffle() {
-    let toShuffle = [...characters];
+  function shuffle(): void {
+    const toShuffle = [...characters];
 
-    for (let i = length - 1; i > 0; i--) {
+    for (let i = length - 1; i > 0; i -= 1) {
       const j = Math.floor(Math.random() * i);
-      const temp = toShuffle[i];
-      toShuffle[i] = toShuffle[j];
+      const temp = toShuffle[i]!;
+      toShuffle[i] = toShuffle[j]!;
       toShuffle[j] = temp;
     }
 
@@ -90,4 +92,4 @@ const roles = (length) => {
 
   return characters;
 };
-module.exports = roles;
+export = roles;

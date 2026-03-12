@@ -1,7 +1,13 @@
-const users = [];
+interface User {
+  id: string;
+  room: string;
+  username: string;
+}
+
+const users: User[] = [];
 
 // Join user to chat
-function userJoin(id, username, room) {
+function userJoin(id: string, username: string, room: string): User {
   const user = { id, username, room };
 
   users.push(user);
@@ -10,13 +16,13 @@ function userJoin(id, username, room) {
 }
 
 // Get current user
-function getCurrentUser(id) {
-  return users.find(user => user.id === id);
+function getCurrentUser(id: string): User | undefined {
+  return users.find((user) => user.id === id);
 }
 
 // User leaves chat
-function userLeave(id) {
-  const index = users.findIndex(user => user.id === id);
+function userLeave(id: string): User | undefined {
+  const index = users.findIndex((user) => user.id === id);
 
   if (index !== -1) {
     return users.splice(index, 1)[0];
@@ -24,8 +30,8 @@ function userLeave(id) {
 }
 
 // Get room users
-function getRoomUsers(room) {
-  return users.filter(user => user.room === room);
+function getRoomUsers(room: string): User[] {
+  return users.filter((user) => user.room === room);
 }
 
 module.exports = {

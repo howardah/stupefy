@@ -1,21 +1,33 @@
-const { initialise } = require("./card-setup");
-const { createMongoClient } = require("./mongo-client");
+import type { Collection, MongoClient } from "mongodb";
+import type { GameState, PlayerState } from "./types";
 
-function isEmpty(obj) {
-  for (var key in obj) {
-    if (obj.hasOwnProperty(key)) return false;
+const { initialise } = require("./card-setup") as {
+  initialise(players: PlayerState[]): GameState;
+};
+const { createMongoClient } = require("./mongo-client") as {
+  createMongoClient(): MongoClient;
+};
+
+interface NewRoomRequest {
+  players: PlayerState[];
+  room: string;
+}
+
+async function newRoom(data: NewRoomRequest): Promise<GameState[] | undefined> {
+  try {
+    const dataObj = await roomRequest(data);
+    console.log("call ended");
+    return dataObj;
+  } catch (error) {
+    console.error(error);
+    return undefined;
   }
-  return true;
 }
 
-async function newRoom(data) {
-  let dataObj = await roomRequest(data).catch(console.error);
-  console.log("call ended");
-  return dataObj;
-}
-
-async function roomRequest(details) {
-  let data;
+async function roomRequest(
+  details: NewRoomRequest
+): Promise<GameState[] | undefined> {
+  let data: GameState[] | undefined;
   const client = createMongoClient();
 
   try {
@@ -33,7 +45,10 @@ async function roomRequest(details) {
   return data;
 }
 
-async function createRoom(client, info) {
+async function createRoom(
+  client: MongoClient,
+  info: NewRoomRequest
+): Promise<GameState[]> {
   const db = await client.db("stupefy");
 
   const names = await db.listCollections().toArray();
@@ -41,16 +56,16 @@ async function createRoom(client, info) {
     return coll.name === info.room;
   });
 
-  let obj = initialise(info.players);
+  const obj = initialise(info.players);
   obj._id = 0;
 
   if (exists) {
-    await db.collection(info.room).remove({});
+    await db.collection<GameState>(info.room).deleteMany({});
   }
 
-  await db
-    .collection(info.room)
-    .insertOne(Object.assign(obj, { last_updated: Date.now() }));
+  await (db.collection(info.room) as Collection<GameState>).insertOne(
+    Object.assign(obj, { last_updated: Date.now() })
+  );
 
   return [obj];
 }

@@ -1,77 +1,100 @@
-const camelCase = require("lodash/camelCase");
-const { idGenerator, decode } = require("./db-tools");
-const { createMongoClient } = require("./mongo-client");
+import type { Collection, MongoClient } from "mongodb";
+import type {
+  ErrorResult,
+  GameState,
+  WaitingChatMessage,
+  WaitingPlayer,
+  WaitingRoomCreateQuery,
+  WaitingRoomGetQuery,
+  WaitingRoomJoinQuery,
+  WaitingRoomState,
+} from "./types";
+
+const camelCase = require("lodash/camelCase") as (value: string) => string;
+const { idGenerator, decode } = require("./db-tools") as {
+  decode(message: string, key: string): string;
+  idGenerator(currentArr: WaitingPlayer[]): number;
+};
+const { createMongoClient } = require("./mongo-client") as {
+  createMongoClient(): MongoClient;
+};
 
 // const { initialise } = require("../utils/card-setup");
 //Prevent problems by postponing db requests until
 //the current requests are dealt with
-var queue = {};
+const queue: Record<string, { busy: boolean; data: Record<string, unknown> }> = {};
 
-function isEmpty(obj) {
-  for (var key in obj) {
-    if (obj.hasOwnProperty(key)) return false;
-  }
-  return true;
-}
+type WaitingRoomResult = Array<ErrorResult | WaitingRoomState>;
 
-async function getWaitRoom(data) {
-  return new Promise(function (resolve, reject) {
-    let currentRoom = data.room;
+async function getWaitRoom(data: WaitingRoomGetQuery): Promise<WaitingRoomResult | undefined> {
+  return new Promise(function (resolve) {
+    const currentRoom = data.room;
 
-    async function askForRoom(thisRoom) {
+    async function askForRoom(thisRoom: string): Promise<void> {
       console.log("call begins");
       console.log(thisRoom);
-      let dataObj = await roomRequest("get", data).catch(console.error);
+      const dataObj = await roomRequest("get", data);
       console.log("call ended");
-      resolve(dataObj);
+      resolve(dataObj || undefined);
     }
-    askForRoom(currentRoom);
+    void askForRoom(currentRoom);
   });
 }
 
-async function joinWaitRoom(data) {
-  return new Promise(function (resolve, reject) {
-    let currentRoom = data.room;
+async function joinWaitRoom(
+  data: WaitingRoomJoinQuery
+): Promise<WaitingRoomResult | undefined> {
+  return new Promise(function (resolve) {
+    const currentRoom = data.room;
 
-    async function askForRoom(thisRoom) {
+    async function askForRoom(thisRoom: string): Promise<void> {
       console.log("call begins");
       console.log(thisRoom);
-      let dataObj = await roomRequest("join", data).catch(console.error);
+      const dataObj = await roomRequest("join", data);
       console.log("call ended");
-      resolve(dataObj);
+      resolve(dataObj || undefined);
     }
-    askForRoom(currentRoom);
+    void askForRoom(currentRoom);
   });
 }
 
-async function updateActive(data) {
-  return new Promise(function (resolve, reject) {
-    let currentRoom = data.room;
+async function updateActive(data: {
+  data: Partial<WaitingRoomState>;
+  room: string;
+}): Promise<WaitingRoomResult | undefined> {
+  return new Promise(function (resolve) {
+    const currentRoom = data.room;
 
-    async function askForRoom(thisRoom) {
+    async function askForRoom(thisRoom: string): Promise<void> {
       console.log("call begins");
       console.log(thisRoom);
-      let dataObj = await roomRequest("active", data).catch(console.error);
+      const dataObj = await roomRequest("active", data);
       console.log("call ended");
-      resolve(dataObj);
+      resolve(dataObj || undefined);
     }
-    askForRoom(currentRoom);
+    void askForRoom(currentRoom);
   });
 }
 
-async function addChat(data) {
+async function addChat(data: {
+  newChat: WaitingChatMessage;
+  room: string;
+}): Promise<WaitingChatMessage[] | undefined> {
   console.log("call begins");
-  let dataObj = await roomRequest("chat", data).catch(console.error);
+  const dataObj = await roomRequest("chat", data);
   console.log("call ended");
-  return dataObj[0].chat;
+  const room = Array.isArray(dataObj) ? dataObj[0] : undefined;
+  return room && "chat" in room ? room.chat : undefined;
 }
 
-async function makeWaitRoom(info) {
+async function makeWaitRoom(
+  info: WaitingRoomCreateQuery
+): Promise<WaitingRoomResult | false | undefined> {
   const roomKey = camelCase(info.room),
-    players = [{ name: info.player, id: idGenerator([]) }],
+    players: WaitingPlayer[] = [{ name: info.player, id: idGenerator([]) }],
     password = info.pw || false;
 
-  const newRoom = {
+  const newRoom: WaitingRoomState = {
     players,
     password,
     roomName: info.room,
@@ -85,24 +108,31 @@ async function makeWaitRoom(info) {
     ],
   };
 
-  return new Promise(function (resolve, reject) {
-    let currentRoom = roomKey;
-    async function askForRoom(thisRoom) {
+  return new Promise(function (resolve) {
+    const currentRoom = roomKey;
+    async function askForRoom(thisRoom: string): Promise<void> {
       console.log("call begins");
       console.log(thisRoom);
-      let dataObj = await roomRequest("make", { roomKey, room: newRoom }).catch(
-        console.error
-      );
+      const dataObj = await roomRequest("make", { roomKey, room: newRoom });
       console.log("call ended");
       queue[currentRoom] = { busy: false, data: {} };
-      resolve(dataObj);
+      resolve(dataObj || undefined);
     }
-    askForRoom(currentRoom);
+    void askForRoom(currentRoom);
   });
 }
 
-async function roomRequest(request, details) {
-  let data;
+async function roomRequest(
+  request: "active" | "chat" | "get" | "join" | "make" | "update",
+  details:
+    | WaitingRoomCreateQuery
+    | WaitingRoomGetQuery
+    | WaitingRoomJoinQuery
+    | { data: Partial<WaitingRoomState>; room: string }
+    | { newChat: WaitingChatMessage; room: string }
+    | { room: WaitingRoomState; roomKey: string }
+): Promise<WaitingRoomResult | false | undefined> {
+  let data: WaitingRoomResult | false | undefined;
   const client = createMongoClient();
 
   try {
@@ -112,22 +142,34 @@ async function roomRequest(request, details) {
     // Make the appropriate DB calls
     switch (request) {
       case "update":
-        data = await setRoom(client, details);
+        data = await setWaitingRoom(client, details as {
+          data: Partial<WaitingRoomState>;
+          room: string;
+        });
         break;
       case "join":
-        data = await joinRoom(client, details);
+        data = await joinRoom(client, details as WaitingRoomJoinQuery);
         break;
       case "get":
-        data = await fetchWaitRoom(client, details);
+        data = await fetchWaitRoom(client, details as WaitingRoomGetQuery);
         break;
       case "active":
-        data = await setWaitingRoom(client, details);
+        data = await setWaitingRoom(client, details as {
+          data: Partial<WaitingRoomState>;
+          room: string;
+        });
         break;
       case "chat":
-        data = await addChatToRoom(client, details);
+        data = await addChatToRoom(client, details as {
+          newChat: WaitingChatMessage;
+          room: string;
+        });
         break;
       case "make":
-        data = await createWaitingRoom(client, details);
+        data = await createWaitingRoom(client, details as {
+          room: WaitingRoomState;
+          roomKey: string;
+        });
         break;
       default:
         console.log("No valid request specified");
@@ -142,13 +184,19 @@ async function roomRequest(request, details) {
   return data;
 }
 
-async function fetchRoom(client, info) {
+async function fetchRoom(
+  client: MongoClient,
+  info: { room: string }
+): Promise<GameState[] | false> {
   const db = await client.db("stupefy");
-  let returnData = await db.collection(info.room).find().toArray();
+  const result = await (db.collection(info.room) as Collection<GameState>)
+    .find()
+    .toArray();
+  let returnData: GameState[] | false = result as GameState[];
   if (
-    returnData[0] === undefined ||
-    returnData[0].players === undefined ||
-    returnData[0].players.length === 0
+    result[0] === undefined ||
+    result[0].players === undefined ||
+    result[0].players.length === 0
   )
     returnData = false;
 
@@ -156,19 +204,29 @@ async function fetchRoom(client, info) {
   return returnData;
 }
 
-async function fetchWaitRoom(client, info) {
+async function fetchWaitRoom(
+  client: MongoClient,
+  info: WaitingRoomGetQuery
+): Promise<WaitingRoomResult> {
   const db = await client.db("waiting_room");
-  let returnData = await db.collection(camelCase(info.room)).find().toArray();
+  const returnData = await (
+    db.collection(camelCase(info.room)) as Collection<WaitingRoomState>
+  )
+    .find()
+    .toArray();
+
+  const currentRoom = returnData[0];
+  if (!currentRoom) return [{ error: "room not found" }];
 
   console.log(decode(info.key, info.room.replace(" ", "_")));
 
   if (
-    returnData[0].password &&
-    returnData[0].password !== decode(info.key, info.room.replace(" ", "_"))
+    currentRoom.password &&
+    currentRoom.password !== decode(info.key, info.room.replace(" ", "_"))
   )
     return [{ error: "password incorrect" }];
 
-  const currentUsers = returnData[0].players;
+  const currentUsers = currentRoom.players;
 
   console.log(currentUsers);
   console.log(info);
@@ -182,22 +240,28 @@ async function fetchWaitRoom(client, info) {
   return returnData;
 }
 
-async function joinRoom(client, info) {
+async function joinRoom(
+  client: MongoClient,
+  info: WaitingRoomJoinQuery
+): Promise<WaitingRoomResult> {
   const db = await client.db("waiting_room"),
-    collection = await db.collection(camelCase(info.room));
+    collection = (await db.collection(
+      camelCase(info.room)
+    )) as Collection<WaitingRoomState>;
 
-  let current_object = await collection.findOne();
+  const current_object = await collection.findOne();
+  if (!current_object) return [{ error: "room not found" }];
 
   if (current_object.password && current_object.password !== info.pw)
     return [{ error: "password incorrect" }];
 
   for (let i = 0; i < current_object.players.length; i++) {
-    if (current_object.players[i].name === info.player) {
+    if (current_object.players[i]?.name === info.player) {
       console.log("player name is the same!");
 
-      for (let socket in current_object.active) {
+      for (const socket in current_object.active ?? {}) {
         if (
-          Number(current_object.active[socket]) === current_object.players[i].id
+          Number(current_object.active?.[socket]) === current_object.players[i]?.id
         )
           return [
             {
@@ -206,21 +270,20 @@ async function joinRoom(client, info) {
             },
           ];
       }
-
-      current_object.players[i].id;
+      current_object.players[i]?.id;
     }
   }
 
-  let players = current_object.players;
+  const players = current_object.players;
 
   players.push({ name: info.player, id: idGenerator(current_object.players) });
 
-  let new_object = Object.assign(current_object, { players });
+  const new_object = Object.assign(current_object, { players });
 
   console.log(new_object);
 
   // console.log("Set Room");
-  finObj = await collection.updateOne(
+  await collection.updateOne(
     {},
     { $set: new_object },
     { upsert: true }
@@ -229,19 +292,25 @@ async function joinRoom(client, info) {
   return [new_object];
 }
 
-async function addChatToRoom(client, info) {
+async function addChatToRoom(
+  client: MongoClient,
+  info: { newChat: WaitingChatMessage; room: string }
+): Promise<WaitingRoomResult> {
   const db = await client.db("waiting_room"),
-    collection = await db.collection(camelCase(info.room));
+    collection = (await db.collection(
+      camelCase(info.room)
+    )) as Collection<WaitingRoomState>;
 
-  let current_object = await collection.findOne();
+  const current_object = await collection.findOne();
+  if (!current_object) return [{ error: "room not found" }];
 
-  let chats = [...current_object.chat];
+  const chats = [...current_object.chat];
 
   chats.push(info.newChat);
 
-  let new_object = Object.assign(current_object, { chat: chats });
+  const new_object = Object.assign(current_object, { chat: chats });
 
-  finObj = await collection.updateOne(
+  await collection.updateOne(
     {},
     { $set: new_object },
     { upsert: true }
@@ -250,15 +319,20 @@ async function addChatToRoom(client, info) {
   return [new_object];
 }
 
-async function setWaitingRoom(client, info) {
+async function setWaitingRoom(
+  client: MongoClient,
+  info: { data: Partial<WaitingRoomState>; room: string }
+): Promise<WaitingRoomResult> {
   const db = await client.db("waiting_room"),
-    collection = await db.collection(camelCase(info.room));
+    collection = (await db.collection(
+      camelCase(info.room)
+    )) as Collection<WaitingRoomState>;
 
-  let current_object = await collection.findOne();
+  const current_object = (await collection.findOne()) ?? ({} as WaitingRoomState);
 
-  let new_object = Object.assign(current_object, info.data);
+  const new_object = Object.assign(current_object, info.data);
 
-  finObj = await collection.updateOne(
+  await collection.updateOne(
     {},
     { $set: new_object },
     { upsert: true }
@@ -267,7 +341,10 @@ async function setWaitingRoom(client, info) {
   return [new_object];
 }
 
-async function createWaitingRoom(client, info) {
+async function createWaitingRoom(
+  client: MongoClient,
+  info: { room: WaitingRoomState; roomKey: string }
+): Promise<WaitingRoomResult | false> {
   const db = await client.db("waiting_room");
 
   const collections = await db.listCollections().toArray();
@@ -275,7 +352,7 @@ async function createWaitingRoom(client, info) {
     return coll.name === info.roomKey;
   });
 
-  let returnData = [info.room];
+  const returnData: WaitingRoomResult = [info.room];
 
   if (exists === -1) {
     await db
@@ -286,13 +363,17 @@ async function createWaitingRoom(client, info) {
     // and how long it’s been since it’s been used
 
     // How long since the room was set up
-    const collection = await db.collection(info.roomKey).find().toArray();
-    const how_long_creation = Date.now() - collection[0].last_updated;
+    const collection = await (
+      db.collection(info.roomKey) as Collection<WaitingRoomState>
+    )
+      .find()
+      .toArray();
+    const how_long_creation = Date.now() - (collection[0]?.last_updated ?? 0);
 
     // How long since it's been used
     const gameInfo = await fetchRoom(client, { room: info.room.roomName });
-    const how_long_played = gameInfo[0]
-      ? Date.now() - gameInfo[0].last_updated
+    const how_long_played = Array.isArray(gameInfo) && gameInfo[0]
+      ? Date.now() - (gameInfo[0].last_updated ?? 0)
       : false;
 
     // Rooms will expire after 2 days after last play
