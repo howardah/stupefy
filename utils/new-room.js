@@ -1,5 +1,5 @@
-const MongoClient = require("mongodb").MongoClient;
 const { initialise } = require("./card-setup");
+const { createMongoClient } = require("./mongo-client");
 
 function isEmpty(obj) {
   for (var key in obj) {
@@ -15,20 +15,8 @@ async function newRoom(data) {
 }
 
 async function roomRequest(details) {
-  /**
-   * Connection URI. Update <username>, <password>, and <your-cluster-url> to reflect your cluster.
-   * See https://docs.mongodb.com/ecosystem/drivers/node/ for more details
-   */
-  const stupefyUri =
-    "mongodb+srv://" +
-    process.env.MONGO_STUPEFY_UN +
-    ":" +
-    process.env.MONGO_STUPEFY_PW +
-    "@" +
-    process.env.MONGO_STUPEFY_CLUSTER +
-    ".mongodb.net/stupefy?retryWrites=true&w=majority";
   let data;
-  const client = new MongoClient(stupefyUri);
+  const client = createMongoClient();
 
   try {
     // Connect to the MongoDB cluster

@@ -1,6 +1,6 @@
-const MongoClient = require("mongodb").MongoClient;
 const { initialise } = require("./card-setup");
 const { camelCase } = require("lodash");
+const { createMongoClient } = require("./mongo-client");
 
 // const { initialise } = require("../utils/card-setup");
 //Prevent problems by postponing db requests until
@@ -87,20 +87,8 @@ async function makeRoom(room) {
 }
 
 async function roomRequest(request, details) {
-  /**
-   * Connection URI. Update <username>, <password>, and <your-cluster-url> to reflect your cluster.
-   * See https://docs.mongodb.com/ecosystem/drivers/node/ for more details
-   */
-  const stupefyUri =
-    "mongodb+srv://" +
-    process.env.MONGO_STUPEFY_UN +
-    ":" +
-    process.env.MONGO_STUPEFY_PW +
-    "@" +
-    process.env.MONGO_STUPEFY_CLUSTER +
-    ".mongodb.net/stupefy?retryWrites=true&w=majority";
   let data;
-  const client = new MongoClient(stupefyUri);
+  const client = createMongoClient();
 
   try {
     // Connect to the MongoDB cluster

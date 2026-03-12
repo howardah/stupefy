@@ -20,6 +20,15 @@ Now, you’re all set to run the app with:
     npm start
 You should then see `Server running on port 3000` in your console and you can navigate to [localhost:3000](http://localhost:3000).
 
+## Run With Docker
+The repository now includes a [`docker-config.yaml`](/Users/innocentsmith/Sites/node/stupefy/docker-config.yaml) file that starts both the app and a local MongoDB container. The app will automatically use `MONGO_URI` when it is set, so its database calls are routed to the Docker Mongo service instead of MongoDB Atlas.
+
+Start everything with:
+
+    docker compose -f docker-config.yaml up --build
+
+The app will be available at [localhost:3000](http://localhost:3000) and MongoDB will be available at `localhost:27017`.
+
 ## Google Cloud
 As noted above, the app is currently live, running with google cloud. I used the google cloud [websocket example](https://github.com/GoogleCloudPlatform/nodejs-docs-samples/tree/master/appengine/websockets#setup) to set it up.
 
@@ -35,4 +44,3 @@ The application is still in its initial development. There are some key features
  - Because of lack of built-in resolution, the db & the room are not closed at the end of the game and therefore the room name will not be re-usable until the room expires by sitting 3 days without activity.
  - The rules and functionality are not explained anywhere.
  - Many of the characters special abilities are not yet functional.
-
