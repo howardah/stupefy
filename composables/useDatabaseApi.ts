@@ -1,4 +1,5 @@
 import type {
+  GameState,
   GameRoomApiResponse,
   OpenWaitingRoomSummary,
   WaitingChatMessage,
@@ -68,6 +69,12 @@ export function useDatabaseApi() {
   const getGameRoom = (params: { room: string }) =>
     request<GameRoomApiResponse>("/database/players/", { params });
 
+  const updateGameRoom = (body: { data: Partial<GameState>; room: string }) =>
+    request<{ ok: true }>("/database/players/update/", {
+      body,
+      method: "POST",
+    });
+
   return {
     addChat,
     createRoom,
@@ -78,6 +85,7 @@ export function useDatabaseApi() {
     removeActive,
     setReady,
     startGame,
+    updateGameRoom,
     updateActive,
   };
 }
