@@ -20,6 +20,7 @@ import {
 import {
   createResolutionEvent,
   deathCheck,
+  eventIndex,
   protegoOptions,
   tableauProblems,
 } from "./events";
@@ -112,6 +113,29 @@ function createBystanderPopup(
   };
 }
 
+function createDeathPrompt(
+  message: string,
+  target: PlayerState,
+  options: PopupOption[],
+  bystanders?: string
+): GameEvent {
+  const event: GameEvent = {
+    popup: {
+      message,
+      options,
+      popupType: "subtle",
+    },
+    cardType: getPrimaryCharacter(target)?.fileName || target.name,
+    target: [target.id],
+  };
+
+  if (bystanders) {
+    event.bystanders = createBystanderPopup(bystanders, "subtle");
+  }
+
+  return event;
+}
+
 function isProtegoCard(player: PlayerState, cardName: string) {
   const character = getPrimaryCharacter(player)?.fileName;
 
@@ -163,6 +187,20 @@ function clearCurrentEvent(state: BoardViewState) {
   state.events.shift();
 }
 
+function restoreTurnCycleAfterDeath(state: BoardViewState) {
+  const afterDeath = state.turnCycle.afterDeath as
+    | { action?: string; phase?: string }
+    | undefined;
+
+  if (!afterDeath?.phase) {
+    return;
+  }
+
+  state.turnCycle.phase = afterDeath.phase;
+  state.turnCycle.action = afterDeath.action || "";
+  state.turnCycle.afterDeath = {};
+}
+
 function finishEventForPlayer(
   state: BoardViewState,
   resolutionEvent: GameEvent | null,
@@ -203,27 +241,130 @@ function finishEventForPlayer(
   state.turnCycle = cycleCleanse(state.turnCycle, state.players, state.turn);
 }
 
-function applySimpleDeaths(state: BoardViewState) {
+function getDyingPlayers(state: BoardViewState) {
+  return state.players.filter((player) => {
+    const character = getPrimaryCharacter(player);
+    return (
+      Boolean(character && character.health === 0) &&
+      !state.deadPlayers.includes(player.id)
+    );
+  });
+}
+
+function queueLilySavePrompts(state: BoardViewState, dyingPlayer: PlayerState) {
+  const lilyPlayers = state.players.filter((player) => {
+    if (state.deadPlayers.includes(player.id)) {
+      return false;
+    }
+
+    return player.power.includes("lily_potter");
+  });
+
+  for (const lilyPlayer of [...lilyPlayers].reverse()) {
+    state.events.unshift(
+      createDeathPrompt(
+        `${getPrimaryCharacter(dyingPlayer)?.shortName || dyingPlayer.name} is about to die. Would you like to give up a life point to save them?`,
+        lilyPlayer,
+        [
+          { label: "Yes", function: "lily_yes" },
+          { label: "No", function: "lily_no" },
+        ],
+        `${getPrimaryCharacter(lilyPlayer)?.shortName || lilyPlayer.name} has a chance to save ${getPrimaryCharacter(dyingPlayer)?.shortName || dyingPlayer.name}.`
+      )
+    );
+  }
+
+  return lilyPlayers.length > 0;
+}
+
+function applyFinalDeathConsequences(
+  state: BoardViewState,
+  player: PlayerState,
+  options?: string
+) {
+  const deck = cloneDeckState(state);
+  state.deadPlayers.push(player.id);
+
+  state.events.push(
+    createResolutionEvent(
+      "You are now out, but you can still influence the game! As a House Ghost, you may empower another player each turn.",
+      [player.id],
+      `${getPrimaryCharacter(player)?.shortName || player.name} has been defeated.`
+    )
+  );
+
+  for (const powerPlayer of state.players) {
+    if (
+      powerPlayer.id !== player.id &&
+      !state.deadPlayers.includes(powerPlayer.id) &&
+      powerPlayer.power.includes("voldemort")
+    ) {
+      const character = getPrimaryCharacter(powerPlayer);
+      if (character) {
+        character.health += 1;
+        character.maxHealth += 1;
+      }
+    }
+  }
+
+  if (player.hand.length > 0) {
+    if (player.power.includes("molly_weasley") && options !== "molly-skip") {
+      state.events.unshift(
+        createDeathPrompt(
+          "You can choose a player to give your cards to or decide to pass.",
+          player,
+          [{ label: "skip", function: "molly" }],
+          "Molly has died and is choosing who to will her cards to."
+        )
+      );
+      state.deck = deck;
+      return { interrupted: true };
+    }
+
+    const umbridge = state.players.find(
+      (powerPlayer) =>
+        powerPlayer.id !== player.id &&
+        !state.deadPlayers.includes(powerPlayer.id) &&
+        powerPlayer.power.includes("dolores_umbridge")
+    );
+
+    if (umbridge) {
+      umbridge.hand.unshift(...player.hand.splice(0));
+    }
+  }
+
+  deck.serveCards(player.hand.splice(0));
+  deck.serveCards(player.tableau.splice(0));
+  state.deck = deck;
+  return { interrupted: false };
+}
+
+function applyAdvancedDeaths(state: BoardViewState, options?: string) {
   const newlyDead = deathCheck(state.players, state.deadPlayers);
 
   if (newlyDead.length === 0) {
     return;
   }
 
-  const deck = cloneDeckState(state);
+  if (!(state.turnCycle.afterDeath as { phase?: string } | undefined)?.phase) {
+    state.turnCycle.afterDeath = {
+      action: state.turnCycle.action,
+      phase: state.turnCycle.phase,
+    };
+  }
 
-  for (const playerId of newlyDead) {
-    const player = getPlayerById(state, playerId);
-    if (!player) {
-      continue;
-    }
+  for (const player of getDyingPlayers(state)) {
+    state.turnCycle.phase = "death";
+    state.turnCycle.action = "death";
 
+    const deck = cloneDeckState(state);
     const butterbeerIndex = cardsIndexName(player.hand, "butterbeer");
     if (butterbeerIndex !== -1) {
       const [butterbeer] = player.hand.splice(butterbeerIndex, 1);
       if (butterbeer) {
         deck.serveCard(butterbeer);
       }
+      state.deck = deck;
 
       const character = getPrimaryCharacter(player);
       if (character) {
@@ -237,22 +378,38 @@ function applySimpleDeaths(state: BoardViewState) {
           `${getPrimaryCharacter(player)?.shortName || player.name} drank a butterbeer and was spared from death.`
         )
       );
+      restoreTurnCycleAfterDeath(state);
       continue;
     }
 
-    state.deadPlayers.push(player.id);
-    deck.serveCards(player.hand.splice(0));
-    deck.serveCards(player.tableau.splice(0));
-    state.events.push(
-      createResolutionEvent(
-        "You are now out, but you can still influence the game as a House Ghost.",
-        [player.id],
-        `${getPrimaryCharacter(player)?.shortName || player.name} has been defeated.`
-      )
-    );
+    if (player.power.includes("harry_potter")) {
+      const character = getPrimaryCharacter(player) as
+        | ({ end?: { deaths?: number; killer?: number } } & NonNullable<ReturnType<typeof getPrimaryCharacter>>)
+        | null;
+
+      if (character && (!character.end || character.end.deaths === 0)) {
+        character.end = {
+          deaths: 1,
+          killer: state.turn,
+        };
+        character.health += 1;
+        restoreTurnCycleAfterDeath(state);
+        continue;
+      }
+    }
+
+    if (options !== "lily-skip" && queueLilySavePrompts(state, player)) {
+      state.deck = deck;
+      return;
+    }
+
+    const finalDeath = applyFinalDeathConsequences(state, player, options);
+    if (finalDeath.interrupted) {
+      return;
+    }
   }
 
-  state.deck = deck;
+  restoreTurnCycleAfterDeath(state);
 }
 
 function checkTopCardForHouses(state: BoardViewState, houses: string[]) {
@@ -815,10 +972,28 @@ export function handleRuleCharacterClick(
   targetPlayerId: number,
   pushAlert: PushAlert
 ): RuleResult {
+  const currentEvent = getCurrentEvent(state);
   const targetPlayer = getPlayerById(state, targetPlayerId);
 
   if (!targetPlayer) {
     return { handled: false };
+  }
+
+  if (
+    state.turnCycle.phase === "death" &&
+    currentEvent?.cardType === "molly_weasley" &&
+    currentEvent.target.includes(state.playerId)
+  ) {
+    const molly = viewerPlayer(state);
+    if (!molly || molly.id === targetPlayer.id) {
+      return { handled: true };
+    }
+
+    targetPlayer.hand.unshift(...molly.hand.splice(0));
+    clearCurrentEvent(state);
+    applyAdvancedDeaths(state, "molly-skip");
+    restoreTurnCycleAfterDeath(state);
+    return { handled: true };
   }
 
   switch (state.turnCycle.action) {
@@ -1041,6 +1216,65 @@ export function handleRulePopupChoice(
   const reaction = ensureReactionState(state, state.playerId);
   reaction.choice = action;
 
+  if (state.turnCycle.phase === "death") {
+    if (action === "lily_yes") {
+      const lily = viewerPlayer(state);
+      const dyingPlayer = getDyingPlayers(state)[0];
+
+      if (!lily || !dyingPlayer) {
+        return { handled: false };
+      }
+
+      const lilyCharacter = getPrimaryCharacter(lily);
+      const dyingCharacter = getPrimaryCharacter(dyingPlayer);
+      if (lilyCharacter && dyingCharacter) {
+        dyingCharacter.health += 1;
+        lilyCharacter.health -= 1;
+      }
+
+      const promptMessage = `${getPrimaryCharacter(dyingPlayer)?.shortName || dyingPlayer.name} is about to die. Would you like to give up a life point to save them?`;
+      while (eventIndex(state.events, promptMessage) !== -1) {
+        state.events.splice(eventIndex(state.events, promptMessage), 1);
+      }
+
+      state.events.unshift(
+        createResolutionEvent(
+          `${getPrimaryCharacter(lily)?.shortName || lily.name} sacrificed a life point to save your life!`,
+          [dyingPlayer.id],
+          `${getPrimaryCharacter(lily)?.shortName || lily.name} sacrificed a life point to save ${getPrimaryCharacter(dyingPlayer)?.shortName || dyingPlayer.name}'s life.`
+        )
+      );
+      restoreTurnCycleAfterDeath(state);
+      return { handled: true };
+    }
+
+    if (action === "lily_no") {
+      const currentMessage = event.popup?.message || "";
+      clearCurrentEvent(state);
+
+      if (currentMessage && eventIndex(state.events, currentMessage) !== -1) {
+        return { handled: true };
+      }
+
+      applyAdvancedDeaths(state, "lily-skip");
+      return { handled: true };
+    }
+
+    if (action === "molly") {
+      const molly = viewerPlayer(state);
+      const deck = cloneDeckState(state);
+
+      if (molly) {
+        deck.serveCards(molly.hand.splice(0));
+      }
+      state.deck = deck;
+      clearCurrentEvent(state);
+      applyAdvancedDeaths(state, "molly-skip");
+      restoreTurnCycleAfterDeath(state);
+      return { handled: true };
+    }
+  }
+
   switch (state.turnCycle.action) {
     case "discardEvent": {
       if (action === "dump") {
@@ -1077,7 +1311,10 @@ export function handleRulePopupChoice(
         return { handled: action === "takeHit" };
       }
 
-      applySimpleDeaths(state);
+      applyAdvancedDeaths(state);
+      if (state.turnCycle.phase === "death") {
+        return { handled: true };
+      }
       finishEventForPlayer(state, resolveStupefyResolution(state, action));
       return { handled: true };
     }
@@ -1088,7 +1325,10 @@ export function handleRulePopupChoice(
         return { handled: action === "takeHit" };
       }
 
-      applySimpleDeaths(state);
+      applyAdvancedDeaths(state);
+      if (state.turnCycle.phase === "death") {
+        return { handled: true };
+      }
       finishEventForPlayer(
         state,
         null,
@@ -1102,7 +1342,10 @@ export function handleRulePopupChoice(
         if (character) {
           character.health -= 1;
         }
-        applySimpleDeaths(state);
+        applyAdvancedDeaths(state);
+        if (state.turnCycle.phase === "death") {
+          return { handled: true };
+        }
         const instigator = event.instigator ? getPlayerById(state, event.instigator.id) : null;
         const loser = getPlayerById(state, event.target[0] as number);
         clearCurrentEvent(state);
@@ -1206,7 +1449,7 @@ export function handleRulePopupChoice(
         }
 
         clearCurrentEvent(state);
-        applySimpleDeaths(state);
+        applyAdvancedDeaths(state);
         state.deck = deck;
         state.events.unshift(
           createResolutionEvent(
@@ -1291,7 +1534,10 @@ export function handleRulePopupChoice(
         cardType: "fiendfyre",
         target: nextTarget ? [nextTarget.id] : [],
       });
-      applySimpleDeaths(state);
+      applyAdvancedDeaths(state);
+      if (state.turnCycle.phase === "death") {
+        return { handled: true };
+      }
       return { handled: true };
     }
     default:
