@@ -1,5 +1,9 @@
 <script setup lang="ts">
 import type { GameCard } from "~/utils/types";
+import { useBoardController } from "~/composables/gameplay/useBoardController";
+import { useRealtimeRoom } from "~/composables/gameplay/useRealtimeRoom";
+import { useRoomState } from "~/composables/gameplay/useRoomState";
+import { useTurnCycle } from "~/composables/gameplay/useTurnCycle";
 import { normalizeRoomKey } from "~/utils/room";
 
 definePageMeta({
