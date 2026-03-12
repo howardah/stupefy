@@ -219,26 +219,24 @@ onBeforeUnmount(() => {
         <div class="text-xs uppercase tracking-[0.22em] text-[rgba(33,22,15,0.55)]">Game Room</div>
         <h1 class="text-4xl font-semibold">{{ roomName }}</h1>
         <p class="mt-2 max-w-3xl text-sm text-[rgba(33,22,15,0.68)]">
-          The migrated Vue board now syncs through a typed server-authoritative polling layer.
-          Core turn selection, drawing, character choice, alerts, and end-turn flow are shared
-          across players. Full spell and event resolution still moves into later phases.
+          Follow the turn order, choose your actions, and watch the table as the round unfolds.
         </p>
       </div>
 
       <div class="flex flex-wrap gap-3">
-        <UBadge color="secondary" variant="subtle">Realtime: {{ realtimeRoom.status }}</UBadge>
-        <UBadge color="neutral" variant="subtle">Transport: {{ realtimeRoom.transport }}</UBadge>
+        <UBadge color="secondary" variant="subtle">Connection: {{ realtimeRoom.status }}</UBadge>
+        <UBadge color="neutral" variant="subtle">Sync: {{ realtimeRoom.transport }}</UBadge>
         <UBadge color="neutral" variant="subtle">
-          Cards tracked:
+          Cards in deck:
           {{ cardCount ? `${cardCount.length} / ${cardCount.duplicates} duplicates` : "unknown" }}
         </UBadge>
-        <UButton color="neutral" variant="ghost" icon="i-lucide-refresh-cw" label="Reload room" @click="reloadRoom" />
+        <UButton color="neutral" variant="ghost" icon="i-lucide-refresh-cw" label="Refresh room" @click="reloadRoom" />
         <UButton to="/" color="neutral" variant="soft" icon="i-lucide-arrow-left" label="Back to lobby" />
       </div>
     </div>
 
     <div v-if="status === 'pending'" class="rounded-[2rem] bg-white/60 p-8 text-lg shadow-[0_24px_80px_rgba(62,39,15,0.08)]">
-      Loading room state...
+      Loading game...
     </div>
 
     <UAlert
@@ -265,13 +263,13 @@ onBeforeUnmount(() => {
         "
         color="warning"
         variant="subtle"
-        title="Realtime sync needs attention"
+        title="Connection needs attention"
         :description="realtimeRoom.errorMessage"
       />
 
       <div class="grid gap-4 md:grid-cols-5">
         <UCard class="stu-panel rounded-[1.6rem] border-0">
-          <div class="text-xs uppercase tracking-[0.18em] text-[rgba(33,22,15,0.55)]">Player</div>
+          <div class="text-xs uppercase tracking-[0.18em] text-[rgba(33,22,15,0.55)]">You</div>
           <div class="mt-2 text-xl font-semibold">{{ playerId }}</div>
         </UCard>
         <UCard class="stu-panel rounded-[1.6rem] border-0">
@@ -280,16 +278,16 @@ onBeforeUnmount(() => {
         </UCard>
         <UCard class="stu-panel rounded-[1.6rem] border-0">
           <div class="text-xs uppercase tracking-[0.18em] text-[rgba(33,22,15,0.55)]">Targets</div>
-          <div class="mt-2 text-sm">{{ availableTargets.join(", ") || "none" }}</div>
+          <div class="mt-2 text-sm">{{ availableTargets.join(", ") || "None" }}</div>
         </UCard>
         <UCard class="stu-panel rounded-[1.6rem] border-0">
-          <div class="text-xs uppercase tracking-[0.18em] text-[rgba(33,22,15,0.55)]">Room Key</div>
+          <div class="text-xs uppercase tracking-[0.18em] text-[rgba(33,22,15,0.55)]">Room code</div>
           <div class="mt-2 text-sm">{{ normalizedRoomKey }}</div>
         </UCard>
         <UCard class="stu-panel rounded-[1.6rem] border-0">
-          <div class="text-xs uppercase tracking-[0.18em] text-[rgba(33,22,15,0.55)]">Last Sync</div>
+          <div class="text-xs uppercase tracking-[0.18em] text-[rgba(33,22,15,0.55)]">Last update</div>
           <div class="mt-2 text-sm">
-            {{ realtimeRoom.lastSyncedAt ? new Date(realtimeRoom.lastSyncedAt).toLocaleTimeString() : "pending" }}
+            {{ realtimeRoom.lastSyncedAt ? new Date(realtimeRoom.lastSyncedAt).toLocaleTimeString() : "Waiting" }}
           </div>
         </UCard>
       </div>

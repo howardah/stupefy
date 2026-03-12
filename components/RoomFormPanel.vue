@@ -74,14 +74,14 @@ defineExpose({
           color="neutral"
           variant="ghost"
           icon="i-lucide-arrow-left"
-          label="Lobby"
+          label="Back to lobby"
           to="/"
         />
       </div>
     </template>
 
     <div class="grid gap-4">
-      <UFormField label="Your Name">
+      <UFormField label="Player name">
         <UInput v-model="formState.player" autocomplete="off" :placeholder="playerPlaceholder" size="xl" />
       </UFormField>
       <UFormField label="Room Name">
@@ -91,7 +91,7 @@ defineExpose({
         <UInput
           v-model="formState.pw"
           autocomplete="off"
-          placeholder="Optional"
+          placeholder="Leave blank for no password"
           size="xl"
         />
       </UFormField>

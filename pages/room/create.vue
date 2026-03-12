@@ -88,7 +88,7 @@ async function create(payload: { player: string; pw?: string; room: string }) {
     <RoomFormPanel
       button-color="primary"
       button-label="Create Room"
-      description="Start a new lobby for your group. Add a password only if you want the room hidden from the public join list."
+      description="Set up a room for your group. Add a password if you want to keep it private."
       :busy="isSubmitting"
       :error-message="submitError"
       heading="Create Room"

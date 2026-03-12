@@ -213,21 +213,21 @@ onBeforeUnmount(async () => {
       v-if="!roomName || !currentPlayerId"
       color="error"
       variant="soft"
-      title="Missing room information. Return to the lobby and rejoin the room."
+      title="This room link is incomplete. Go back to the lobby and join again."
       class="mb-6"
     />
     <div
       v-else-if="!hasLoaded && isRefreshing"
       class="stu-panel mb-6 rounded-[2rem] px-6 py-8 text-center text-lg"
     >
-      Loading waiting room...
+      Loading room...
     </div>
     <WaitingRoomPanel
       :active-player-ids="activePlayerIds"
       :chat="roomState?.chat || []"
       :current-player-id="currentPlayerId"
       :current-player-ready="currentPlayerReady"
-      :empty-message="hasLoaded ? 'No players in this room yet.' : 'Loading players...'"
+      :empty-message="hasLoaded ? 'No one has joined this room yet.' : 'Loading players...'"
       :error-message="pageError"
       :everyone-ready="everyoneReady"
       :is-refreshing="isRefreshing"

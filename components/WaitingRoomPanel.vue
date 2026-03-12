@@ -52,7 +52,7 @@ const readyCount = computed(() =>
           <div>
             <h2 class="text-2xl font-semibold">{{ room }}</h2>
             <p class="text-sm text-[rgba(33,22,15,0.6)]">
-              Everyone must mark themselves ready before the game launches.
+              Everyone needs to mark ready before the game can begin.
             </p>
           </div>
           <UButton
@@ -60,6 +60,7 @@ const readyCount = computed(() =>
             icon="i-lucide-refresh-cw"
             :loading="isRefreshing"
             variant="ghost"
+            label="Refresh room"
             @click="emit('refresh')"
           />
         </div>
@@ -75,7 +76,7 @@ const readyCount = computed(() =>
 
       <div class="mb-4 rounded-2xl bg-white/60 px-4 py-3 text-sm text-[rgba(33,22,15,0.68)]">
         {{ readyCount }} / {{ players.length }} players ready
-        <span v-if="everyoneReady"> · launching game now</span>
+        <span v-if="everyoneReady"> · starting now</span>
       </div>
 
       <div v-if="players.length" class="space-y-3">
@@ -103,7 +104,7 @@ const readyCount = computed(() =>
         v-else
         class="rounded-2xl border border-dashed border-[rgba(33,22,15,0.14)] bg-white/40 px-4 py-6 text-sm text-[rgba(33,22,15,0.6)]"
       >
-        {{ emptyMessage || "No players in the room yet." }}
+        {{ emptyMessage || "No one has joined this room yet." }}
       </div>
 
       <template #footer>
@@ -125,7 +126,7 @@ const readyCount = computed(() =>
         <div>
           <h2 class="text-2xl font-semibold">Chat</h2>
           <p class="text-sm text-[rgba(33,22,15,0.6)]">
-            Lobby updates are currently synchronized with HTTP polling.
+            Use chat to coordinate before the game starts.
           </p>
         </div>
       </template>
@@ -150,7 +151,7 @@ const readyCount = computed(() =>
         v-else
         class="rounded-2xl border border-dashed border-[rgba(33,22,15,0.14)] bg-white/40 px-4 py-6 text-sm text-[rgba(33,22,15,0.6)]"
       >
-        No chat yet. Break the silence.
+        No messages yet. Say hello to your table.
       </div>
 
       <template #footer>
@@ -158,12 +159,12 @@ const readyCount = computed(() =>
           <UInput
             :model-value="message"
             class="flex-1"
-            placeholder="Send a message"
+            placeholder="Type a message"
             size="xl"
             @update:model-value="emit('update', $event)"
             @keyup.enter="emit('send')"
           />
-          <UButton color="secondary" icon="i-lucide-send" size="xl" @click="emit('send')" />
+          <UButton color="secondary" icon="i-lucide-send" label="Send" size="xl" @click="emit('send')" />
         </div>
       </template>
     </UCard>

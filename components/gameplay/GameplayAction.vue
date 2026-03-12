@@ -35,10 +35,10 @@ const emit = defineEmits<{
         <p class="text-sm text-[rgba(33,22,15,0.7)]">
           {{
             actions.canDismiss === false
-              ? "Waiting for another player to respond to the active queued action."
+              ? "Waiting for another player to respond."
               : running
-                ? "This action came from the active event queue."
-                : "The room is paused, so actions are read-only."
+                ? "Choose what happens next."
+                : "The game is paused, so you can review this action but not change it."
           }}
         </p>
 

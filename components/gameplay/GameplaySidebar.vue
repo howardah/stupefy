@@ -62,11 +62,11 @@ const roleClass = computed(() => currentRoleCardClass(props.boardState));
           color="neutral"
           variant="soft"
           :icon="boardState.showCards ? 'i-lucide-eye-off' : 'i-lucide-eye'"
-          :label="boardState.showCards ? 'Hide non-owned hands' : 'Show all loaded cards'"
+          :label="boardState.showCards ? `Hide other players' hands` : 'Show all hands'"
           block
           @click="emit('toggleCards')"
         />
-        <UButton color="secondary" variant="subtle" icon="i-lucide-rotate-ccw" label="Reset local board" block @click="emit('resetBoard')" />
+        <UButton color="secondary" variant="subtle" icon="i-lucide-rotate-ccw" label="Reset this view" block @click="emit('resetBoard')" />
       </div>
 
       <div class="rounded-[1.6rem] bg-[rgba(255,251,245,0.55)] p-4 text-sm text-[rgba(33,22,15,0.72)]">
@@ -80,7 +80,7 @@ const roleClass = computed(() => currentRoleCardClass(props.boardState));
         class="rounded-[1.6rem] border border-[rgba(82,57,29,0.12)] bg-[rgba(255,248,237,0.65)] p-4 text-sm"
         :class="roleClass ? 'text-[rgba(33,22,15,0.78)]' : 'text-[rgba(33,22,15,0.6)]'"
       >
-        This board is now interactive for the already-ported turn-selection flows. Full spell and event resolution still depends on the later card-rule migration phases.
+        Use this panel to track the round and keep the board in sync if anything looks out of date.
       </div>
     </div>
   </UCard>

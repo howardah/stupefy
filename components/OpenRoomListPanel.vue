@@ -31,7 +31,7 @@ function formatUpdatedAt(updatedAt: number): string {
         <div>
           <h2 class="text-2xl font-semibold uppercase tracking-[0.2em]">Open Rooms</h2>
           <p class="mt-2 text-sm text-[rgba(33,22,15,0.65)]">
-            These rooms have no password and the game has not started yet.
+            These rooms do not require a password and have not started yet.
           </p>
         </div>
         <UButton
@@ -65,7 +65,7 @@ function formatUpdatedAt(updatedAt: number): string {
           <div>
             <div class="text-lg font-semibold text-default">{{ room.roomName }}</div>
             <div class="mt-1 text-sm text-[rgba(33,22,15,0.6)]">
-              {{ room.playerCount }} players, {{ room.activeCount }} active
+              {{ room.playerCount }} players, {{ room.activeCount }} here now
             </div>
           </div>
           <div class="text-right text-xs uppercase tracking-[0.18em] text-[rgba(33,22,15,0.45)]">
@@ -76,7 +76,7 @@ function formatUpdatedAt(updatedAt: number): string {
     </div>
 
     <div v-else class="rounded-3xl bg-white/60 px-5 py-6 text-sm text-[rgba(33,22,15,0.65)]">
-      No open rooms are available right now. You can still join a private room manually if you know its name.
+      No open rooms yet. Enter a room name to join a private room, or create a new one.
     </div>
   </UCard>
 </template>

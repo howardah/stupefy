@@ -12,13 +12,13 @@ const emit = defineEmits<{
 function roleSentence(role: PlayerState["role"]) {
   switch (role) {
     case "minister":
-      return "You lead the Ministry team. Survive to the end while your side eliminates the Death Eaters.";
+      return "Lead the Ministry team and stay alive while your side defeats the Death Eaters.";
     case "auror":
-      return "You protect the Minister and help finish off the Death Eaters.";
+      return "Protect the Minister and help your side defeat the Death Eaters.";
     case "death eater":
-      return "You and your allies need to bring down the Ministry and take control of the table.";
+      return "Work with your allies to bring down the Ministry and take control of the table.";
     case "werewolf":
-      return "You are alone. Survive the chaos long enough to eliminate everyone else.";
+      return "You are on your own. Survive the chaos and outlast everyone else.";
     default:
       return "Choose the character that best fits your opening plan.";
   }
@@ -31,7 +31,7 @@ function roleSentence(role: PlayerState["role"]) {
       <template #header>
         <div class="space-y-2">
           <div class="text-xs uppercase tracking-[0.22em] text-[rgba(33,22,15,0.55)]">Choose Character</div>
-          <h2 class="text-2xl font-semibold">{{ player.name }}, pick your character</h2>
+          <h2 class="text-2xl font-semibold">{{ player.name }}, choose your character</h2>
           <p class="max-w-3xl text-sm text-[rgba(33,22,15,0.7)]">
             {{ roleSentence(player.role) }}
           </p>

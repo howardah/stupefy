@@ -7,8 +7,7 @@
       <h1 class="stu-title">Stupefy</h1>
     </div>
     <p class="stu-subtitle">
-      Nuxt migration in progress. The lobby flow is now server-rendered and backed by Nitro routes,
-      with the original React implementation recovered locally for the remaining board port.
+      Build a room, gather your players, and start the duel when everyone is ready.
     </p>
   </header>
 </template>
