@@ -64,6 +64,7 @@ export function useBoardController(sourceBoardState: ComputedRef<BoardViewState 
   const localBoardState = ref<BoardViewState | null>(null);
   const alerts = ref<BoardAlert[]>([]);
   const mutationNonce = ref(0);
+  const authoritativeSignature = ref<string | null>(null);
 
   function pushAlert(message: string, tone: BoardAlert["tone"] = "warning") {
     const alert = {
@@ -85,6 +86,13 @@ export function useBoardController(sourceBoardState: ComputedRef<BoardViewState 
   watch(
     sourceBoardState,
     (nextState) => {
+      const nextSignature = nextState ? getGameplaySyncSignature(nextState) : null;
+
+      if (nextSignature === authoritativeSignature.value) {
+        return;
+      }
+
+      authoritativeSignature.value = nextSignature;
       localBoardState.value = nextState ? cloneBoardViewState(nextState) : null;
       alerts.value = [];
     },

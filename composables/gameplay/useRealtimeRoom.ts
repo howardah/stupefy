@@ -77,7 +77,11 @@ export function useRealtimeRoom(options: UseRealtimeRoomOptions) {
       return;
     }
 
-    status.value = reason === "retry" ? "reconnecting" : "syncing";
+    if (reason === "retry") {
+      status.value = "reconnecting";
+    } else if (reason !== "poll" || status.value !== "connected") {
+      status.value = "syncing";
+    }
 
     try {
       await options.fetchLatest();
@@ -124,16 +128,19 @@ export function useRealtimeRoom(options: UseRealtimeRoomOptions) {
   function connect() {
     if (!enabled.value) {
       status.value = "disabled";
+      errorMessage.value = null;
       clearTimers();
       return;
     }
 
+    errorMessage.value = null;
     startPolling();
     void pullLatest("connect");
   }
 
   function disconnect() {
     clearTimers();
+    errorMessage.value = null;
     status.value = enabled.value ? "idle" : "disabled";
   }
 

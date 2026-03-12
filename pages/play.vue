@@ -5,7 +5,9 @@ import { useBoardController } from "~/composables/gameplay/useBoardController";
 import { useRealtimeRoom } from "~/composables/gameplay/useRealtimeRoom";
 import { useRoomState } from "~/composables/gameplay/useRoomState";
 import { useTurnCycle } from "~/composables/gameplay/useTurnCycle";
+import { createBoardViewState } from "~/utils/gameplay/bootstrap";
 import { createGameStatePatch } from "~/utils/gameplay/sync";
+import { getGameplaySyncSignature } from "~/utils/gameplay/sync";
 import { normalizeRoomKey } from "~/utils/room";
 
 definePageMeta({
@@ -29,7 +31,6 @@ const playQuery = computed(() => ({
 const {
   data: roomState,
   error,
-  refresh,
   status,
 } = await useAsyncData(
   () => `game-room-state:${normalizedRoomKey.value}`,
@@ -79,9 +80,50 @@ async function applyAuthoritativeRoom(room: GameState | null) {
   isApplyingAuthoritativeState.value = false;
 }
 
+function getRoomFromResponse(response: GameState[] | false): GameState | null {
+  return Array.isArray(response) && response[0] ? response[0] : null;
+}
+
+function getRoomSignature(room: GameState | null) {
+  if (!room || !normalizedRoomKey.value || playerId.value <= 0) {
+    return null;
+  }
+
+  return getGameplaySyncSignature(
+    createBoardViewState(room, {
+      id: playerId.value,
+      key: route.query.key ? String(route.query.key) : undefined,
+      room: roomName.value,
+    })
+  );
+}
+
+async function fetchLatestRoom() {
+  const response = await api.getGameRoom({ room: normalizedRoomKey.value });
+  const nextRoom = getRoomFromResponse(response);
+  const currentSignature = getRoomSignature(currentRoom.value);
+  const nextSignature = getRoomSignature(nextRoom);
+
+  if (
+    nextRoom &&
+    (
+      !currentRoom.value ||
+      currentRoom.value.last_updated !== nextRoom.last_updated ||
+      currentSignature !== nextSignature
+    )
+  ) {
+    await applyAuthoritativeRoom(nextRoom);
+    return;
+  }
+
+  if (!nextRoom && currentRoom.value) {
+    await applyAuthoritativeRoom(null);
+  }
+}
+
 async function reloadRoom() {
   try {
-    await refresh();
+    await fetchLatestRoom();
   } catch (refreshError) {
     console.error("[play] Failed to refresh the game room.", refreshError);
     toast.add({
@@ -95,7 +137,7 @@ async function reloadRoom() {
 
 const realtimeRoom = useRealtimeRoom({
   enabled: computed(() => Boolean(normalizedRoomKey.value && playerId.value > 0)),
-  fetchLatest: reloadRoom,
+  fetchLatest: fetchLatestRoom,
   pushUpdate: api.updateGameRoom,
   room: normalizedRoomKey,
 });
@@ -217,7 +259,10 @@ onBeforeUnmount(() => {
 
     <div v-else class="space-y-6">
       <UAlert
-        v-if="realtimeRoom.errorMessage"
+        v-if="
+          realtimeRoom.errorMessage &&
+          (realtimeRoom.status === 'error' || realtimeRoom.status === 'reconnecting')
+        "
         color="warning"
         variant="subtle"
         title="Realtime sync needs attention"
