@@ -6,45 +6,54 @@ import type {
 } from "~/utils/types";
 
 export function useDatabaseApi() {
+  async function request<T>(path: string, options?: Parameters<typeof $fetch<T>>[1]) {
+    try {
+      return await $fetch<T>(path, options);
+    } catch (error) {
+      console.error(`[useDatabaseApi] Request failed: ${path}`, error);
+      throw error;
+    }
+  }
+
   const createRoom = (params: { player: string; pw?: string; room: string }) =>
-    $fetch<WaitingRoomApiResponse>("/database/wait/create/", { params });
+    request<WaitingRoomApiResponse>("/database/wait/create/", { params });
 
   const getWaitingRoom = (params: { id: number | string; key: string; room: string }) =>
-    $fetch<WaitingRoomApiResponse>("/database/wait/get/", { params });
+    request<WaitingRoomApiResponse>("/database/wait/get/", { params });
 
   const joinRoom = (params: { player: string; pw?: string; room: string }) =>
-    $fetch<WaitingRoomApiResponse>("/database/wait/join/", { params });
+    request<WaitingRoomApiResponse>("/database/wait/join/", { params });
 
   const updateActive = (body: {
     playerId: number | string;
     room: string;
     sessionId: string;
   }) =>
-    $fetch<WaitingRoomApiResponse>("/database/wait/active/", {
+    request<WaitingRoomApiResponse>("/database/wait/active/", {
       body,
       method: "POST",
     });
 
   const removeActive = (body: { room: string; sessionId: string }) =>
-    $fetch<WaitingRoomApiResponse>("/database/wait/active/", {
+    request<WaitingRoomApiResponse>("/database/wait/active/", {
       body,
       method: "DELETE",
     });
 
   const addChat = (body: { newChat: WaitingChatMessage; room: string }) =>
-    $fetch<WaitingRoomApiResponse>("/database/wait/chat/", {
+    request<WaitingRoomApiResponse>("/database/wait/chat/", {
       body,
       method: "POST",
     });
 
   const startGame = (body: { players: PlayerState[]; room: string }) =>
-    $fetch<GameRoomApiResponse>("/database/wait/start/", {
+    request<GameRoomApiResponse>("/database/wait/start/", {
       body,
       method: "POST",
     });
 
   const getGameRoom = (params: { room: string }) =>
-    $fetch<GameRoomApiResponse>("/database/players/", { params });
+    request<GameRoomApiResponse>("/database/players/", { params });
 
   return {
     addChat,

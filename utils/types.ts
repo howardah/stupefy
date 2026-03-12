@@ -192,3 +192,9 @@ export interface WaitingRoomCreateQuery {
   pw?: string;
   room: string;
 }
+
+export interface WaitingRoomAccessState {
+  exists: boolean;
+  hasPassword: boolean;
+  roomName: string;
+}

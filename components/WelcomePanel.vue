@@ -1,6 +1,7 @@
 <script setup lang="ts">
 defineProps<{
   busy?: boolean;
+  errorMessage?: string;
 }>();
 
 const emit = defineEmits<{
@@ -106,6 +107,12 @@ function emitJoin() {
         size="xl"
         @click="emitCreate"
       />
+      <UAlert
+        v-if="errorMessage"
+        color="error"
+        variant="soft"
+        :title="errorMessage"
+      />
     </div>
 
     <div v-else class="grid gap-4">
@@ -131,6 +138,12 @@ function emitJoin() {
         label="Join"
         size="xl"
         @click="emitJoin"
+      />
+      <UAlert
+        v-if="errorMessage"
+        color="error"
+        variant="soft"
+        :title="errorMessage"
       />
     </div>
   </UCard>

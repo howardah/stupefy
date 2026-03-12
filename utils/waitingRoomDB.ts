@@ -3,6 +3,7 @@ import type {
   ErrorResult,
   GameState,
   WaitingChatMessage,
+  WaitingRoomAccessState,
   WaitingPlayer,
   WaitingRoomCreateQuery,
   WaitingRoomGetQuery,
@@ -103,6 +104,26 @@ async function getWaitRoom(
     }
 
     return [currentRoom];
+  });
+}
+
+async function getWaitRoomAccess(room: string): Promise<WaitingRoomAccessState> {
+  return withClient(async (client) => {
+    const currentRoom = await readWaitingRoom(client, room);
+
+    if (!currentRoom) {
+      return {
+        exists: false,
+        hasPassword: false,
+        roomName: normalizeRoomName(room),
+      };
+    }
+
+    return {
+      exists: true,
+      hasPassword: typeof currentRoom.password === "string" && currentRoom.password.length > 0,
+      roomName: currentRoom.roomName,
+    };
   });
 }
 
@@ -273,6 +294,7 @@ async function makeWaitRoom(
 export {
   addChat,
   getWaitRoom,
+  getWaitRoomAccess,
   joinWaitRoom,
   makeWaitRoom,
   removeActiveSession,
