@@ -118,19 +118,19 @@ This roadmap tracks the full migration from the legacy React/Express application
 
 ## Phase 7: Real-Time Layer Decision
 
-- [ ] Decide whether the game board should use:
+- [x] Decide whether the game board should use:
   - Nitro-compatible server events/websocket transport
   - a standalone Socket.IO server
   - polling for selected flows only
-- [ ] If real-time transport remains required, define a typed event contract for:
+- [x] If real-time transport remains required, define a typed event contract for:
   - join room
   - room pause/resume
   - gameplay state sync
   - waiting-room presence
   - waiting-room chat
-- [ ] Remove dependence on the legacy in-memory `rooms` object from the old server model.
-- [ ] Ensure real-time updates do not mutate UI state directly without validation.
-- [ ] Add reconnect/retry behavior that is explicit and testable.
+- [x] Remove dependence on the legacy in-memory `rooms` object from the old server model.
+- [x] Ensure real-time updates do not mutate UI state directly without validation.
+- [x] Add reconnect/retry behavior that is explicit and testable.
 
 ## Phase 8: Card Rule and Gameplay Integrity
 
@@ -174,12 +174,13 @@ This roadmap tracks the full migration from the legacy React/Express application
 
 - [ ] Port the remaining spell/event rule handlers from the recovered `card-rules/*` modules into typed shared modules.
 - [ ] Replace the current Phase 6 “explicit fallback alerts” with real action-option handlers once the relevant rules are ported.
-- [ ] Decide and implement the long-term real-time strategy for the gameplay room.
-- [ ] Add a server-authoritative state sync path so gameplay interactions stop being local-only after the initial room load.
+- [ ] Tighten the current polling-based room sync into smaller action-level server mutations once the card-rule port is further along.
+- [ ] Add gameplay tests around authoritative sync conflicts so simultaneous actions are exercised intentionally.
 
 ## Deferred Logic Notes
 
 - The migrated Vue board now renders and supports the already-ported turn-cycle flows locally, but most spell/event click paths still depend on the legacy `card-rules/*` modules. Those paths now raise explicit UI and console feedback instead of silently doing nothing.
-- Gameplay state on `/play` is still local-only after load. There is no authoritative write-back or real-time sync yet, so board interactions are intentionally non-persistent until Phase 7 defines the transport contract.
+- Gameplay state on `/play` now syncs through a server-authoritative polling path instead of remaining local-only after load. The remaining gap is granularity: updates still write validated whole-room snapshots rather than smaller command-level mutations.
 - `turnCycle` and several event payloads still rely on dynamic per-player keys such as `id11` and free-form string phases. They are typed safely enough for the current port, but they remain a structural cleanup target for a later refactor because they make deeper rule migration more error-prone.
 - Card visibility is still based on whatever the loaded room snapshot contains. The current “hide other hands” toggle only changes presentation; it does not enforce backend privacy guarantees.
+- Phase 7 now uses a typed polling transport with optimistic concurrency on `last_updated`, which fixes the previous local-only board divergence. The larger remaining limitation is that updates still write whole-room snapshots, so high-contention gameplay phases should eventually move to smaller action-level mutations or a stronger server-side command model.

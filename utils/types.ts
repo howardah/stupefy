@@ -62,6 +62,45 @@ export interface TurnCyclePlayerState {
   choice?: string;
 }
 
+export type RealtimeTransportStrategy = "polling";
+
+export type RealtimeRoomStatus =
+  | "connected"
+  | "disabled"
+  | "error"
+  | "idle"
+  | "reconnecting"
+  | "syncing";
+
+export interface RealtimeEventMap {
+  "room:join": {
+    playerId: number;
+    room: string;
+  };
+  "room:pause": {
+    playerId: number;
+    room: string;
+  };
+  "room:resume": {
+    playerId: number;
+    room: string;
+  };
+  "room:sync": {
+    expectedLastUpdated?: number;
+    playerId: number;
+    room: string;
+    transport: RealtimeTransportStrategy;
+  };
+  "wait:chat": {
+    room: string;
+    transport: RealtimeTransportStrategy;
+  };
+  "wait:presence": {
+    room: string;
+    transport: RealtimeTransportStrategy;
+  };
+}
+
 export type GameplayTarget =
   | "between-characters"
   | "characters"
@@ -118,6 +157,22 @@ export interface GameState {
 export type GameRoomDocument = GameState;
 export type GameRoomApiResponse = GameState[] | false;
 
+export interface GameRoomSyncRequest {
+  data: Partial<GameState>;
+  expectedLastUpdated?: number;
+  playerId: number;
+  room: string;
+  transport: RealtimeTransportStrategy;
+}
+
+export interface GameRoomSyncResponse {
+  conflict: boolean;
+  ok: boolean;
+  room: GameState | null;
+  transport: RealtimeTransportStrategy;
+  updated: boolean;
+}
+
 export interface PlayQuery {
   id: number;
   key?: string;
@@ -140,6 +195,8 @@ export interface BoardViewState {
   turnCycle: TurnCycle;
   turnOrder: number[];
 }
+
+export type BoardMutationKind = "gameplay" | "presentation";
 
 export interface BoardAlert {
   id: string;

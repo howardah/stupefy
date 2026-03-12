@@ -1,6 +1,8 @@
 import type {
   GameState,
   GameRoomApiResponse,
+  GameRoomSyncRequest,
+  GameRoomSyncResponse,
   OpenWaitingRoomSummary,
   WaitingChatMessage,
   WaitingRoomApiResponse,
@@ -69,8 +71,8 @@ export function useDatabaseApi() {
   const getGameRoom = (params: { room: string }) =>
     request<GameRoomApiResponse>("/database/players/", { params });
 
-  const updateGameRoom = (body: { data: Partial<GameState>; room: string }) =>
-    request<{ ok: true }>("/database/players/update/", {
+  const updateGameRoom = (body: GameRoomSyncRequest) =>
+    request<GameRoomSyncResponse>("/database/players/update/", {
       body,
       method: "POST",
     });

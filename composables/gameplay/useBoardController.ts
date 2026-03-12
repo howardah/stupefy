@@ -1,10 +1,17 @@
 import type { ComputedRef } from "vue";
-import type { BoardAlert, BoardViewState, CharacterCard, GameCard } from "~/utils/types";
+import type {
+  BoardAlert,
+  BoardMutationKind,
+  BoardViewState,
+  CharacterCard,
+  GameCard,
+} from "~/utils/types";
 import Deck from "~/utils/deck";
 import { cloneBoardViewState } from "~/utils/gameplay/bootstrap";
 import { rotatePlayersForViewer } from "~/utils/gameplay/board-ui";
 import { cardIndex, cardsInclude, getPrimaryCharacter, playerIndex } from "~/utils/gameplay/core";
 import { getPopupState, tableauProblems } from "~/utils/gameplay/events";
+import { getGameplaySyncSignature } from "~/utils/gameplay/sync";
 import { getAvailableTargets, getCardTargets } from "~/utils/gameplay/targeting";
 import {
   cycleCleanse,
@@ -48,6 +55,7 @@ export function useBoardController(sourceBoardState: ComputedRef<BoardViewState 
   const toast = useToast();
   const localBoardState = ref<BoardViewState | null>(null);
   const alerts = ref<BoardAlert[]>([]);
+  const mutationNonce = ref(0);
 
   function pushAlert(message: string, tone: BoardAlert["tone"] = "warning") {
     const alert = {
@@ -117,13 +125,15 @@ export function useBoardController(sourceBoardState: ComputedRef<BoardViewState 
 
   function withBoardState(
     action: (state: BoardViewState) => void | boolean | BoardViewState,
-    fallbackMessage?: string
+    fallbackMessage?: string,
+    kind: BoardMutationKind = "gameplay"
   ) {
     if (!localBoardState.value) {
       return;
     }
 
     const next = cloneBoardViewState(localBoardState.value);
+    const previousSignature = getGameplaySyncSignature(localBoardState.value);
     const result = action(next);
 
     if (result === false) {
@@ -136,12 +146,19 @@ export function useBoardController(sourceBoardState: ComputedRef<BoardViewState 
     localBoardState.value =
       result && typeof result === "object" && result !== next ? result : next;
     syncActions(localBoardState.value);
+
+    if (kind === "gameplay") {
+      const nextSignature = getGameplaySyncSignature(localBoardState.value);
+      if (nextSignature !== previousSignature) {
+        mutationNonce.value += 1;
+      }
+    }
   }
 
   function toggleCards() {
     withBoardState((state) => {
       state.showCards = !state.showCards;
-    });
+    }, undefined, "presentation");
   }
 
   function chooseCharacter(character: CharacterCard) {
@@ -532,5 +549,6 @@ export function useBoardController(sourceBoardState: ComputedRef<BoardViewState 
     removeAlert,
     resetBoard,
     toggleCards,
+    mutationNonce,
   };
 }

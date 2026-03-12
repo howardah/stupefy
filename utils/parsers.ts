@@ -8,6 +8,7 @@ import type {
   PlayerState,
   PopupState,
   TurnCycle,
+  TurnCyclePlayerState,
   WaitingChatMessage,
   WaitingPlayer,
   WaitingRoomState,
@@ -47,14 +48,14 @@ function asGameCard(value: unknown): GameCard {
 function asPlayerCharacter(value: unknown): PlayerCharacterState {
   if (Array.isArray(value)) {
     return value.map((entry) => ({
-    fileName: typeof entry?.fileName === "string" ? entry.fileName : "",
-    health: typeof entry?.health === "number" ? entry.health : 0,
-    house: typeof entry?.house === "string" ? (entry.house as "") : "",
-    maxHealth: typeof entry?.maxHealth === "number" ? entry.maxHealth : 0,
-    name: typeof entry?.name === "string" ? entry.name : "",
-    power: asCardPower(entry?.power),
-    shortName: typeof entry?.shortName === "string" ? entry.shortName : "",
-  }));
+      fileName: typeof entry?.fileName === "string" ? entry.fileName : "",
+      health: typeof entry?.health === "number" ? entry.health : 0,
+      house: typeof entry?.house === "string" ? (entry.house as "") : "",
+      maxHealth: typeof entry?.maxHealth === "number" ? entry.maxHealth : 0,
+      name: typeof entry?.name === "string" ? entry.name : "",
+      power: asCardPower(entry?.power),
+      shortName: typeof entry?.shortName === "string" ? entry.shortName : "",
+    }));
   }
 
   if (!isObject(value)) {
@@ -116,7 +117,7 @@ function asTurnCycle(value: unknown): TurnCycle {
     };
   }
 
-  return {
+  const turnCycle: TurnCycle = {
     action: typeof value.action === "string" ? value.action : "",
     cards: Array.isArray(value.cards) ? value.cards.map(asGameCard) : [],
     draw: typeof value.draw === "number" ? value.draw : 0,
@@ -126,6 +127,19 @@ function asTurnCycle(value: unknown): TurnCycle {
     shots: typeof value.shots === "number" ? value.shots : 0,
     used: Array.isArray(value.used) ? [...value.used] : [],
   };
+
+  for (const [key, entry] of Object.entries(value)) {
+    if (!key.startsWith("id") || !isObject(entry)) {
+      continue;
+    }
+
+    turnCycle[key] = {
+      cards: Array.isArray(entry.cards) ? entry.cards.map(asGameCard) : [],
+      choice: typeof entry.choice === "string" ? entry.choice : undefined,
+    } satisfies TurnCyclePlayerState;
+  }
+
+  return turnCycle;
 }
 
 function asPopupState(value: unknown): PopupState | undefined {
@@ -143,7 +157,10 @@ function asGameEvent(value: unknown): GameEvent {
     ...value,
     bystanders: asPopupState(value.bystanders),
     cardType: typeof value.cardType === "string" ? value.cardType : undefined,
+    deck: value.deck ? parseDeckState(value.deck) : undefined,
+    instigator: value.instigator ? asPlayerState(value.instigator) : undefined,
     popup: asPopupState(value.popup),
+    table: Array.isArray(value.table) ? value.table.map(asGameCard) : undefined,
     target: Array.isArray(value.target) ? [...value.target] : [],
   };
 }

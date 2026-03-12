@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import type { CharacterCard, GameCard } from "~/utils/types";
+import type { FetchError } from "ofetch";
+import type { GameCard, GameRoomSyncResponse, GameState } from "~/utils/types";
 import { useBoardController } from "~/composables/gameplay/useBoardController";
 import { useRealtimeRoom } from "~/composables/gameplay/useRealtimeRoom";
 import { useRoomState } from "~/composables/gameplay/useRoomState";
 import { useTurnCycle } from "~/composables/gameplay/useTurnCycle";
+import { createGameStatePatch } from "~/utils/gameplay/sync";
 import { normalizeRoomKey } from "~/utils/room";
 
 definePageMeta({
@@ -13,10 +15,10 @@ definePageMeta({
 const route = useRoute();
 const api = useDatabaseApi();
 const toast = useToast();
-const realtimeRoom = useRealtimeRoom(computed(() => String(route.query.room || "")));
 
 const roomName = computed(() => String(route.query.room || ""));
 const playerId = computed(() => Number(route.query.id || 0));
+const normalizedRoomKey = computed(() => normalizeRoomKey(roomName.value));
 
 const playQuery = computed(() => ({
   id: playerId.value,
@@ -29,8 +31,12 @@ const {
   error,
   refresh,
   status,
-} = await useAsyncData("game-room-state", () =>
-  api.getGameRoom({ room: normalizeRoomKey(roomName.value) })
+} = await useAsyncData(
+  () => `game-room-state:${normalizedRoomKey.value}`,
+  () => api.getGameRoom({ room: normalizedRoomKey.value }),
+  {
+    watch: [normalizedRoomKey],
+  }
 );
 
 const { boardState: sourceBoardState, cardCount, currentRoom } = useRoomState({
@@ -55,41 +61,80 @@ const {
   removeAlert,
   resetBoard,
   toggleCards,
+  mutationNonce,
 } = useBoardController(sourceBoardState);
 const { currentPlayer, nextTurn } = useTurnCycle(computed(() => boardState.value));
+const isApplyingAuthoritativeState = ref(false);
 
-const isChoosingCharacters = computed(() =>
-  orderedPlayers.value.some((player) => Array.isArray(player.character))
-);
-
-async function persistCharacterSelection() {
-  if (!boardState.value) return;
-
-  await api.updateGameRoom({
-    room: normalizeRoomKey(roomName.value),
-    data: {
-      deck: boardState.value.deck,
-      events: boardState.value.events,
-      players: boardState.value.players,
-      turn: boardState.value.turn,
-      turnCycle: boardState.value.turnCycle,
-      turnOrder: boardState.value.turnOrder,
-    },
-  });
+function extractConflictRoom(error: unknown) {
+  const fetchError = error as FetchError<GameRoomSyncResponse>;
+  return fetchError?.data?.room ?? null;
 }
 
-async function handleChooseCharacter(character: CharacterCard) {
-  chooseCharacter(character);
+async function applyAuthoritativeRoom(room: GameState | null) {
+  isApplyingAuthoritativeState.value = true;
+  roomState.value = room ? [room] : false;
   await nextTick();
+  isApplyingAuthoritativeState.value = false;
+}
+
+async function reloadRoom() {
+  try {
+    await refresh();
+  } catch (refreshError) {
+    console.error("[play] Failed to refresh the game room.", refreshError);
+    toast.add({
+      title: "Unable to refresh room",
+      description: "The latest game state could not be loaded from the server.",
+      color: "error",
+      icon: "i-lucide-octagon-alert",
+    });
+  }
+}
+
+const realtimeRoom = useRealtimeRoom({
+  enabled: computed(() => Boolean(normalizedRoomKey.value && playerId.value > 0)),
+  fetchLatest: reloadRoom,
+  pushUpdate: api.updateGameRoom,
+  room: normalizedRoomKey,
+});
+
+async function persistBoardState() {
+  if (!boardState.value || !normalizedRoomKey.value) {
+    return;
+  }
 
   try {
-    await persistCharacterSelection();
-    await refresh();
+    const response = await realtimeRoom.pushStateUpdate({
+      data: createGameStatePatch(boardState.value),
+      expectedLastUpdated: currentRoom.value?.last_updated,
+      playerId: playerId.value,
+      room: normalizedRoomKey.value,
+      transport: "polling",
+    });
+
+    if (response?.room) {
+      await applyAuthoritativeRoom(response.room);
+    }
   } catch (persistError) {
-    console.error("[play] Failed to persist character selection.", persistError);
+    const conflictRoom = extractConflictRoom(persistError);
+
+    if (conflictRoom) {
+      console.warn("[play] Room update conflict. Applying authoritative state.", persistError);
+      await applyAuthoritativeRoom(conflictRoom);
+      toast.add({
+        title: "Room updated by another player",
+        description: "Your view has been refreshed to the latest shared game state.",
+        color: "warning",
+        icon: "i-lucide-refresh-cw",
+      });
+      return;
+    }
+
+    console.error("[play] Failed to persist board state.", persistError);
     toast.add({
-      title: "Unable to save character choice",
-      description: "Your selection could not be shared with the rest of the room.",
+      title: "Unable to sync game state",
+      description: "Your action was applied locally, but the shared room could not be updated.",
       color: "error",
       icon: "i-lucide-octagon-alert",
     });
@@ -111,19 +156,24 @@ function onTableClick(card: GameCard) {
   handleTableClick(card);
 }
 
-let roomRefreshTimer: ReturnType<typeof setInterval> | undefined;
-
-onMounted(() => {
-  roomRefreshTimer = setInterval(() => {
-    if (isChoosingCharacters.value) {
-      void refresh();
+watch(
+  mutationNonce,
+  (nextMutation, previousMutation) => {
+    if (
+      nextMutation === previousMutation ||
+      nextMutation === 0 ||
+      isApplyingAuthoritativeState.value
+    ) {
+      return;
     }
-  }, 3000);
-});
+
+    void persistBoardState();
+  }
+);
 
 onBeforeUnmount(() => {
-  if (roomRefreshTimer) {
-    clearInterval(roomRefreshTimer);
+  if (realtimeRoom.status.value !== "disabled") {
+    realtimeRoom.disconnect();
   }
 });
 </script>
@@ -137,19 +187,20 @@ onBeforeUnmount(() => {
         <div class="text-xs uppercase tracking-[0.22em] text-[rgba(33,22,15,0.55)]">Game Room</div>
         <h1 class="text-4xl font-semibold">{{ roomName }}</h1>
         <p class="mt-2 max-w-3xl text-sm text-[rgba(33,22,15,0.68)]">
-          Phase 6 replaces the previous diagnostics-only loader with the real Vue board container.
-          Core turn selection, drawing, character choice, alerts, and end-turn flow are now local
-          and typed. Full spell/event resolution still moves into later phases.
+          The migrated Vue board now syncs through a typed server-authoritative polling layer.
+          Core turn selection, drawing, character choice, alerts, and end-turn flow are shared
+          across players. Full spell and event resolution still moves into later phases.
         </p>
       </div>
 
       <div class="flex flex-wrap gap-3">
         <UBadge color="secondary" variant="subtle">Realtime: {{ realtimeRoom.status }}</UBadge>
+        <UBadge color="neutral" variant="subtle">Transport: {{ realtimeRoom.transport }}</UBadge>
         <UBadge color="neutral" variant="subtle">
           Cards tracked:
           {{ cardCount ? `${cardCount.length} / ${cardCount.duplicates} duplicates` : "unknown" }}
         </UBadge>
-        <UButton color="neutral" variant="ghost" icon="i-lucide-refresh-cw" label="Reload room" @click="refresh()" />
+        <UButton color="neutral" variant="ghost" icon="i-lucide-refresh-cw" label="Reload room" @click="reloadRoom" />
         <UButton to="/welcome" color="neutral" variant="soft" icon="i-lucide-arrow-left" label="Back to lobby" />
       </div>
     </div>
@@ -175,7 +226,15 @@ onBeforeUnmount(() => {
     />
 
     <div v-else class="space-y-6">
-      <div class="grid gap-4 md:grid-cols-4">
+      <UAlert
+        v-if="realtimeRoom.errorMessage"
+        color="warning"
+        variant="subtle"
+        title="Realtime sync needs attention"
+        :description="realtimeRoom.errorMessage"
+      />
+
+      <div class="grid gap-4 md:grid-cols-5">
         <UCard class="stu-panel rounded-[1.6rem] border-0">
           <div class="text-xs uppercase tracking-[0.18em] text-[rgba(33,22,15,0.55)]">Player</div>
           <div class="mt-2 text-xl font-semibold">{{ playerId }}</div>
@@ -190,7 +249,13 @@ onBeforeUnmount(() => {
         </UCard>
         <UCard class="stu-panel rounded-[1.6rem] border-0">
           <div class="text-xs uppercase tracking-[0.18em] text-[rgba(33,22,15,0.55)]">Room Key</div>
-          <div class="mt-2 text-sm">{{ normalizeRoomKey(roomName) }}</div>
+          <div class="mt-2 text-sm">{{ normalizedRoomKey }}</div>
+        </UCard>
+        <UCard class="stu-panel rounded-[1.6rem] border-0">
+          <div class="text-xs uppercase tracking-[0.18em] text-[rgba(33,22,15,0.55)]">Last Sync</div>
+          <div class="mt-2 text-sm">
+            {{ realtimeRoom.lastSyncedAt ? new Date(realtimeRoom.lastSyncedAt).toLocaleTimeString() : "pending" }}
+          </div>
         </UCard>
       </div>
 
@@ -205,7 +270,7 @@ onBeforeUnmount(() => {
         :room-name="playQuery.room"
         :targets="availableTargets"
         @choose-action="logUnsupportedAction"
-        @choose-character="handleChooseCharacter"
+        @choose-character="chooseCharacter"
         @clear-action="clearResolutionAction"
         @click-character="handleCharacterClick"
         @click-deck-pile="handleDeckClick"
