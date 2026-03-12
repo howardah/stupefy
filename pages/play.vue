@@ -1,13 +1,11 @@
 <script setup lang="ts">
-import type { GameState, PlayQuery } from "~/utils/types";
-import {
-  countAllCards,
-  createBoardViewState,
-} from "~/utils/gameplay/bootstrap";
+import type { PlayQuery } from "~/utils/types";
 import { normalizeRoomKey } from "~/utils/room";
+
 definePageMeta({
   middleware: "play-query",
 });
+
 const route = useRoute();
 const api = useDatabaseApi();
 
@@ -28,18 +26,15 @@ const {
   api.getGameRoom({ room: normalizeRoomKey(roomName.value) })
 );
 
-const currentRoom = computed<GameState | null>(() => {
-  if (!Array.isArray(roomState.value) || !roomState.value[0]) return null;
-  return roomState.value[0] as GameState;
+const { boardState, cardCount, currentRoom, fixtureBoardState } = useRoomState({
+  playQuery,
+  roomState,
 });
-
-const boardState = computed(() =>
-  currentRoom.value ? createBoardViewState(currentRoom.value, playQuery.value) : null
-);
-
-const cardCount = computed(() =>
-  boardState.value ? countAllCards(boardState.value) : null
-);
+const { actions, alerts } = useBoardActions(boardState);
+const { currentPlayer, nextTurn, resetPreview, setupPreview } = useTurnCycle(boardState);
+const { actionTargets, availableTargets } = useCardTargets(boardState);
+const { currentEvent, systemResolution } = useCardResolution(boardState);
+const realtimeRoom = useRealtimeRoom(roomName);
 </script>
 
 <template>
@@ -92,12 +87,39 @@ const cardCount = computed(() =>
               <div>Players in order: {{ boardState?.players.length || 0 }}</div>
               <div>Turn: {{ boardState?.turn ?? "unknown" }}</div>
               <div>Phase: {{ boardState?.turnCycle.phase ?? "unknown" }}</div>
-              <div>Popup message: {{ boardState?.actions.message || "none" }}</div>
+              <div>Popup message: {{ actions.message || "none" }}</div>
               <div>Dead players: {{ boardState?.deadPlayers.length || 0 }}</div>
               <div>
                 Card count:
                 {{ cardCount ? `${cardCount.length} total / ${cardCount.duplicates} duplicates` : "unknown" }}
               </div>
+            </div>
+          </div>
+
+          <div class="rounded-3xl bg-white/60 p-5">
+            <div class="mb-3 text-xs uppercase tracking-[0.2em] text-[rgba(33,22,15,0.55)]">
+              Turn Cycle Preview
+            </div>
+            <div class="space-y-2 text-sm">
+              <div>Current player: {{ currentPlayer?.name || "unknown" }}</div>
+              <div>Next turn: {{ nextTurn ?? "unknown" }}</div>
+              <div>Available targets: {{ availableTargets.join(", ") || "none" }}</div>
+              <div>Action targets: {{ actionTargets.join(", ") || "none" }}</div>
+              <div>Next phase preview: {{ setupPreview?.turnCycle.phase || "unknown" }}</div>
+              <div>Reset phase preview: {{ resetPreview?.phase || "unknown" }}</div>
+            </div>
+          </div>
+
+          <div class="rounded-3xl bg-white/60 p-5">
+            <div class="mb-3 text-xs uppercase tracking-[0.2em] text-[rgba(33,22,15,0.55)]">
+              Event Resolution
+            </div>
+            <div class="space-y-2 text-sm">
+              <div>Current event type: {{ currentEvent?.cardType || "none" }}</div>
+              <div>System resolution: {{ systemResolution ? systemResolution.popup?.message : "none" }}</div>
+              <div>Realtime status: {{ realtimeRoom.status }}</div>
+              <div>Fixture players: {{ fixtureBoardState.players.length }}</div>
+              <div>Alerts queued: {{ alerts.length }}</div>
             </div>
           </div>
 

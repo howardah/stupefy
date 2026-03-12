@@ -56,6 +56,28 @@ export interface TurnCycle {
   used: unknown[];
 }
 
+export interface TurnCyclePlayerState {
+  cards: GameCard[];
+  choice?: string;
+}
+
+export type GameplayTarget =
+  | "between-characters"
+  | "characters"
+  | "discard"
+  | "draw"
+  | "hand"
+  | "my-character"
+  | "my-hand"
+  | "my-tableau"
+  | "my-tableau-empty"
+  | "range"
+  | "table"
+  | "table-empty"
+  | "tableau"
+  | "tableau-empty"
+  | "wand-range";
+
 export interface PopupOption {
   function: string;
   label: string;
@@ -70,7 +92,10 @@ export interface PopupState {
 export interface GameEvent {
   bystanders?: PopupState;
   cardType?: string;
+  deck?: DeckState;
+  instigator?: PlayerState;
   popup?: PopupState;
+  table?: GameCard[];
   target: Array<number | string>;
   [key: string]: unknown;
 }
@@ -113,6 +138,11 @@ export interface BoardViewState {
   turn: number;
   turnCycle: TurnCycle;
   turnOrder: number[];
+}
+
+export interface BoardAlert {
+  id: string;
+  message: string;
 }
 
 export interface WaitingPlayer {

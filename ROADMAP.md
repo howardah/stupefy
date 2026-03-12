@@ -68,27 +68,27 @@ This roadmap tracks the full migration from the legacy React/Express application
 
 ## Phase 5: Gameplay Logic Preparation
 
-- [ ] Inventory the recovered frontend gameplay modules and group them into migration units:
+- [x] Inventory the recovered frontend gameplay modules and group them into migration units:
   - board container
   - presentational components
   - turn-cycle helpers
   - card targeting helpers
   - card rule handlers
   - event/popup resolution
-- [ ] Port pure utility logic from `.recovered-react/javascripts/` and `.recovered-react/components/utils/` into typed shared modules before porting board UI.
+- [x] Port pure utility logic from `.recovered-react/javascripts/` and `.recovered-react/components/utils/` into typed shared modules before porting board UI.
   - [x] Extract initial board bootstrap helpers into [`utils/gameplay/bootstrap.ts`](/Users/innocentsmith/Sites/node/stupefy/utils/gameplay/bootstrap.ts).
-  - [ ] Extract turn-cycle helpers.
-  - [ ] Extract targeting helpers.
-  - [ ] Extract event/popup helpers beyond the initial board bootstrap.
-- [ ] Define the target composable structure for gameplay:
+  - [x] Extract turn-cycle helpers.
+  - [x] Extract targeting helpers.
+  - [x] Extract event/popup helpers beyond the initial board bootstrap.
+- [x] Define the target composable structure for gameplay:
   - `useRoomState`
   - `useBoardActions`
   - `useTurnCycle`
   - `useCardTargets`
   - `useCardResolution`
   - `useRealtimeRoom`
-- [ ] Decide what logic belongs in shared TypeScript modules versus Vue composables versus page-local state.
-- [ ] Add fixture data for at least one real room snapshot to support parity testing during the port.
+- [x] Decide what logic belongs in shared TypeScript modules versus Vue composables versus page-local state.
+- [x] Add fixture data for at least one real room snapshot to support parity testing during the port.
 
 ## Phase 6: Gameplay UI Port to Vue
 
