@@ -64,6 +64,9 @@ export interface TurnCyclePlayerState {
 
 export type RealtimeTransportStrategy = "polling";
 
+export type GameRoomStatus = "active" | "archived";
+export type WaitingRoomStatus = "waiting" | "in-game" | "archived";
+
 export type RealtimeRoomStatus =
   | "connected"
   | "disabled"
@@ -143,11 +146,17 @@ export interface GameEvent {
 
 export interface GameState {
   _id?: number;
+  archivedAt?: number;
+  createdAt?: number;
   deadPlayers?: number[];
   deck: DeckState;
   events?: GameEvent[];
+  expiresAt?: number;
   table?: GameCard[];
   players: PlayerState[];
+  sourceWaitingRoom?: string;
+  startedAt?: number;
+  status?: GameRoomStatus;
   turn: number;
   turnCycle: TurnCycle;
   turnOrder: number[];
@@ -218,14 +227,21 @@ export interface WaitingChatMessage {
 }
 
 export interface WaitingRoomState {
+  _id?: number;
   active?: Record<string, number | string>;
   activeUpdatedAt?: Record<string, number>;
+  archivedAt?: number;
   chat: WaitingChatMessage[];
+  createdAt?: number;
+  expiresAt?: number;
+  gameRoomKey?: string;
   last_updated?: number;
   password: false | string;
   players: WaitingPlayer[];
   ready?: Record<string, boolean>;
   roomName: string;
+  startedAt?: number;
+  status?: WaitingRoomStatus;
   [key: string]: unknown;
 }
 

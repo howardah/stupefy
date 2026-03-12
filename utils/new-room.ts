@@ -3,12 +3,16 @@ import type { GameState, PlayerState } from "./types";
 import { initialise } from "./card-setup";
 import { createMongoClient } from "./mongo-client";
 import { parseGameState } from "./parsers";
+import { applyGameRoomLifecycle, isGameRoomActive } from "./room-lifecycle";
 import { normalizeRoomKey } from "./room";
 
 interface NewRoomRequest {
   players: PlayerState[];
   room: string;
+  sourceWaitingRoom?: string;
 }
+
+const ROOM_DOCUMENT_FILTER = { _id: 0 };
 
 async function withClient<T>(runner: (client: MongoClient) => Promise<T>): Promise<T> {
   const client = createMongoClient();
@@ -38,17 +42,27 @@ async function newRoom(data: NewRoomRequest): Promise<GameState[] | undefined> {
         .db("stupefy")
         .collection<GameState>(normalizeRoomKey(data.room)) as Collection<GameState>;
 
-      const current = parseGameState(await collection.findOne());
-      if (current && samePlayers(current.players, data.players)) {
+      const parsed = parseGameState(await collection.findOne(ROOM_DOCUMENT_FILTER));
+      const current = parsed ? applyGameRoomLifecycle(parsed) : null;
+
+      if (current && isGameRoomActive(current) && samePlayers(current.players, data.players)) {
         return [current];
       }
 
-      const nextState = initialise(data.players);
-      nextState._id = 0;
+      const now = Date.now();
+      const nextState = applyGameRoomLifecycle({
+        ...initialise(data.players),
+        _id: 0,
+        createdAt: current?.createdAt ?? now,
+        last_updated: now,
+        sourceWaitingRoom: data.sourceWaitingRoom ?? data.room,
+        startedAt: current?.startedAt ?? now,
+        status: "active",
+      });
 
       await collection.replaceOne(
-        {},
-        Object.assign(nextState, { last_updated: Date.now() }),
+        ROOM_DOCUMENT_FILTER,
+        nextState,
         { upsert: true }
       );
 

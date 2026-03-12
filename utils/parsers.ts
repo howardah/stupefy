@@ -145,6 +145,7 @@ function asTurnCycle(value: unknown): TurnCycle {
 function asPopupState(value: unknown): PopupState | undefined {
   if (!isObject(value)) return undefined;
   return {
+    canDismiss: typeof value.canDismiss === "boolean" ? value.canDismiss : undefined,
     message: typeof value.message === "string" ? value.message : "",
     options: Array.isArray(value.options) ? (value.options as PopupState["options"]) : [],
     popupType: typeof value.popupType === "string" ? value.popupType : undefined,
@@ -178,12 +179,22 @@ export function parseGameState(value: unknown): GameState | null {
 
   return {
     ...value,
+    archivedAt: typeof value.archivedAt === "number" ? value.archivedAt : undefined,
+    createdAt: typeof value.createdAt === "number" ? value.createdAt : undefined,
     deadPlayers: Array.isArray(value.deadPlayers)
       ? value.deadPlayers.filter((entry): entry is number => typeof entry === "number")
       : [],
     deck: parseDeckState(value.deck),
     events: Array.isArray(value.events) ? value.events.map(asGameEvent) : [],
+    expiresAt: typeof value.expiresAt === "number" ? value.expiresAt : undefined,
     players: Array.isArray(value.players) ? value.players.map(asPlayerState) : [],
+    sourceWaitingRoom:
+      typeof value.sourceWaitingRoom === "string" ? value.sourceWaitingRoom : undefined,
+    startedAt: typeof value.startedAt === "number" ? value.startedAt : undefined,
+    status:
+      value.status === "active" || value.status === "archived"
+        ? value.status
+        : undefined,
     table: Array.isArray(value.table) ? value.table.map(asGameCard) : [],
     turn: typeof value.turn === "number" ? value.turn : 0,
     turnCycle: asTurnCycle(value.turnCycle),
@@ -240,7 +251,12 @@ export function parseWaitingRoomState(value: unknown): WaitingRoomState | null {
     ...value,
     active,
     activeUpdatedAt,
+    archivedAt: typeof value.archivedAt === "number" ? value.archivedAt : undefined,
     chat: Array.isArray(value.chat) ? value.chat.map(parseWaitingChatMessage) : [],
+    createdAt: typeof value.createdAt === "number" ? value.createdAt : undefined,
+    expiresAt: typeof value.expiresAt === "number" ? value.expiresAt : undefined,
+    gameRoomKey: typeof value.gameRoomKey === "string" ? value.gameRoomKey : undefined,
+    last_updated: typeof value.last_updated === "number" ? value.last_updated : undefined,
     password:
       value.password === false || typeof value.password === "string"
         ? value.password
@@ -248,5 +264,12 @@ export function parseWaitingRoomState(value: unknown): WaitingRoomState | null {
     players: Array.isArray(value.players) ? value.players.map(parseWaitingPlayer) : [],
     ready,
     roomName: typeof value.roomName === "string" ? value.roomName : "",
+    startedAt: typeof value.startedAt === "number" ? value.startedAt : undefined,
+    status:
+      value.status === "waiting" ||
+      value.status === "in-game" ||
+      value.status === "archived"
+        ? value.status
+        : undefined,
   };
 }

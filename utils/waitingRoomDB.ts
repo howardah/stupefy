@@ -17,9 +17,16 @@ import { decode } from "./encrypt";
 import { createMongoClient } from "./mongo-client";
 import { newRoom } from "./new-room";
 import { parseGameState, parseWaitingRoomState } from "./parsers";
+import {
+  applyGameRoomLifecycle,
+  applyWaitingRoomLifecycle,
+  isGameRoomActive,
+  isWaitingRoomAvailable,
+} from "./room-lifecycle";
 import { normalizeRoomKey, normalizeRoomName, roomPasswordKey } from "./room";
 
 type WaitingRoomResult = Array<ErrorResult | WaitingRoomState>;
+const ROOM_DOCUMENT_FILTER = { _id: 0 };
 
 async function withClient<T>(runner: (client: MongoClient) => Promise<T>): Promise<T> {
   const client = createMongoClient();
@@ -67,12 +74,12 @@ function prunePresence(room: WaitingRoomState): WaitingRoomState {
     }
   }
 
-  return {
+  return applyWaitingRoomLifecycle({
     ...room,
     active,
     activeUpdatedAt,
     ready: { ...(room.ready || {}) },
-  };
+  });
 }
 
 function ensureReadyMap(room: WaitingRoomState): Record<string, boolean> {
@@ -117,7 +124,7 @@ async function readWaitingRoom(
   room: string
 ): Promise<WaitingRoomState | null> {
   const collection = await getWaitingCollection(client, room);
-  const parsed = parseWaitingRoomState(await collection.findOne());
+  const parsed = parseWaitingRoomState(await collection.findOne(ROOM_DOCUMENT_FILTER));
   return parsed ? prunePresence(parsed) : null;
 }
 
@@ -129,7 +136,7 @@ async function writeWaitingRoom(
   const collection = await getWaitingCollection(client, room);
   const pruned = prunePresence(nextState);
 
-  await collection.replaceOne({}, pruned, { upsert: true });
+  await collection.replaceOne(ROOM_DOCUMENT_FILTER, { ...pruned, _id: 0 }, { upsert: true });
   return pruned;
 }
 
@@ -139,6 +146,7 @@ async function getWaitRoom(
   return withClient(async (client) => {
     const currentRoom = await readWaitingRoom(client, data.room);
     if (!currentRoom) return [{ error: "room not found" }];
+    if (currentRoom.status === "archived") return [{ error: "room archived" }];
 
     if (
       currentRoom.password &&
@@ -159,7 +167,7 @@ async function getWaitRoomAccess(room: string): Promise<WaitingRoomAccessState> 
   return withClient(async (client) => {
     const currentRoom = await readWaitingRoom(client, room);
 
-    if (!currentRoom) {
+    if (!currentRoom || currentRoom.status === "archived") {
       return {
         exists: false,
         hasPassword: false,
@@ -181,16 +189,31 @@ async function listOpenWaitRooms(): Promise<OpenWaitingRoomSummary[]> {
     const openRooms = await Promise.all(
       roomKeys.map(async (roomKey) => {
         const waitingCollection = await getWaitingCollection(client, roomKey);
-        const waitingRoom = parseWaitingRoomState(await waitingCollection.findOne());
+        const waitingRoomDocument = parseWaitingRoomState(
+          await waitingCollection.findOne(ROOM_DOCUMENT_FILTER)
+        );
+        const waitingRoom = waitingRoomDocument
+          ? applyWaitingRoomLifecycle(waitingRoomDocument)
+          : null;
 
         if (!waitingRoom) return null;
+        if (!isWaitingRoomAvailable(waitingRoom)) {
+          await waitingCollection.replaceOne(ROOM_DOCUMENT_FILTER, { ...waitingRoom, _id: 0 }, { upsert: true });
+          return null;
+        }
         if (typeof waitingRoom.password === "string" && waitingRoom.password.length > 0) {
           return null;
         }
 
         const gameCollection = await getGameCollection(client, roomKey);
-        const existingGame = parseGameState(await gameCollection.findOne());
-        if (existingGame) {
+        const existingGameDocument = parseGameState(
+          await gameCollection.findOne(ROOM_DOCUMENT_FILTER)
+        );
+        const existingGame = existingGameDocument
+          ? applyGameRoomLifecycle(existingGameDocument)
+          : null;
+
+        if (existingGame && isGameRoomActive(existingGame)) {
           return null;
         }
 
@@ -223,6 +246,9 @@ async function joinWaitRoom(
   return withClient(async (client) => {
     const currentRoom = await readWaitingRoom(client, data.room);
     if (!currentRoom) return [{ error: "room not found" }];
+    if (!isWaitingRoomAvailable(currentRoom)) {
+      return [{ error: "game already started" }];
+    }
 
     if (currentRoom.password && currentRoom.password !== data.pw) {
       return [{ error: "password incorrect" }];
@@ -264,18 +290,22 @@ async function updateActive(data: {
     const currentRoom =
       (await readWaitingRoom(client, data.room)) ??
       ({
+        createdAt: Date.now(),
         active: {},
         activeUpdatedAt: {},
         chat: [],
+        expiresAt: undefined,
         password: false,
         players: [],
         ready: {},
         roomName: normalizeRoomName(data.room),
+        status: "waiting",
       } as WaitingRoomState);
 
     const nextState: WaitingRoomState = {
       ...currentRoom,
       ...data.data,
+      status: currentRoom.status ?? "waiting",
       active: {
         ...(currentRoom.active || {}),
         ...(data.data.active || {}),
@@ -307,6 +337,9 @@ async function updateReadyStatus(data: {
   return withClient(async (client) => {
     const currentRoom = await readWaitingRoom(client, data.room);
     if (!currentRoom) return [{ error: "room not found" }];
+    if (!isWaitingRoomAvailable(currentRoom)) {
+      return [{ error: "game already started" }];
+    }
 
     const playerKey = String(data.playerId);
     if (!currentRoom.players.some((player) => String(player.id) === playerKey)) {
@@ -356,6 +389,7 @@ async function addChat(data: {
   return withClient(async (client) => {
     const currentRoom = await readWaitingRoom(client, data.room);
     if (!currentRoom) return undefined;
+    if (currentRoom.status === "archived") return undefined;
 
     const nextState = await writeWaitingRoom(client, data.room, {
       ...currentRoom,
@@ -373,10 +407,12 @@ async function makeWaitRoom(
     const roomName = normalizeRoomName(info.room);
     const currentRoom = await readWaitingRoom(client, roomName);
     const players: WaitingPlayer[] = [{ name: info.player, id: idGenerator([]) }];
+    const now = Date.now();
 
     const freshRoom: WaitingRoomState = {
       active: {},
       activeUpdatedAt: {},
+      createdAt: now,
       chat: [
         {
           text:
@@ -385,10 +421,12 @@ async function makeWaitRoom(
           time: Date.now(),
         },
       ],
+      expiresAt: now,
       password: info.pw || false,
       players,
       ready: { [String(players[0]?.id || 0)]: false },
       roomName,
+      status: "waiting",
     };
 
     if (!currentRoom) {
@@ -396,26 +434,23 @@ async function makeWaitRoom(
     }
 
     const gameCollection = await getGameCollection(client, roomName);
-    const currentGame = parseGameState(await gameCollection.findOne());
-    const howLongCreation = Date.now() - (currentRoom.last_updated ?? 0);
-    const howLongPlayed = currentGame?.last_updated
-      ? Date.now() - currentGame.last_updated
-      : false;
+    const currentGameDocument = parseGameState(await gameCollection.findOne(ROOM_DOCUMENT_FILTER));
+    const currentGame = currentGameDocument
+      ? applyGameRoomLifecycle(currentGameDocument)
+      : null;
 
-    if (!howLongPlayed || howLongPlayed / 86400000 > 2) {
-      if (howLongCreation / 3600000 > 2) {
+    if (currentRoom.status === "archived") {
+      return [await writeWaitingRoom(client, roomName, freshRoom)];
+    }
+
+    if (!currentGame || !isGameRoomActive(currentGame)) {
+      if (!isWaitingRoomAvailable(currentRoom)) {
         return [await writeWaitingRoom(client, roomName, freshRoom)];
       }
 
-      console.log(
-        "Room created " + Math.floor(howLongCreation / 60000) + " minutes ago."
-      );
       return false;
     }
 
-    console.log(
-      "Room last used " + Math.floor(howLongPlayed / 3600000) + " hours ago."
-    );
     return false;
   });
 }
@@ -423,14 +458,45 @@ async function makeWaitRoom(
 async function startWaitRoomGame(room: string): Promise<GameState[] | undefined> {
   return withClient(async (client) => {
     const currentRoom = await readWaitingRoom(client, room);
-    if (!currentRoom || !areAllPlayersReady(currentRoom)) {
+    if (!currentRoom) {
       return undefined;
     }
 
-    return newRoom({
+    const roomKey = normalizeRoomKey(room);
+    const gameCollection = await getGameCollection(client, roomKey);
+    const existingGameDocument = parseGameState(await gameCollection.findOne(ROOM_DOCUMENT_FILTER));
+    const existingGame = existingGameDocument
+      ? applyGameRoomLifecycle(existingGameDocument)
+      : null;
+
+    if (currentRoom.status === "in-game" && existingGame && isGameRoomActive(existingGame)) {
+      return [existingGame];
+    }
+
+    if (!areAllPlayersReady(currentRoom) || !isWaitingRoomAvailable(currentRoom)) {
+      return undefined;
+    }
+
+    const gameRooms = await newRoom({
       players: playersForGame(currentRoom),
-      room: normalizeRoomKey(room),
+      room: roomKey,
+      sourceWaitingRoom: currentRoom.roomName,
     });
+
+    if (!gameRooms?.[0]) {
+      return undefined;
+    }
+
+    await writeWaitingRoom(client, room, {
+      ...currentRoom,
+      expiresAt: undefined,
+      gameRoomKey: roomKey,
+      last_updated: Date.now(),
+      startedAt: currentRoom.startedAt ?? Date.now(),
+      status: "in-game",
+    });
+
+    return gameRooms;
   });
 }
 

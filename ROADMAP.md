@@ -149,9 +149,9 @@ This roadmap tracks the full migration from the legacy React/Express application
 
 ## Phase 9: Backend Reliability and Cleanup
 
-- [ ] Replace deprecated Mongo usage everywhere.
-- [ ] Add explicit room expiration or archival behavior instead of relying on stale collections.
-- [ ] Ensure waiting rooms and game rooms have clear lifecycle transitions.
+- [x] Replace deprecated Mongo usage everywhere.
+- [x] Add explicit room expiration or archival behavior instead of relying on stale collections.
+- [x] Ensure waiting rooms and game rooms have clear lifecycle transitions.
 - [ ] Remove backend code paths that are only kept for compatibility once the Vue port is complete.
 - [ ] Remove the recovered React source only after the Vue/Nuxt gameplay port is verified complete.
 
@@ -187,3 +187,4 @@ This roadmap tracks the full migration from the legacy React/Express application
 - Card visibility is still based on whatever the loaded room snapshot contains. The current “hide other hands” toggle only changes presentation; it does not enforce backend privacy guarantees.
 - Phase 7 now uses a typed polling transport with optimistic concurrency on `last_updated`, which fixes the previous local-only board divergence. The larger remaining limitation is that updates still write whole-room snapshots, so high-contention gameplay phases should eventually move to smaller action-level mutations or a stronger server-side command model.
 - Phase 8 now ports the core popup, targeting, reaction, and advanced death-trigger rules into shared TypeScript modules. The current audit is tracked in [`docs/character-power-audit.md`](/Users/innocentsmith/Sites/node/stupefy/docs/character-power-audit.md).
+- Phase 9 now gives waiting rooms and game rooms explicit lifecycle metadata (`status`, `createdAt`, `startedAt`, `expiresAt`, `archivedAt`) and replaces the older timestamp-heuristic recreation logic with deterministic lifecycle transitions. The main remaining backend cleanup is removing compatibility-only paths once the final gameplay/runtime gaps are closed.
