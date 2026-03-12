@@ -1,6 +1,6 @@
 import type { Role } from "./types";
 
-const roles = (length: number): Role[] => {
+export default function roles(length: number): Role[] {
   let characters: Role[] = [];
 
   // setup the possible roles based on the number of players
@@ -91,5 +91,4 @@ const roles = (length: number): Role[] => {
   shuffle();
 
   return characters;
-};
-export = roles;
+}

@@ -4,8 +4,7 @@ import {
   countAllCards,
   createBoardViewState,
 } from "~/utils/gameplay/bootstrap";
-
-const { normalizeRoomKey } = require("../utils/room") as typeof import("../utils/room");
+import { normalizeRoomKey } from "~/utils/room";
 definePageMeta({
   middleware: "play-query",
 });

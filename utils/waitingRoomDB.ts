@@ -9,23 +9,11 @@ import type {
   WaitingRoomJoinQuery,
   WaitingRoomState,
 } from "./types";
-
-const { idGenerator, decode } = require("./db-tools") as {
-  decode(message: string, key: string): string;
-  idGenerator(currentArr: WaitingPlayer[]): number;
-};
-const { createMongoClient } = require("./mongo-client") as {
-  createMongoClient(): MongoClient;
-};
-const {
-  parseGameState,
-  parseWaitingRoomState,
-} = require("./parsers") as typeof import("./parsers");
-const {
-  normalizeRoomKey,
-  normalizeRoomName,
-  roomPasswordKey,
-} = require("./room") as typeof import("./room");
+import { idGenerator } from "./db-tools";
+import { decode } from "./encrypt";
+import { createMongoClient } from "./mongo-client";
+import { parseGameState, parseWaitingRoomState } from "./parsers";
+import { normalizeRoomKey, normalizeRoomName, roomPasswordKey } from "./room";
 
 type WaitingRoomResult = Array<ErrorResult | WaitingRoomState>;
 
@@ -282,7 +270,7 @@ async function makeWaitRoom(
   });
 }
 
-module.exports = {
+export {
   addChat,
   getWaitRoom,
   joinWaitRoom,

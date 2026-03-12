@@ -1,14 +1,9 @@
 import type { Collection, MongoClient } from "mongodb";
 import type { GameState, PlayerState } from "./types";
-
-const { initialise } = require("./card-setup") as {
-  initialise(players: PlayerState[]): GameState;
-};
-const { createMongoClient } = require("./mongo-client") as {
-  createMongoClient(): MongoClient;
-};
-const { parseGameState } = require("./parsers") as typeof import("./parsers");
-const { normalizeRoomKey } = require("./room") as typeof import("./room");
+import { initialise } from "./card-setup";
+import { createMongoClient } from "./mongo-client";
+import { parseGameState } from "./parsers";
+import { normalizeRoomKey } from "./room";
 
 interface NewRoomRequest {
   players: PlayerState[];
@@ -65,4 +60,4 @@ async function newRoom(data: NewRoomRequest): Promise<GameState[] | undefined> {
   }
 }
 
-module.exports = { newRoom };
+export { newRoom };

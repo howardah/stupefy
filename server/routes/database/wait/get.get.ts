@@ -1,12 +1,7 @@
 import { getQuery, setResponseHeader } from "h3";
-
-const { encode } = require("../../../../utils/encrypt") as {
-  encode(message: string, key: string): string;
-};
-const { roomPasswordKey } = require("../../../../utils/room") as typeof import("../../../../utils/room");
-const { getWaitRoom } = require("../../../../utils/waitingRoomDB") as {
-  getWaitRoom(query: { id: string | number; key: string; room: string }): Promise<unknown>;
-};
+import { encode } from "~/utils/encrypt";
+import { roomPasswordKey } from "~/utils/room";
+import { getWaitRoom } from "~/utils/waitingRoomDB";
 
 export default defineEventHandler(async (event) => {
   setResponseHeader(event, "Access-Control-Allow-Origin", "*");

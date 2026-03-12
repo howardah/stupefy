@@ -1,10 +1,8 @@
-const { encode, decode } = require("./encrypt");
-
 type HasId = {
   id: number;
 };
 
-const idGenerator = (currentArr: HasId[]): number => {
+export const idGenerator = (currentArr: HasId[]): number => {
   function createId(): number {
     return Math.floor(Math.random() * 100);
   }
@@ -24,5 +22,3 @@ const idGenerator = (currentArr: HasId[]): number => {
 
   return id;
 };
-
-module.exports = { idGenerator, encode, decode };

@@ -5,22 +5,11 @@ import type {
   PlayerState,
   TurnCycle,
 } from "./types";
+import Deck from "./deck";
+import { characters, mainDeck } from "./stupefy-decks";
+import roles from "./roles";
 
-type DeckConstructor = new <T>(cards?: T[], discards?: T[]) => {
-  cards: T[];
-  discards: T[];
-  drawCards(number: number, discard?: boolean): T[];
-  shuffle(): void;
-};
-
-const Deck = require("./deck") as DeckConstructor;
-const { mainDeck, characters } = require("../utils/stupefy-decks.js") as {
-  characters: CharacterCard[];
-  mainDeck(): GameCard[];
-};
-const roles = require("../utils/roles.js") as (length: number) => PlayerState["role"][];
-
-function initialise(players: PlayerState[]): GameState {
+export function initialise(players: PlayerState[]): GameState {
   // characters.forEach((v, i) => {
   //   v.shots = 1;
   //   v.draw = 2;
@@ -75,4 +64,3 @@ function initialise(players: PlayerState[]): GameState {
 
   return { players, deck: initialDeck, turn, turnOrder, turnCycle };
 }
-module.exports = { initialise };

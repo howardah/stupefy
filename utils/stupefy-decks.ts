@@ -1,5 +1,7 @@
-const mainDeck = () => {
-  let houses = Array(82)
+import type { CharacterCard, GameCard, House } from "./types";
+
+export const mainDeck = (): GameCard[] => {
+  const houses: House[] = Array(82)
     .fill("G", 0, 20)
     .fill("R", 20, 41)
     .fill("S", 41, 61)
@@ -9,7 +11,7 @@ const mainDeck = () => {
     protego = Array(12).fill({ name: "protego", power: {} }),
     azkaban = Array(3).fill({ name: "azkaban", power: { jailed: true } }),
     beer = Array(6).fill({ name: "butterbeer", power: {} }),
-    expelliarmus = [...Array(4)].map((e) => ({
+    expelliarmus = [...Array(4)].map(() => ({
       name: "expelliarmus",
       fileName: "expelliarmus_" + Math.ceil(Math.random() * 3),
       power: {},
@@ -64,10 +66,10 @@ const mainDeck = () => {
     };
   });
 
-  return deck;
+  return deck as GameCard[];
 };
 
-const characters = [
+export const characters: CharacterCard[] = [
   {
     fileName: "albus_dumbledore",
     name: "Albus Dumbledore",
@@ -348,5 +350,3 @@ const characters = [
     power: {},
   },
 ];
-
-module.exports = { mainDeck, characters };

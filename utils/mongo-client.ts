@@ -1,6 +1,6 @@
-const { MongoClient } = require("mongodb");
+import { MongoClient } from "mongodb";
 
-function getMongoUri(): string {
+export function getMongoUri(): string {
   if (process.env.MONGO_URI) return process.env.MONGO_URI;
 
   return (
@@ -14,8 +14,6 @@ function getMongoUri(): string {
   );
 }
 
-function createMongoClient() {
+export function createMongoClient(): MongoClient {
   return new MongoClient(getMongoUri());
 }
-
-module.exports = { createMongoClient, getMongoUri };

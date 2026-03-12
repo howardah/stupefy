@@ -1,4 +1,4 @@
-const camelCase = require("lodash/camelCase") as (value: string) => string;
+import camelCase from "lodash/camelCase";
 
 export function normalizeRoomName(room: string): string {
   return room.trim();

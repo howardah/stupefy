@@ -1,14 +1,5 @@
 import { readBody, setResponseHeader } from "h3";
-
-const { updateActive } = require("../../../../utils/waitingRoomDB") as {
-  updateActive(data: {
-    data: {
-      active: Record<string, number | string>;
-      activeUpdatedAt: Record<string, number>;
-    };
-    room: string;
-  }): Promise<unknown>;
-};
+import { updateActive } from "~/utils/waitingRoomDB";
 
 export default defineEventHandler(async (event) => {
   setResponseHeader(event, "Access-Control-Allow-Origin", "*");

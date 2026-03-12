@@ -4,3 +4,4 @@ archives/
 .env
 app.yaml
 .nuxt/
+.output/

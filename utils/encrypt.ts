@@ -1,4 +1,4 @@
-const encode = (message: string, key: string): string => {
+export const encode = (message: string, key: string): string => {
   const messageArr = message.split("");
   const keyArr = key.split("");
 
@@ -14,7 +14,7 @@ const encode = (message: string, key: string): string => {
   return returnArr.join("");
 };
 
-const decode = (message: string, key: string): string => {
+export const decode = (message: string, key: string): string => {
   const messageArr = message.split("");
   const keyArr = key.split("");
 
@@ -191,5 +191,3 @@ const printArr = [
   "Ç",
   "∂",
 ];
-
-module.exports = { encode, decode };

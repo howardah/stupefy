@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { WaitingPlayer, WaitingRoomState } from "~/utils/types";
-const { normalizeRoomKey } = require("../utils/room") as typeof import("../utils/room");
+import { normalizeRoomKey } from "~/utils/room";
 definePageMeta({
   middleware: "waiting-room-query",
 });

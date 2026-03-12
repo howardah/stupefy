@@ -1,4 +1,4 @@
-class Deck<T> {
+export default class Deck<T> {
   cards: T[];
   discards: T[];
 
@@ -39,5 +39,3 @@ class Deck<T> {
     this.discards = [];
   }
 }
-
-export = Deck;
