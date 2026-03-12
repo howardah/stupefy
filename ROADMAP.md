@@ -48,23 +48,23 @@ This roadmap tracks the full migration from the legacy React/Express application
 
 ## Phase 4: Data Model Hardening
 
-- [ ] Split the broad `GameState` and `WaitingRoomState` types into narrower application models:
+- [x] Split the broad `GameState` and `WaitingRoomState` types into narrower application models:
   - persisted Mongo documents
   - API payloads
   - view models
   - gameplay event payloads
-- [ ] Add runtime parsing/validation for Mongo documents before they are used in UI state.
-- [ ] Normalize collection naming and room identifiers across:
+- [x] Add runtime parsing/validation for Mongo documents before they are used in UI state.
+- [x] Normalize collection naming and room identifiers across:
   - waiting-room DB records
   - game-room DB records
   - route params/query params
   - client-visible room names
-- [ ] Replace mutation-heavy DB helpers with more deterministic update helpers.
-- [ ] Remove implicit merge behavior that can silently overwrite state in [`utils/stupefyDB.ts`](/Users/innocentsmith/Sites/node/stupefy/utils/stupefyDB.ts).
-- [ ] Remove or rewrite legacy queue logic in:
+- [x] Replace mutation-heavy DB helpers with more deterministic update helpers.
+- [x] Remove implicit merge behavior that can silently overwrite state in [`utils/stupefyDB.ts`](/Users/innocentsmith/Sites/node/stupefy/utils/stupefyDB.ts).
+- [x] Remove or rewrite legacy queue logic in:
   - [`utils/stupefyDB.ts`](/Users/innocentsmith/Sites/node/stupefy/utils/stupefyDB.ts)
   - [`utils/waitingRoomDB.ts`](/Users/innocentsmith/Sites/node/stupefy/utils/waitingRoomDB.ts)
-- [ ] Make room creation and game start idempotent.
+- [x] Make room creation and game start idempotent.
 
 ## Phase 5: Gameplay Logic Preparation
 

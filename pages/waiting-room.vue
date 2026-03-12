@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { WaitingPlayer, WaitingRoomState } from "~/utils/types";
-const camelCase = require("lodash/camelCase") as (value: string) => string;
+const { normalizeRoomKey } = require("../utils/room") as typeof import("../utils/room");
 definePageMeta({
   middleware: "waiting-room-query",
 });
@@ -105,7 +105,7 @@ async function startGame() {
   isStarting.value = true;
 
   await api.startGame({
-    room: camelCase(roomName.value),
+    room: normalizeRoomKey(roomName.value),
     players: connectedPlayers.value.map((player) => ({
       character: [],
       hand: [],

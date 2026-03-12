@@ -5,7 +5,7 @@ import {
   createBoardViewState,
 } from "~/utils/gameplay/bootstrap";
 
-const camelCase = require("lodash/camelCase") as (value: string) => string;
+const { normalizeRoomKey } = require("../utils/room") as typeof import("../utils/room");
 definePageMeta({
   middleware: "play-query",
 });
@@ -26,7 +26,7 @@ const {
   error,
   status,
 } = await useAsyncData("game-room-state", () =>
-  api.getGameRoom({ room: camelCase(roomName.value) })
+  api.getGameRoom({ room: normalizeRoomKey(roomName.value) })
 );
 
 const currentRoom = computed<GameState | null>(() => {
@@ -80,7 +80,7 @@ const cardCount = computed(() =>
             </div>
             <div class="space-y-2 text-sm">
               <div>Room: {{ playQuery.room }}</div>
-              <div>Room Key: {{ camelCase(playQuery.room) }}</div>
+              <div>Room Key: {{ normalizeRoomKey(playQuery.room) }}</div>
               <div>Player ID: {{ playQuery.id }}</div>
             </div>
           </div>

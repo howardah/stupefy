@@ -1,4 +1,7 @@
 node_modules
+bun.lockb
+.output
+.nuxt
 npm-debug.log
 .git
 .DS_Store

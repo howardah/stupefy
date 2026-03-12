@@ -7,67 +7,62 @@ const { initialise } = require("./card-setup") as {
 const { createMongoClient } = require("./mongo-client") as {
   createMongoClient(): MongoClient;
 };
+const { parseGameState } = require("./parsers") as typeof import("./parsers");
+const { normalizeRoomKey } = require("./room") as typeof import("./room");
 
 interface NewRoomRequest {
   players: PlayerState[];
   room: string;
 }
 
+async function withClient<T>(runner: (client: MongoClient) => Promise<T>): Promise<T> {
+  const client = createMongoClient();
+
+  try {
+    await client.connect();
+    return await runner(client);
+  } finally {
+    await client.close();
+  }
+}
+
+function samePlayers(left: PlayerState[], right: PlayerState[]): boolean {
+  const leftIds = left.map((player) => player.id).sort((a, b) => a - b);
+  const rightIds = right.map((player) => player.id).sort((a, b) => a - b);
+
+  return (
+    leftIds.length === rightIds.length &&
+    leftIds.every((value, index) => value === rightIds[index])
+  );
+}
+
 async function newRoom(data: NewRoomRequest): Promise<GameState[] | undefined> {
   try {
-    const dataObj = await roomRequest(data);
-    console.log("call ended");
-    return dataObj;
+    return await withClient(async (client) => {
+      const collection = client
+        .db("stupefy")
+        .collection<GameState>(normalizeRoomKey(data.room)) as Collection<GameState>;
+
+      const current = parseGameState(await collection.findOne());
+      if (current && samePlayers(current.players, data.players)) {
+        return [current];
+      }
+
+      const nextState = initialise(data.players);
+      nextState._id = 0;
+
+      await collection.replaceOne(
+        {},
+        Object.assign(nextState, { last_updated: Date.now() }),
+        { upsert: true }
+      );
+
+      return [nextState];
+    });
   } catch (error) {
     console.error(error);
     return undefined;
   }
-}
-
-async function roomRequest(
-  details: NewRoomRequest
-): Promise<GameState[] | undefined> {
-  let data: GameState[] | undefined;
-  const client = createMongoClient();
-
-  try {
-    // Connect to the MongoDB cluster
-    await client.connect();
-
-    // Make the appropriate DB calls
-    data = await createRoom(client, details);
-  } catch (e) {
-    console.error(e);
-  } finally {
-    await client.close();
-  }
-
-  return data;
-}
-
-async function createRoom(
-  client: MongoClient,
-  info: NewRoomRequest
-): Promise<GameState[]> {
-  const db = await client.db("stupefy");
-
-  const names = await db.listCollections().toArray();
-  const exists = names.some((coll) => {
-    return coll.name === info.room;
-  });
-
-  const obj = initialise(info.players);
-  obj._id = 0;
-
-  if (exists) {
-    await db.collection<GameState>(info.room).deleteMany({});
-  }
-
-  await (db.collection(info.room) as Collection<GameState>).insertOne(
-    Object.assign(obj, { last_updated: Date.now() })
-  );
-
-  return [obj];
 }
 
 module.exports = { newRoom };

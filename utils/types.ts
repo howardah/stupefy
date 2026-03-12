@@ -89,6 +89,9 @@ export interface GameState {
   [key: string]: unknown;
 }
 
+export type GameRoomDocument = GameState;
+export type GameRoomApiResponse = GameState[] | false;
+
 export interface PlayQuery {
   id: number;
   key?: string;
@@ -134,6 +137,9 @@ export interface WaitingRoomState {
   roomName: string;
   [key: string]: unknown;
 }
+
+export type WaitingRoomDocument = WaitingRoomState;
+export type WaitingRoomApiResponse = Array<ErrorResult | WaitingRoomState>;
 
 export interface ErrorResult {
   error: string;
