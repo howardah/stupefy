@@ -233,7 +233,7 @@ onBeforeUnmount(() => {
           {{ cardCount ? `${cardCount.length} / ${cardCount.duplicates} duplicates` : "unknown" }}
         </UBadge>
         <UButton color="neutral" variant="ghost" icon="i-lucide-refresh-cw" label="Reload room" @click="reloadRoom" />
-        <UButton to="/welcome" color="neutral" variant="soft" icon="i-lucide-arrow-left" label="Back to lobby" />
+        <UButton to="/" color="neutral" variant="soft" icon="i-lucide-arrow-left" label="Back to lobby" />
       </div>
     </div>
 

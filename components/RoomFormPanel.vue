@@ -75,7 +75,7 @@ defineExpose({
           variant="ghost"
           icon="i-lucide-arrow-left"
           label="Lobby"
-          to="/welcome"
+          to="/"
         />
       </div>
     </template>

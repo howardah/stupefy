@@ -28,7 +28,7 @@ import {
   setupTurnCycleForTurn,
 } from "~/utils/gameplay/turn-cycle";
 
-const POPUP_EMPTY = { message: "", options: [] };
+const POPUP_EMPTY = { canDismiss: true, message: "", options: [] };
 
 function cloneSelectedCards(cards: GameCard[]) {
   return cards.map((card) => ({ ...card, power: { ...card.power } }));

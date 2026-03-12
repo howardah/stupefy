@@ -3,6 +3,6 @@ export default defineNuxtRouteMiddleware((to) => {
   const idValue = typeof to.query.id === "string" ? Number(to.query.id) : Number.NaN;
 
   if (!room || !Number.isFinite(idValue) || idValue <= 0) {
-    return navigateTo("/welcome");
+    return navigateTo("/");
   }
 });

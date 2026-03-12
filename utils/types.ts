@@ -124,6 +124,7 @@ export interface PopupOption {
 }
 
 export interface PopupState {
+  canDismiss?: boolean;
   message: string;
   options: PopupOption[];
   popupType?: string;

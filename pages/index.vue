@@ -1,7 +1,6 @@
-<script setup lang="ts">
-await navigateTo("/welcome", { replace: true });
-</script>
-
 <template>
-  <div />
+  <div class="stu-shell">
+    <AppHeader />
+    <WelcomePanel />
+  </div>
 </template>

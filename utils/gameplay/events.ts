@@ -23,20 +23,29 @@ export function getPopupState(
     const firstEvent = events[0];
 
     if (firstEvent.target.includes(playerId) && firstEvent.popup) {
-      return firstEvent.popup;
+      return {
+        ...firstEvent.popup,
+        canDismiss: true,
+      };
     }
 
     const bystanderPopup = firstEvent[`bystanders-${playerId}`];
     if (bystanderPopup && typeof bystanderPopup === "object") {
-      return bystanderPopup as PopupState;
+      return {
+        ...(bystanderPopup as PopupState),
+        canDismiss: false,
+      };
     }
 
     if (firstEvent.bystanders) {
-      return firstEvent.bystanders;
+      return {
+        ...firstEvent.bystanders,
+        canDismiss: false,
+      };
     }
   }
 
-  return { message: "", options: [] };
+  return { canDismiss: true, message: "", options: [] };
 }
 
 export function createResolutionEvent(
