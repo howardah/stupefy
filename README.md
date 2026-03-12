@@ -1,13 +1,15 @@
 ﻿# Stupefy!
-Stupefy is a React/Socket.io built application counter-part to a game developed by Hanna Hutchinson, Bethany Shorey-Fennell, Peter Myers, Jordan Howard, Kelsey Howard, Henry Fennell, Chloe Fennell, Dan Hutchinson, and Adam Howard.
+Stupefy is a card game application originally built with React and Socket.IO. This repository is now being migrated to Nuxt and Vue while preserving the original gameplay logic as a reference.
 
 ## What’s this?
-This repository comprises the Node.js backend for the application, hosted via Google Cloud on [stupefy.fun](https://stupefy.fun/), which contains a build from the React [Stupefy Front-End](https://github.com/howardah/stupefy-front-end).
+This repository originally comprised the Node.js backend for the application, hosted via Google Cloud on [stupefy.fun](https://stupefy.fun/), and served a compiled build from the React [Stupefy Front-End](https://github.com/howardah/stupefy-front-end). The project is now being restructured into a Nuxt application with Nitro server routes replacing the old Express layer.
+
+The original frontend source was recovered from the production source map and is stored in [`.recovered-react/`](/Users/innocentsmith/Sites/node/stupefy/.recovered-react) as the migration reference.
 
 ## Install & Run
 To run the app on your local machine you must download the source, `cd` into the directory, then install the dependencies with:
 
-    npm install
+    bun install
 The application also requires connection to a [MongoDB](http://mongodb.com/) database. You can create one for free on the MongoDB website. After which you should create a .env file in your local Stupefy directory and add the lines:
 
     MONGO_STUPEFY_UN=<your-mongo-user>
@@ -17,8 +19,11 @@ replacing the values with your own.
 
 Now, you’re all set to run the app with:
 
-    npm start
-You should then see `Server running on port 3000` in your console and you can navigate to [localhost:3000](http://localhost:3000).
+    bun run dev
+
+The Nuxt development server should then be available at [localhost:3000](http://localhost:3000).
+
+At the moment, the lobby flow has been migrated into Nuxt, while the full board/gameplay UI is still being ported from the recovered React source.
 
 ## Run With Docker
 The repository now includes a [`docker-config.yaml`](/Users/innocentsmith/Sites/node/stupefy/docker-config.yaml) file that starts both the app and a local MongoDB container. The app will automatically use `MONGO_URI` when it is set, so its database calls are routed to the Docker Mongo service instead of MongoDB Atlas.

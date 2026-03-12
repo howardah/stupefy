@@ -2,23 +2,25 @@
   "name": "stupefy-backend",
   "version": "2.0.0",
   "private": true,
-  "description": "The Server for the Stupefy card game App",
+  "description": "Nuxt-based Stupefy application",
   "license": "MIT",
   "author": "Adam Howard",
-  "main": "server.ts",
   "scripts": {
-    "deploy": "gcloud app deploy",
-    "start": "node server",
-    "dev": "nodemon server"
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "preview": "nuxt preview",
+    "typecheck": "nuxt typecheck"
   },
   "dependencies": {
+    "@nuxt/ui": "^4.1.0",
     "dotenv": "^17.3.1",
-    "express": "^5.2.1",
     "lodash": "^4.17.23",
     "mongodb": "^7.1.0",
+    "nuxt": "^4.1.2",
     "socket.io": "^4.8.3",
-    "socket.io-redis": "^6.1.1",
-    "sticky-session": "^1.1.2"
+    "socket.io-client": "^4.8.1",
+    "tailwindcss": "^4.1.12",
+    "vue": "^3.5.13"
   },
   "devDependencies": {
     "@types/bun": "latest",
