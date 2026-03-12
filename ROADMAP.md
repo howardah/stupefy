@@ -25,11 +25,11 @@ This roadmap tracks the full migration from the legacy React/Express application
 - [x] Add Nitro endpoints for waiting-room create/get/join.
 - [x] Add Nitro endpoints for waiting-room active presence, waiting-room chat, and game start.
 - [x] Add Nitro endpoints for game-room fetch and room creation.
-- [ ] Remove obsolete backend files that are no longer part of the Nuxt runtime:
+- [x] Remove obsolete backend files that are no longer part of the Nuxt runtime:
   - [`server.ts`](/Users/innocentsmith/Sites/node/stupefy/server.ts)
   - [`routes/index.ts`](/Users/innocentsmith/Sites/node/stupefy/routes/index.ts)
   - [`routes/database.ts`](/Users/innocentsmith/Sites/node/stupefy/routes/database.ts)
-- [ ] Remove legacy ambient type shims that were only needed for the Express transition if they become unused.
+- [x] Remove legacy ambient type shims that were only needed for the Express transition if they become unused.
 
 ## Phase 3: Lobby Flow Completion
 
@@ -76,6 +76,10 @@ This roadmap tracks the full migration from the legacy React/Express application
   - card rule handlers
   - event/popup resolution
 - [ ] Port pure utility logic from `.recovered-react/javascripts/` and `.recovered-react/components/utils/` into typed shared modules before porting board UI.
+  - [x] Extract initial board bootstrap helpers into [`utils/gameplay/bootstrap.ts`](/Users/innocentsmith/Sites/node/stupefy/utils/gameplay/bootstrap.ts).
+  - [ ] Extract turn-cycle helpers.
+  - [ ] Extract targeting helpers.
+  - [ ] Extract event/popup helpers beyond the initial board bootstrap.
 - [ ] Define the target composable structure for gameplay:
   - `useRoomState`
   - `useBoardActions`
@@ -89,7 +93,9 @@ This roadmap tracks the full migration from the legacy React/Express application
 ## Phase 6: Gameplay UI Port to Vue
 
 - [ ] Replace the temporary placeholder in [`pages/play.vue`](/Users/innocentsmith/Sites/node/stupefy/pages/play.vue) with a real board container.
-- [ ] Port `App.js` loading/query behavior from [`.recovered-react/App.js`](/Users/innocentsmith/Sites/node/stupefy/.recovered-react/App.js).
+  - [x] Replace the placeholder with a real game-room loader/bootstrap view.
+  - [ ] Replace the bootstrap view with interactive board rendering.
+- [x] Port `App.js` loading/query behavior from [`.recovered-react/App.js`](/Users/innocentsmith/Sites/node/stupefy/.recovered-react/App.js).
 - [ ] Port the `Board` container from [`.recovered-react/components/board.jsx`](/Users/innocentsmith/Sites/node/stupefy/.recovered-react/components/board.jsx).
 - [ ] Port the following presentational components to Vue:
   - `card`

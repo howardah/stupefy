@@ -24,6 +24,8 @@ export interface CharacterCard {
   power: CardPower;
 }
 
+export type PlayerCharacterState = CharacterCard | CharacterCard[];
+
 export interface PlayerState {
   id: number;
   name: string;
@@ -31,8 +33,13 @@ export interface PlayerState {
   tableau: GameCard[];
   hand: GameCard[];
   power: unknown[];
-  character: CharacterCard[];
+  character: PlayerCharacterState;
   [key: string]: unknown;
+}
+
+export interface DeckState {
+  cards: GameCard[];
+  discards: GameCard[];
 }
 
 export interface TurnCycle {
@@ -46,15 +53,60 @@ export interface TurnCycle {
   used: unknown[];
 }
 
+export interface PopupOption {
+  function: string;
+  label: string;
+}
+
+export interface PopupState {
+  message: string;
+  options: PopupOption[];
+  popupType?: string;
+}
+
+export interface GameEvent {
+  bystanders?: PopupState;
+  cardType?: string;
+  popup?: PopupState;
+  target: Array<number | string>;
+  [key: string]: unknown;
+}
+
 export interface GameState {
   _id?: number;
-  deck: unknown;
+  deadPlayers?: number[];
+  deck: DeckState;
+  events?: GameEvent[];
+  table?: GameCard[];
   players: PlayerState[];
   turn: number;
   turnCycle: TurnCycle;
   turnOrder: number[];
   last_updated?: number;
   [key: string]: unknown;
+}
+
+export interface PlayQuery {
+  id: number;
+  key?: string;
+  room: string;
+}
+
+export interface BoardViewState {
+  actions: PopupState;
+  alerts: string[];
+  deadPlayers: number[];
+  deck: DeckState;
+  events: GameEvent[];
+  playerId: number;
+  playerRoom: string;
+  players: PlayerState[];
+  running: boolean;
+  showCards: boolean;
+  table: GameCard[];
+  turn: number;
+  turnCycle: TurnCycle;
+  turnOrder: number[];
 }
 
 export interface WaitingPlayer {

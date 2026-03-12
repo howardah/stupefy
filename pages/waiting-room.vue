@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { WaitingPlayer, WaitingRoomState } from "~/utils/types";
+const camelCase = require("lodash/camelCase") as (value: string) => string;
 
 const route = useRoute();
 const router = useRouter();
@@ -70,7 +71,7 @@ async function startGame() {
   if (!connectedPlayers.value.length) return;
 
   await api.startGame({
-    room: roomName.value,
+    room: camelCase(roomName.value),
     players: connectedPlayers.value.map((player) => ({
       character: [],
       hand: [],

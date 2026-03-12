@@ -3,3 +3,4 @@ archives/
 .DS_Store
 .env
 app.yaml
+.nuxt/
