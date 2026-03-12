@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { PlayQuery } from "~/utils/types";
+import type { GameCard } from "~/utils/types";
 import { normalizeRoomKey } from "~/utils/room";
 
 definePageMeta({
@@ -8,11 +8,13 @@ definePageMeta({
 
 const route = useRoute();
 const api = useDatabaseApi();
+const toast = useToast();
+const realtimeRoom = useRealtimeRoom(computed(() => String(route.query.room || "")));
 
 const roomName = computed(() => String(route.query.room || ""));
 const playerId = computed(() => Number(route.query.id || 0));
 
-const playQuery = computed<PlayQuery>(() => ({
+const playQuery = computed(() => ({
   id: playerId.value,
   key: route.query.key ? String(route.query.key) : undefined,
   room: roomName.value,
@@ -21,133 +23,142 @@ const playQuery = computed<PlayQuery>(() => ({
 const {
   data: roomState,
   error,
+  refresh,
   status,
 } = await useAsyncData("game-room-state", () =>
   api.getGameRoom({ room: normalizeRoomKey(roomName.value) })
 );
 
-const { boardState, cardCount, currentRoom, fixtureBoardState } = useRoomState({
+const { boardState: sourceBoardState, cardCount, currentRoom } = useRoomState({
   playQuery,
   roomState,
 });
-const { actions, alerts } = useBoardActions(boardState);
-const { currentPlayer, nextTurn, resetPreview, setupPreview } = useTurnCycle(boardState);
-const { actionTargets, availableTargets } = useCardTargets(boardState);
-const { currentEvent, systemResolution } = useCardResolution(boardState);
-const realtimeRoom = useRealtimeRoom(roomName);
+const {
+  actions,
+  alerts,
+  availableTargets,
+  boardState,
+  canEndTurn,
+  chooseCharacter,
+  clearResolutionAction,
+  endTurn,
+  handleCharacterClick,
+  handleDeckClick,
+  handleHandClick,
+  handleTableClick,
+  handleTableauClick,
+  orderedPlayers,
+  removeAlert,
+  resetBoard,
+  toggleCards,
+} = useBoardController(sourceBoardState);
+const { currentPlayer, nextTurn } = useTurnCycle(computed(() => boardState.value));
+
+function logUnsupportedAction(action: string, index: number) {
+  console.warn("[play] Action option selected before rule port:", { action, index });
+  toast.add({
+    title: "Action not yet available",
+    description:
+      "This popup came from the migrated event queue, but its card-rule handler is still pending in a later roadmap phase.",
+    color: "info",
+    icon: "i-lucide-hourglass",
+  });
+}
+
+function onTableClick(card: GameCard) {
+  handleTableClick(card);
+}
 </script>
 
 <template>
-  <div class="stu-shell">
+  <div class="stu-shell !max-w-[1400px]">
     <AppHeader />
-    <UCard class="stu-panel rounded-[2rem] border-0">
-      <template #header>
-        <div class="flex items-center justify-between gap-4">
-          <div>
-            <h2 class="text-2xl font-semibold">Gameplay Loader</h2>
-            <p class="text-sm text-[rgba(33,22,15,0.65)]">
-              This page now follows the recovered React `App.js` load path and bootstraps the
-              initial board state from the persisted game room.
-            </p>
-          </div>
-          <UButton to="/welcome" color="neutral" variant="ghost" label="Back to lobby" />
-        </div>
-      </template>
 
-      <div v-if="status === 'pending'" class="rounded-3xl bg-white/60 p-6 text-lg">
-        Loading room state...
+    <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
+      <div>
+        <div class="text-xs uppercase tracking-[0.22em] text-[rgba(33,22,15,0.55)]">Game Room</div>
+        <h1 class="text-4xl font-semibold">{{ roomName }}</h1>
+        <p class="mt-2 max-w-3xl text-sm text-[rgba(33,22,15,0.68)]">
+          Phase 6 replaces the previous diagnostics-only loader with the real Vue board container.
+          Core turn selection, drawing, character choice, alerts, and end-turn flow are now local
+          and typed. Full spell/event resolution still moves into later phases.
+        </p>
       </div>
 
-      <div v-else-if="error" class="rounded-3xl bg-red-50 p-6 text-red-700">
-        Error loading room: {{ error.message }}
+      <div class="flex flex-wrap gap-3">
+        <UBadge color="secondary" variant="subtle">Realtime: {{ realtimeRoom.status }}</UBadge>
+        <UBadge color="neutral" variant="subtle">
+          Cards tracked:
+          {{ cardCount ? `${cardCount.length} / ${cardCount.duplicates} duplicates` : "unknown" }}
+        </UBadge>
+        <UButton color="neutral" variant="ghost" icon="i-lucide-refresh-cw" label="Reload room" @click="refresh()" />
+        <UButton to="/welcome" color="neutral" variant="soft" icon="i-lucide-arrow-left" label="Back to lobby" />
+      </div>
+    </div>
+
+    <div v-if="status === 'pending'" class="rounded-[2rem] bg-white/60 p-8 text-lg shadow-[0_24px_80px_rgba(62,39,15,0.08)]">
+      Loading room state...
+    </div>
+
+    <UAlert
+      v-else-if="error"
+      color="error"
+      variant="subtle"
+      title="Unable to load this game room"
+      :description="error.message"
+    />
+
+    <UAlert
+      v-else-if="!currentRoom || !boardState"
+      color="warning"
+      variant="subtle"
+      title="Room not found"
+      description="The requested room could not be loaded."
+    />
+
+    <div v-else class="space-y-6">
+      <div class="grid gap-4 md:grid-cols-4">
+        <UCard class="stu-panel rounded-[1.6rem] border-0">
+          <div class="text-xs uppercase tracking-[0.18em] text-[rgba(33,22,15,0.55)]">Player</div>
+          <div class="mt-2 text-xl font-semibold">{{ playerId }}</div>
+        </UCard>
+        <UCard class="stu-panel rounded-[1.6rem] border-0">
+          <div class="text-xs uppercase tracking-[0.18em] text-[rgba(33,22,15,0.55)]">Phase</div>
+          <div class="mt-2 text-xl font-semibold">{{ boardState.turnCycle.phase }}</div>
+        </UCard>
+        <UCard class="stu-panel rounded-[1.6rem] border-0">
+          <div class="text-xs uppercase tracking-[0.18em] text-[rgba(33,22,15,0.55)]">Targets</div>
+          <div class="mt-2 text-sm">{{ availableTargets.join(", ") || "none" }}</div>
+        </UCard>
+        <UCard class="stu-panel rounded-[1.6rem] border-0">
+          <div class="text-xs uppercase tracking-[0.18em] text-[rgba(33,22,15,0.55)]">Room Key</div>
+          <div class="mt-2 text-sm">{{ normalizeRoomKey(roomName) }}</div>
+        </UCard>
       </div>
 
-      <div v-else-if="!currentRoom" class="rounded-3xl bg-white/60 p-6 text-lg">
-        This room doesn’t exist.
-      </div>
-
-      <div v-else class="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-        <div class="space-y-6">
-          <div class="rounded-3xl bg-white/60 p-5">
-            <div class="mb-3 text-xs uppercase tracking-[0.2em] text-[rgba(33,22,15,0.55)]">
-              Query
-            </div>
-            <div class="space-y-2 text-sm">
-              <div>Room: {{ playQuery.room }}</div>
-              <div>Room Key: {{ normalizeRoomKey(playQuery.room) }}</div>
-              <div>Player ID: {{ playQuery.id }}</div>
-            </div>
-          </div>
-
-          <div class="rounded-3xl bg-white/60 p-5">
-            <div class="mb-3 text-xs uppercase tracking-[0.2em] text-[rgba(33,22,15,0.55)]">
-              Bootstrapped Board State
-            </div>
-            <div class="space-y-2 text-sm">
-              <div>Players in order: {{ boardState?.players.length || 0 }}</div>
-              <div>Turn: {{ boardState?.turn ?? "unknown" }}</div>
-              <div>Phase: {{ boardState?.turnCycle.phase ?? "unknown" }}</div>
-              <div>Popup message: {{ actions.message || "none" }}</div>
-              <div>Dead players: {{ boardState?.deadPlayers.length || 0 }}</div>
-              <div>
-                Card count:
-                {{ cardCount ? `${cardCount.length} total / ${cardCount.duplicates} duplicates` : "unknown" }}
-              </div>
-            </div>
-          </div>
-
-          <div class="rounded-3xl bg-white/60 p-5">
-            <div class="mb-3 text-xs uppercase tracking-[0.2em] text-[rgba(33,22,15,0.55)]">
-              Turn Cycle Preview
-            </div>
-            <div class="space-y-2 text-sm">
-              <div>Current player: {{ currentPlayer?.name || "unknown" }}</div>
-              <div>Next turn: {{ nextTurn ?? "unknown" }}</div>
-              <div>Available targets: {{ availableTargets.join(", ") || "none" }}</div>
-              <div>Action targets: {{ actionTargets.join(", ") || "none" }}</div>
-              <div>Next phase preview: {{ setupPreview?.turnCycle.phase || "unknown" }}</div>
-              <div>Reset phase preview: {{ resetPreview?.phase || "unknown" }}</div>
-            </div>
-          </div>
-
-          <div class="rounded-3xl bg-white/60 p-5">
-            <div class="mb-3 text-xs uppercase tracking-[0.2em] text-[rgba(33,22,15,0.55)]">
-              Event Resolution
-            </div>
-            <div class="space-y-2 text-sm">
-              <div>Current event type: {{ currentEvent?.cardType || "none" }}</div>
-              <div>System resolution: {{ systemResolution ? systemResolution.popup?.message : "none" }}</div>
-              <div>Realtime status: {{ realtimeRoom.status }}</div>
-              <div>Fixture players: {{ fixtureBoardState.players.length }}</div>
-              <div>Alerts queued: {{ alerts.length }}</div>
-            </div>
-          </div>
-
-          <div class="rounded-3xl bg-white/60 p-5">
-            <div class="mb-3 text-xs uppercase tracking-[0.2em] text-[rgba(33,22,15,0.55)]">
-              Turn Order
-            </div>
-            <div class="space-y-2 text-sm">
-              <div
-                v-for="player in boardState?.players || []"
-                :key="player.id"
-                class="flex items-center justify-between rounded-2xl bg-white/70 px-3 py-2"
-              >
-                <span>{{ player.name }}</span>
-                <span class="text-[rgba(33,22,15,0.5)]">
-                  {{ player.id === playQuery.id ? "You" : player.role || "unknown" }}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <UTextarea
-          :model-value="JSON.stringify({ room: currentRoom, boardState, cardCount }, null, 2)"
-          :rows="28"
-          readonly
-        />
-      </div>
-    </UCard>
+      <GameplayBoard
+        :actions="actions"
+        :alerts="alerts"
+        :board-state="boardState"
+        :can-end-turn="canEndTurn"
+        :current-player="currentPlayer"
+        :next-turn="nextTurn"
+        :ordered-players="orderedPlayers"
+        :room-name="playQuery.room"
+        :targets="availableTargets"
+        @choose-action="logUnsupportedAction"
+        @choose-character="chooseCharacter"
+        @clear-action="clearResolutionAction"
+        @click-character="handleCharacterClick"
+        @click-deck-pile="handleDeckClick"
+        @click-hand="handleHandClick"
+        @click-table="onTableClick"
+        @click-tableau="handleTableauClick"
+        @close-alert="removeAlert"
+        @end-turn="endTurn"
+        @reset-board="resetBoard"
+        @toggle-cards="toggleCards"
+      />
+    </div>
   </div>
 </template>

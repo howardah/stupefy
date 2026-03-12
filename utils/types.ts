@@ -54,6 +54,7 @@ export interface TurnCycle {
   phase: string;
   shots: number;
   used: unknown[];
+  [key: string]: unknown;
 }
 
 export interface TurnCyclePlayerState {
@@ -143,6 +144,7 @@ export interface BoardViewState {
 export interface BoardAlert {
   id: string;
   message: string;
+  tone?: "error" | "info" | "warning";
 }
 
 export interface WaitingPlayer {

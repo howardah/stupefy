@@ -92,12 +92,12 @@ This roadmap tracks the full migration from the legacy React/Express application
 
 ## Phase 6: Gameplay UI Port to Vue
 
-- [ ] Replace the temporary placeholder in [`pages/play.vue`](/Users/innocentsmith/Sites/node/stupefy/pages/play.vue) with a real board container.
+- [x] Replace the temporary placeholder in [`pages/play.vue`](/Users/innocentsmith/Sites/node/stupefy/pages/play.vue) with a real board container.
   - [x] Replace the placeholder with a real game-room loader/bootstrap view.
-  - [ ] Replace the bootstrap view with interactive board rendering.
+  - [x] Replace the bootstrap view with interactive board rendering.
 - [x] Port `App.js` loading/query behavior from [`.recovered-react/App.js`](/Users/innocentsmith/Sites/node/stupefy/.recovered-react/App.js).
-- [ ] Port the `Board` container from [`.recovered-react/components/board.jsx`](/Users/innocentsmith/Sites/node/stupefy/.recovered-react/components/board.jsx).
-- [ ] Port the following presentational components to Vue:
+- [x] Port the `Board` container from [`.recovered-react/components/board.jsx`](/Users/innocentsmith/Sites/node/stupefy/.recovered-react/components/board.jsx).
+- [x] Port the following presentational components to Vue:
   - `card`
   - `character`
   - `character-card`
@@ -108,8 +108,12 @@ This roadmap tracks the full migration from the legacy React/Express application
   - `alert`
   - `action`
   - `choose-character`
-- [ ] Port click/selection handling while preserving current gameplay semantics.
-- [ ] Port popup/action resolution behavior.
+- [~] Port click/selection handling while preserving current gameplay semantics.
+  - [x] Port the selection/draw/discard/end-turn flows that are already covered by the extracted shared helpers.
+  - [ ] Port the click paths that still depend on the legacy card-rule handlers.
+- [~] Port popup/action resolution behavior.
+  - [x] Port the popup/action UI shell and resolution dismissal behavior.
+  - [ ] Port the action-option handlers that still depend on the legacy card-rule handlers.
 - [ ] Port card/turn animations only after functional parity is established.
 
 ## Phase 7: Real-Time Layer Decision
@@ -168,7 +172,14 @@ This roadmap tracks the full migration from the legacy React/Express application
 
 ## Immediate Next Steps
 
-- [ ] Remove the obsolete Express entrypoint files and confirm the repo no longer depends on them.
-- [ ] Port the recovered `Board` loader/state initialization into [`pages/play.vue`](/Users/innocentsmith/Sites/node/stupefy/pages/play.vue).
-- [ ] Move recovered pure gameplay helpers into typed shared modules before porting board subcomponents.
+- [ ] Port the remaining spell/event rule handlers from the recovered `card-rules/*` modules into typed shared modules.
+- [ ] Replace the current Phase 6 “explicit fallback alerts” with real action-option handlers once the relevant rules are ported.
 - [ ] Decide and implement the long-term real-time strategy for the gameplay room.
+- [ ] Add a server-authoritative state sync path so gameplay interactions stop being local-only after the initial room load.
+
+## Deferred Logic Notes
+
+- The migrated Vue board now renders and supports the already-ported turn-cycle flows locally, but most spell/event click paths still depend on the legacy `card-rules/*` modules. Those paths now raise explicit UI and console feedback instead of silently doing nothing.
+- Gameplay state on `/play` is still local-only after load. There is no authoritative write-back or real-time sync yet, so board interactions are intentionally non-persistent until Phase 7 defines the transport contract.
+- `turnCycle` and several event payloads still rely on dynamic per-player keys such as `id11` and free-form string phases. They are typed safely enough for the current port, but they remain a structural cleanup target for a later refactor because they make deeper rule migration more error-prone.
+- Card visibility is still based on whatever the loaded room snapshot contains. The current “hide other hands” toggle only changes presentation; it does not enforce backend privacy guarantees.
