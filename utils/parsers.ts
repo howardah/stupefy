@@ -213,6 +213,12 @@ export function parseWaitingRoomState(value: unknown): WaitingRoomState | null {
       ) as Record<string, number>
     : {};
 
+  const ready: Record<string, boolean> = isObject(value.ready)
+    ? Object.fromEntries(
+        Object.entries(value.ready).filter(([, entry]) => typeof entry === "boolean")
+      ) as Record<string, boolean>
+    : {};
+
   return {
     ...value,
     active,
@@ -223,6 +229,7 @@ export function parseWaitingRoomState(value: unknown): WaitingRoomState | null {
         ? value.password
         : false,
     players: Array.isArray(value.players) ? value.players.map(parseWaitingPlayer) : [],
+    ready,
     roomName: typeof value.roomName === "string" ? value.roomName : "",
   };
 }

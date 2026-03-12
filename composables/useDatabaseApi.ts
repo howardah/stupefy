@@ -1,7 +1,6 @@
 import type {
   GameRoomApiResponse,
   OpenWaitingRoomSummary,
-  PlayerState,
   WaitingChatMessage,
   WaitingRoomApiResponse,
 } from "~/utils/types";
@@ -50,7 +49,17 @@ export function useDatabaseApi() {
       method: "POST",
     });
 
-  const startGame = (body: { players: PlayerState[]; room: string }) =>
+  const setReady = (body: {
+    playerId: number | string;
+    ready: boolean;
+    room: string;
+  }) =>
+    request<WaitingRoomApiResponse>("/database/wait/ready/", {
+      body,
+      method: "POST",
+    });
+
+  const startGame = (body: { room: string }) =>
     request<GameRoomApiResponse>("/database/wait/start/", {
       body,
       method: "POST",
@@ -67,6 +76,7 @@ export function useDatabaseApi() {
     getWaitingRoom,
     joinRoom,
     removeActive,
+    setReady,
     startGame,
     updateActive,
   };

@@ -3,6 +3,7 @@ import type {
   ErrorResult,
   GameState,
   OpenWaitingRoomSummary,
+  PlayerState,
   WaitingChatMessage,
   WaitingRoomAccessState,
   WaitingPlayer,
@@ -14,6 +15,7 @@ import type {
 import { idGenerator } from "./db-tools";
 import { decode } from "./encrypt";
 import { createMongoClient } from "./mongo-client";
+import { newRoom } from "./new-room";
 import { parseGameState, parseWaitingRoomState } from "./parsers";
 import { normalizeRoomKey, normalizeRoomName, roomPasswordKey } from "./room";
 
@@ -69,7 +71,45 @@ function prunePresence(room: WaitingRoomState): WaitingRoomState {
     ...room,
     active,
     activeUpdatedAt,
+    ready: { ...(room.ready || {}) },
   };
+}
+
+function ensureReadyMap(room: WaitingRoomState): Record<string, boolean> {
+  const ready = { ...(room.ready || {}) };
+
+  for (const player of room.players) {
+    const key = String(player.id);
+    if (ready[key] !== true) {
+      ready[key] = false;
+    }
+  }
+
+  for (const key of Object.keys(ready)) {
+    if (!room.players.some((player) => String(player.id) === key)) {
+      delete ready[key];
+    }
+  }
+
+  return ready;
+}
+
+function areAllPlayersReady(room: WaitingRoomState): boolean {
+  if (room.players.length === 0) return false;
+
+  const ready = ensureReadyMap(room);
+  return room.players.every((player) => ready[String(player.id)] === true);
+}
+
+function playersForGame(room: WaitingRoomState): PlayerState[] {
+  return room.players.map((player) => ({
+    character: [],
+    hand: [],
+    id: Number(player.id),
+    name: player.name,
+    power: [],
+    tableau: [],
+  }));
 }
 
 async function readWaitingRoom(
@@ -202,12 +242,14 @@ async function joinWaitRoom(
       }
     }
 
+    const newPlayer = { name: data.player, id: idGenerator(currentRoom.players) };
     const nextState: WaitingRoomState = {
       ...currentRoom,
-      players: [
-        ...currentRoom.players,
-        { name: data.player, id: idGenerator(currentRoom.players) },
-      ],
+      players: [...currentRoom.players, newPlayer],
+      ready: ensureReadyMap({
+        ...currentRoom,
+        players: [...currentRoom.players, newPlayer],
+      } as WaitingRoomState),
     };
 
     return [await writeWaitingRoom(client, data.room, nextState)];
@@ -227,6 +269,7 @@ async function updateActive(data: {
         chat: [],
         password: false,
         players: [],
+        ready: {},
         roomName: normalizeRoomName(data.room),
       } as WaitingRoomState);
 
@@ -241,9 +284,44 @@ async function updateActive(data: {
         ...(currentRoom.activeUpdatedAt || {}),
         ...(data.data.activeUpdatedAt || {}),
       },
+      ready: ensureReadyMap({
+        ...currentRoom,
+        ...data.data,
+        players: data.data.players || currentRoom.players,
+        ready: {
+          ...(currentRoom.ready || {}),
+          ...((data.data.ready as Record<string, boolean> | undefined) || {}),
+        },
+      } as WaitingRoomState),
     };
 
     return [await writeWaitingRoom(client, data.room, nextState)];
+  });
+}
+
+async function updateReadyStatus(data: {
+  playerId: number | string;
+  ready: boolean;
+  room: string;
+}): Promise<WaitingRoomResult | undefined> {
+  return withClient(async (client) => {
+    const currentRoom = await readWaitingRoom(client, data.room);
+    if (!currentRoom) return [{ error: "room not found" }];
+
+    const playerKey = String(data.playerId);
+    if (!currentRoom.players.some((player) => String(player.id) === playerKey)) {
+      return [{ error: "user not found" }];
+    }
+
+    return [
+      await writeWaitingRoom(client, data.room, {
+        ...currentRoom,
+        ready: {
+          ...ensureReadyMap(currentRoom),
+          [playerKey]: data.ready,
+        },
+      }),
+    ];
   });
 }
 
@@ -302,13 +380,14 @@ async function makeWaitRoom(
       chat: [
         {
           text:
-            "Once everyone has joined the room, you can click “Start Game” to set up the actual game.",
+            "Once everyone has joined the room, each player can click Ready. The game launches automatically once everyone is ready.",
           player: 100,
           time: Date.now(),
         },
       ],
       password: info.pw || false,
       players,
+      ready: { [String(players[0]?.id || 0)]: false },
       roomName,
     };
 
@@ -341,6 +420,20 @@ async function makeWaitRoom(
   });
 }
 
+async function startWaitRoomGame(room: string): Promise<GameState[] | undefined> {
+  return withClient(async (client) => {
+    const currentRoom = await readWaitingRoom(client, room);
+    if (!currentRoom || !areAllPlayersReady(currentRoom)) {
+      return undefined;
+    }
+
+    return newRoom({
+      players: playersForGame(currentRoom),
+      room: normalizeRoomKey(room),
+    });
+  });
+}
+
 export {
   addChat,
   getWaitRoom,
@@ -349,5 +442,7 @@ export {
   listOpenWaitRooms,
   makeWaitRoom,
   removeActiveSession,
+  startWaitRoomGame,
+  updateReadyStatus,
   updateActive,
 };

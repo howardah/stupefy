@@ -166,6 +166,7 @@ export interface WaitingRoomState {
   last_updated?: number;
   password: false | string;
   players: WaitingPlayer[];
+  ready?: Record<string, boolean>;
   roomName: string;
   [key: string]: unknown;
 }

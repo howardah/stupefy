@@ -1,29 +1,47 @@
 <script setup lang="ts">
-import type { PlayerState, WaitingChatMessage, WaitingPlayer, WaitingRoomState } from "~/utils/types";
+import type { WaitingChatMessage, WaitingPlayer } from "~/utils/types";
 
 const props = defineProps<{
-  activePlayers: WaitingPlayer[];
-  canStart: boolean;
+  activePlayerIds: number[];
   chat: WaitingChatMessage[];
   currentPlayerId: number;
+  currentPlayerReady: boolean;
   emptyMessage?: string;
   errorMessage?: string;
+  everyoneReady: boolean;
   isRefreshing: boolean;
+  isStarting: boolean;
+  isUpdatingReady: boolean;
   message: string;
+  players: WaitingPlayer[];
+  readyState: Record<string, boolean>;
   room: string;
 }>();
 
 const emit = defineEmits<{
   refresh: [];
   send: [];
-  start: [];
+  toggleReady: [];
   update: [value: string];
 }>();
 
 function playerName(message: WaitingChatMessage) {
-  const match = props.activePlayers.find((player) => player.id === message.player);
+  if (message.player === 100) return "system";
+  const match = props.players.find((player) => player.id === message.player);
   return match?.name || "unknown";
 }
+
+function isActive(playerId: number) {
+  return props.activePlayerIds.includes(playerId);
+}
+
+function isReady(playerId: number) {
+  return props.readyState[String(playerId)] === true;
+}
+
+const readyCount = computed(() =>
+  props.players.filter((player) => isReady(player.id)).length
+);
 </script>
 
 <template>
@@ -33,7 +51,9 @@ function playerName(message: WaitingChatMessage) {
         <div class="flex items-center justify-between">
           <div>
             <h2 class="text-2xl font-semibold">{{ room }}</h2>
-            <p class="text-sm text-[rgba(33,22,15,0.6)]">Waiting room</p>
+            <p class="text-sm text-[rgba(33,22,15,0.6)]">
+              Everyone must mark themselves ready before the game launches.
+            </p>
           </div>
           <UButton
             color="neutral"
@@ -53,15 +73,29 @@ function playerName(message: WaitingChatMessage) {
         class="mb-4"
       />
 
-      <div v-if="activePlayers.length" class="space-y-3">
+      <div class="mb-4 rounded-2xl bg-white/60 px-4 py-3 text-sm text-[rgba(33,22,15,0.68)]">
+        {{ readyCount }} / {{ players.length }} players ready
+        <span v-if="everyoneReady"> · launching game now</span>
+      </div>
+
+      <div v-if="players.length" class="space-y-3">
         <div
-          v-for="player in activePlayers"
+          v-for="player in players"
           :key="player.id"
           class="rounded-2xl border border-[rgba(33,22,15,0.08)] bg-white/60 px-4 py-3"
         >
-          <div class="font-semibold">{{ player.name }}</div>
-          <div class="text-xs uppercase tracking-[0.18em] text-[rgba(33,22,15,0.5)]">
-            {{ player.id === currentPlayerId ? "You" : "Connected player" }}
+          <div class="flex items-center justify-between gap-4">
+            <div>
+              <div class="font-semibold">{{ player.name }}</div>
+              <div class="text-xs uppercase tracking-[0.18em] text-[rgba(33,22,15,0.5)]">
+                <span v-if="player.id === currentPlayerId">You</span>
+                <span v-else>Player</span>
+                <span> · {{ isActive(player.id) ? "Connected" : "Away" }}</span>
+              </div>
+            </div>
+            <UBadge :color="isReady(player.id) ? 'success' : 'neutral'" variant="subtle">
+              {{ isReady(player.id) ? "Ready" : "Waiting" }}
+            </UBadge>
           </div>
         </div>
       </div>
@@ -69,18 +103,19 @@ function playerName(message: WaitingChatMessage) {
         v-else
         class="rounded-2xl border border-dashed border-[rgba(33,22,15,0.14)] bg-white/40 px-4 py-6 text-sm text-[rgba(33,22,15,0.6)]"
       >
-        {{ emptyMessage || "No connected players yet." }}
+        {{ emptyMessage || "No players in the room yet." }}
       </div>
 
       <template #footer>
         <UButton
-          :disabled="!canStart"
+          :color="currentPlayerReady ? 'neutral' : 'primary'"
+          :disabled="isStarting || isUpdatingReady"
+          :icon="currentPlayerReady ? 'i-lucide-circle-off' : 'i-lucide-check-check'"
+          :label="currentPlayerReady ? 'Not ready' : 'Ready to start'"
+          :loading="isUpdatingReady"
           block
-          color="primary"
-          icon="i-lucide-wand-sparkles"
-          label="Start Game"
           size="xl"
-          @click="emit('start')"
+          @click="emit('toggleReady')"
         />
       </template>
     </UCard>

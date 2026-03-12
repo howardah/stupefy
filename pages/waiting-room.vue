@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import type { WaitingPlayer, WaitingRoomState } from "~/utils/types";
+import type { WaitingPlayer, WaitingRoomApiResponse, WaitingRoomState } from "~/utils/types";
 import { normalizeRoomKey } from "~/utils/room";
+
 definePageMeta({
   middleware: "waiting-room-query",
 });
@@ -19,8 +20,11 @@ const roomState = ref<WaitingRoomState | null>(null);
 const message = ref("");
 const isRefreshing = ref(false);
 const isStarting = ref(false);
+const isUpdatingReady = ref(false);
 const pageError = ref("");
 const hasLoaded = ref(false);
+
+const allPlayers = computed<WaitingPlayer[]>(() => roomState.value?.players || []);
 
 const connectedPlayers = computed<WaitingPlayer[]>(() => {
   const currentRoom = roomState.value;
@@ -33,12 +37,30 @@ const connectedPlayers = computed<WaitingPlayer[]>(() => {
   return currentRoom.players.filter((player) => activeIds.has(Number(player.id)));
 });
 
-const canStart = computed(() => !isStarting.value && connectedPlayers.value.length > 0);
+const readyState = computed<Record<string, boolean>>(() => roomState.value?.ready || {});
+const activePlayerIds = computed(() => connectedPlayers.value.map((player) => Number(player.id)));
+const currentPlayerReady = computed(
+  () => readyState.value[String(currentPlayerId.value)] === true
+);
+const everyoneReady = computed(
+  () =>
+    allPlayers.value.length > 0 &&
+    allPlayers.value.every((player) => readyState.value[String(player.id)] === true)
+);
 
-function handleRoomError(result: unknown) {
+function presentError(messageText: string, error?: unknown) {
+  pageError.value = messageText;
+  if (error) {
+    console.error("[waiting-room]", messageText, error);
+  } else {
+    console.error("[waiting-room]", messageText);
+  }
+  toast.add({ color: "error", title: messageText });
+}
+
+function handleRoomError(result: WaitingRoomApiResponse) {
   if (Array.isArray(result) && result[0] && "error" in result[0]) {
-    pageError.value = String(result[0].error);
-    toast.add({ color: "error", title: pageError.value });
+    presentError(String(result[0].error));
     return true;
   }
   return false;
@@ -52,33 +74,58 @@ async function heartbeat() {
   });
 }
 
+async function launchGameIfReady() {
+  if (!everyoneReady.value || isStarting.value) return;
+
+  isStarting.value = true;
+
+  try {
+    await api.startGame({
+      room: normalizeRoomKey(roomName.value),
+    });
+
+    await router.push({
+      path: "/play",
+      query: route.query,
+    });
+  } catch (error) {
+    presentError("Unable to launch the game for this room.", error);
+  } finally {
+    isStarting.value = false;
+  }
+}
+
 async function refreshRoom() {
   isRefreshing.value = true;
   pageError.value = "";
 
-  const result = await api.getWaitingRoom({
-    id: currentPlayerId.value,
-    key: roomKey.value,
-    room: roomName.value,
-  });
+  try {
+    const result = await api.getWaitingRoom({
+      id: currentPlayerId.value,
+      key: roomKey.value,
+      room: roomName.value,
+    });
 
-  if (handleRoomError(result)) {
-    hasLoaded.value = true;
-    isRefreshing.value = false;
-    return;
-  }
+    if (handleRoomError(result)) {
+      hasLoaded.value = true;
+      return;
+    }
 
-  const room = result[0];
-  if (!room || !("players" in room)) {
-    pageError.value = "This room could not be loaded.";
+    const room = result[0];
+    if (!room || !("players" in room)) {
+      presentError("This room could not be loaded.");
+      hasLoaded.value = true;
+      return;
+    }
+
+    roomState.value = room;
     hasLoaded.value = true;
+    await heartbeat();
+  } catch (error) {
+    presentError("Unable to refresh the waiting room.", error);
+  } finally {
     isRefreshing.value = false;
-    return;
   }
-  roomState.value = room;
-  hasLoaded.value = true;
-  await heartbeat();
-  isRefreshing.value = false;
 }
 
 async function sendChat() {
@@ -91,45 +138,62 @@ async function sendChat() {
   };
 
   message.value = "";
-  const result = await api.addChat({
-    room: roomName.value,
-    newChat,
-  });
 
-  if (handleRoomError(result)) return;
-  await refreshRoom();
+  try {
+    const result = await api.addChat({
+      room: roomName.value,
+      newChat,
+    });
+
+    if (!result) {
+      presentError("Unable to send the chat message.");
+      return;
+    }
+
+    await refreshRoom();
+  } catch (error) {
+    presentError("Unable to send the chat message.", error);
+  }
 }
 
-async function startGame() {
-  if (!canStart.value) return;
-  isStarting.value = true;
+async function toggleReady() {
+  isUpdatingReady.value = true;
 
-  await api.startGame({
-    room: normalizeRoomKey(roomName.value),
-    players: connectedPlayers.value.map((player) => ({
-      character: [],
-      hand: [],
-      id: Number(player.id),
-      name: player.name,
-      power: [],
-      tableau: [],
-    })),
-  });
+  try {
+    const result = await api.setReady({
+      room: roomName.value,
+      playerId: currentPlayerId.value,
+      ready: !currentPlayerReady.value,
+    });
 
-  await router.push({
-    path: "/play",
-    query: route.query,
-  });
-  isStarting.value = false;
+    if (handleRoomError(result)) {
+      return;
+    }
+
+    await refreshRoom();
+  } catch (error) {
+    presentError("Unable to update your ready status.", error);
+  } finally {
+    isUpdatingReady.value = false;
+  }
 }
 
 await refreshRoom();
 
+watch(
+  everyoneReady,
+  (ready) => {
+    if (!ready || !hasLoaded.value) return;
+    void launchGameIfReady();
+  },
+  { immediate: true }
+);
+
 let refreshTimer: ReturnType<typeof setInterval> | undefined;
 
-onMounted(async () => {
+onMounted(() => {
   refreshTimer = setInterval(() => {
-    refreshRoom();
+    void refreshRoom();
   }, 4000);
 });
 
@@ -159,18 +223,23 @@ onBeforeUnmount(async () => {
       Loading waiting room...
     </div>
     <WaitingRoomPanel
-      :active-players="connectedPlayers"
-      :can-start="canStart"
+      :active-player-ids="activePlayerIds"
       :chat="roomState?.chat || []"
       :current-player-id="currentPlayerId"
-      :empty-message="hasLoaded ? 'No connected players yet. Waiting for the room to refresh.' : 'Loading players...'"
+      :current-player-ready="currentPlayerReady"
+      :empty-message="hasLoaded ? 'No players in this room yet.' : 'Loading players...'"
       :error-message="pageError"
+      :everyone-ready="everyoneReady"
       :is-refreshing="isRefreshing"
+      :is-starting="isStarting"
+      :is-updating-ready="isUpdatingReady"
       :message="message"
+      :players="allPlayers"
+      :ready-state="readyState"
       :room="roomName"
       @refresh="refreshRoom"
       @send="sendChat"
-      @start="startGame"
+      @toggle-ready="toggleReady"
       @update="message = $event"
     />
   </div>
