@@ -1,4 +1,5 @@
-import type { BoardViewState } from "../../types";
+import type { BoardViewState, GameEvent, GameEventBystanderKey } from "../../types";
+import { toTurnActionName } from "../../types";
 import { cardIndex, cardsIndexName, getPrimaryCharacter } from "../core";
 import { createResolutionEvent } from "../events";
 import { cycleCleanse, incrementTurn } from "../turn-cycle";
@@ -85,7 +86,7 @@ function handleDiscardChoice(state: BoardViewState, action: string): RuleResult 
   clearCurrentEvent(state);
   state.turnCycle.phase = "selected";
   if (state.turnCycle.cards.length === 1) {
-    state.turnCycle.action = state.turnCycle.cards[0]!.name;
+    state.turnCycle.action = toTurnActionName(state.turnCycle.cards[0]!.name, "discard");
   } else if (
     state.turnCycle.cards.length === 2 &&
     state.turnCycle.cards.some((card) => card.name === "stupefy") &&
@@ -118,11 +119,12 @@ function handleWizardsDuelChoice(
       source: "wizards_duel",
     });
     applyAdvancedDeaths(state);
-    if (state.turnCycle.phase === "death") {
+    if (isDeathPhase(state)) {
       return { handled: true };
     }
     const instigator = event.instigator ? getPlayerById(state, event.instigator.id) : null;
-    const loser = getPlayerById(state, event.target[0] as number);
+    const loser =
+      typeof event.target[0] === "number" ? getPlayerById(state, event.target[0]) : null;
     clearCurrentEvent(state);
     if (instigator && loser) {
       state.events.unshift(
@@ -159,7 +161,8 @@ function handleWizardsDuelChoice(
   }
 
   clearCurrentEvent(state);
-  state.events.push({
+  const bystanderKey: GameEventBystanderKey = `bystanders-${player.id}`;
+  const duelEvent: GameEvent = {
     popup: {
       message: `${getPrimaryCharacter(player)?.shortName || player.name} has cast a Stupefy back at you!`,
       options: [
@@ -167,10 +170,6 @@ function handleWizardsDuelChoice(
         { label: "Play Stupefy", function: "duel" },
       ],
     },
-    [`bystanders-${player.id}`]: createBystanderPopup(
-      `You've cast a Stupefy at ${getPrimaryCharacter(defender)?.shortName || defender.name}!`,
-      "subtle",
-    ),
     bystanders: createBystanderPopup(
       `${getPrimaryCharacter(player)?.shortName || player.name} and ${getPrimaryCharacter(defender)?.shortName || defender.name} are fighting a Wizard's Duel!`,
       "subtle",
@@ -178,7 +177,12 @@ function handleWizardsDuelChoice(
     instigator: player,
     cardType: "wizards_duel",
     target: [defender.id],
-  });
+  };
+  duelEvent[bystanderKey] = createBystanderPopup(
+    `You've cast a Stupefy at ${getPrimaryCharacter(defender)?.shortName || defender.name}!`,
+    "subtle",
+  );
+  state.events.push(duelEvent);
   return { handled: true };
 }
 
@@ -330,7 +334,7 @@ function handleRulePopupChoice(
   const reaction = ensureReactionState(state, state.playerId);
   reaction.choice = action;
 
-  if (state.turnCycle.phase === "death") {
+  if (isDeathPhase(state)) {
     return resolveDeathChoice(state, action);
   }
 
@@ -352,7 +356,7 @@ function handleRulePopupChoice(
       }
 
       applyAdvancedDeaths(state);
-      if (state.turnCycle.phase === "death") {
+      if (isDeathPhase(state)) {
         return { handled: true };
       }
       finishEventForPlayer(state, resolveStupefyResolution(state, action));
@@ -366,7 +370,7 @@ function handleRulePopupChoice(
       }
 
       applyAdvancedDeaths(state);
-      if (state.turnCycle.phase === "death") {
+      if (isDeathPhase(state)) {
         return { handled: true };
       }
       finishEventForPlayer(
@@ -390,3 +394,7 @@ function handleRulePopupChoice(
 }
 
 export { handleRulePopupChoice };
+
+function isDeathPhase(state: BoardViewState) {
+  return state.turnCycle.phase === "death";
+}

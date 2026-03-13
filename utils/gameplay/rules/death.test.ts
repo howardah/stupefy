@@ -134,7 +134,7 @@ describe("death handling", () => {
     const interrupt = handleRulePopupChoice(state, "takeHit", 0, () => {});
 
     expect(interrupt.handled).toBe(true);
-    expect(state.turnCycle.phase).toBe("death");
+    expect<string>(state.turnCycle.phase).toBe("death");
     expect(state.events[0]?.popup?.options.map((option) => option.function)).toContain("lily_yes");
 
     state.playerId = 11;

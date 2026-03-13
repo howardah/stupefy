@@ -85,7 +85,11 @@ async function listOpenWaitRooms(): Promise<OpenWaitingRoomSummary[]> {
           return null;
         }
         if (!isWaitingRoomAvailable(waitingRoom)) {
-          await waitingCollection.replaceOne({ _id: 0 }, { ...waitingRoom, _id: 0 }, { upsert: true });
+          await waitingCollection.updateOne(
+            { _id: 0 },
+            { $set: waitingRoom, $setOnInsert: { _id: 0 } },
+            { upsert: true },
+          );
           return null;
         }
         if (typeof waitingRoom.password === "string" && waitingRoom.password.length > 0) {

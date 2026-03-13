@@ -43,12 +43,12 @@ The style guide explicitly calls out broad `unknown[]`, catch-all index signatur
 
 ## Acceptance criteria
 
-- [ ] `utils/types.ts` no longer relies on `unknown[]` for gameplay state collections.
-- [ ] Core gameplay phases and popup types use explicit unions.
-- [ ] Broad index signatures are removed or reduced to narrowly-typed structures.
-- [ ] Gameplay modules compile with fewer casts and guard-only workarounds.
-- [ ] `bunx tsc --noEmit` passes.
+- [x] `utils/types.ts` no longer relies on `unknown[]` for gameplay state collections.
+- [x] Core gameplay phases and popup types use explicit unions.
+- [x] Broad index signatures are removed or reduced to narrowly-typed structures.
+- [x] Gameplay modules compile with fewer casts and guard-only workarounds.
+- [x] `bunx tsc --noEmit` passes.
 
 ## Issue Status
 
-Open
+Closed

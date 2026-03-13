@@ -8,6 +8,8 @@ import type {
   PlayerState,
   PlayQuery,
   TurnCycle,
+  TurnCyclePlayerKey,
+  TurnCyclePlayerState,
 } from "../types";
 import { getPopupState } from "./events";
 import { cloneDeck, countAllCards, sortPlayers } from "./core";
@@ -52,16 +54,14 @@ function cloneEvent(event: GameEvent): GameEvent {
   };
 }
 
-function cloneTurnCyclePlayerState(value: unknown): unknown {
-  if (!value || typeof value !== "object" || !("cards" in value)) {
+function cloneTurnCyclePlayerState(value: TurnCyclePlayerState | undefined): TurnCyclePlayerState | undefined {
+  if (!value) {
     return value;
   }
 
-  const playerState = value as { cards?: GameCard[]; choice?: string };
-
   return {
-    ...playerState,
-    cards: Array.isArray(playerState.cards) ? playerState.cards.map(cloneCard) : [],
+    ...value,
+    cards: value.cards.map(cloneCard),
   };
 }
 
@@ -84,8 +84,10 @@ export function cloneTurnCycle(turnCycle: TurnCycle): TurnCycle {
   };
 
   for (const [key, value] of Object.entries(turnCycle)) {
-    if (key.startsWith("id")) {
-      clone[key] = cloneTurnCyclePlayerState(value);
+    if (/^id\d+$/.test(key)) {
+      clone[key as TurnCyclePlayerKey] = cloneTurnCyclePlayerState(
+        value as TurnCyclePlayerState | undefined,
+      );
     }
   }
 

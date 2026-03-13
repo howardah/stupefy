@@ -2,6 +2,170 @@ export type House = "" | "G" | "H" | "R" | "S";
 
 export type Role = "auror" | "death eater" | "minister" | "werewolf";
 
+export const CHARACTER_POWER_NAMES = [
+  "albus_dumbledore",
+  "arthur_weasley",
+  "bellatrix_lestrange",
+  "cedric_diggory",
+  "dobby",
+  "dolores_umbridge",
+  "draco_malfoy",
+  "fenrir_greyback",
+  "fred_and_george",
+  "gilderoy_lockhart",
+  "ginny_weasley",
+  "harry_potter",
+  "hermione_granger",
+  "james_potter",
+  "lily_potter",
+  "lucius_malfoy",
+  "luna_lovegood",
+  "mad-eye_moody",
+  "minerva_mchonagall",
+  "molly_weasley",
+  "mundungus_fletcher",
+  "neville_longbottom",
+  "nymphadora_tonks",
+  "peeves",
+  "peter_pettigrew",
+  "remus_lupin",
+  "ron_weasley",
+  "rubeus_hagrid",
+  "severus_snape",
+  "sirius_black",
+  "voldemort",
+] as const;
+
+export type CharacterPowerName = (typeof CHARACTER_POWER_NAMES)[number];
+
+export const TURN_CYCLE_USED_ENTRIES = [
+  "cedric_bonus",
+  "dobby_stupefy",
+  "fred_and_george",
+  "james_potter",
+  "minerva_mchonagall",
+  "ressurection_stone",
+  "tonks_copy",
+] as const;
+
+export type TurnCycleUsedEntry = (typeof TURN_CYCLE_USED_ENTRIES)[number];
+
+export const POPUP_TYPES = ["resolution", "subtle"] as const;
+
+export type PopupType = (typeof POPUP_TYPES)[number];
+
+export type GameCardName =
+  | "accio"
+  | "apparate"
+  | "aspen_wand"
+  | "azkaban"
+  | "broomstick"
+  | "butterbeer"
+  | "dementors"
+  | "diagon_alley"
+  | "elder_wand"
+  | "expecto_patronum"
+  | "expelliarmus"
+  | "felix_felicis"
+  | "fiendfyre"
+  | "garroting_gas"
+  | "holly_wand"
+  | "honeydukes"
+  | "invisibility_cloak"
+  | "larch_wand"
+  | "polyjuice_potion"
+  | "protego"
+  | "resurrection_stone"
+  | "stupefy"
+  | "three_broomsticks"
+  | "vanishing_cabinet"
+  | "weasleys_wizard_weezes"
+  | "wizards_duel"
+  | "yew_wand";
+
+export const TURN_ACTION_NAMES = [
+  "",
+  "accio",
+  "apparate",
+  "aspen_wand",
+  "azkaban",
+  "broomstick",
+  "butterbeer",
+  "death",
+  "dementors",
+  "diagon_alley",
+  "discard",
+  "discardEvent",
+  "dobby_punish_stupefy",
+  "dobby_stupefy",
+  "elder_wand",
+  "expecto_patronum",
+  "expelliarmus",
+  "felix",
+  "felix_felicis",
+  "fenrir_stupefy",
+  "fiendfyre",
+  "garroting_gas",
+  "holly_wand",
+  "honeydukes",
+  "invisibility_cloak",
+  "james_potter",
+  "larch_wand",
+  "minerva_mchonagall",
+  "molly_protego",
+  "neville_longbottom",
+  "peeves_draw",
+  "peter_pettigrew",
+  "polyjuice_potion",
+  "protego",
+  "ressurection_stone",
+  "resurrection_stone",
+  "ron_weasley",
+  "stupefy",
+  "three_broomsticks",
+  "tonks_copy",
+  "vanishing_cabinet",
+  "weasleys_wizard_weezes",
+  "wizards_duel",
+  "yew_wand",
+] as const;
+
+export type TurnActionName = (typeof TURN_ACTION_NAMES)[number];
+
+export const TURN_CYCLE_PHASES = [
+  "attack",
+  "azkaban",
+  "death",
+  "diagon_alley",
+  "discard",
+  "felix",
+  "fred-george-discard",
+  "initial",
+  "ressurection_stone",
+  "ressurection_stone-discards",
+  "resurrection_stone",
+  "selected",
+  "selected-stuck-in-azkaban",
+  "selected-tableau",
+  "start-turn",
+  "stuck-in-azkaban",
+  "unset",
+] as const;
+
+export type TurnCyclePhase = (typeof TURN_CYCLE_PHASES)[number];
+export type TurnCyclePlayerKey = `id${number}`;
+export type GameEventBystanderKey = `bystanders-${number}`;
+
+export function isCharacterPowerName(value: string | undefined): value is CharacterPowerName {
+  return typeof value === "string" && CHARACTER_POWER_NAMES.includes(value as CharacterPowerName);
+}
+
+export function toTurnActionName(value: string | undefined, fallback: TurnActionName = ""): TurnActionName {
+  return typeof value === "string" && TURN_ACTION_NAMES.includes(value as TurnActionName)
+    ? (value as TurnActionName)
+    : fallback;
+}
+
 export interface CardPower {
   [key: string]: boolean | number | string | undefined;
 }
@@ -32,9 +196,8 @@ export interface PlayerState {
   role?: Role;
   tableau: GameCard[];
   hand: GameCard[];
-  power: unknown[];
+  power: CharacterPowerName[];
   character: PlayerCharacterState;
-  [key: string]: unknown;
 }
 
 export interface DeckState {
@@ -46,20 +209,26 @@ export interface DeckState {
 }
 
 export interface TurnCycle {
-  action: string;
+  action: TurnActionName;
   cards: GameCard[];
   felix: PlayerState[];
   draw: number;
   hotseat: number;
-  phase: string;
+  phase: TurnCyclePhase;
   shots: number;
-  used: unknown[];
-  [key: string]: unknown;
+  used: TurnCycleUsedEntry[];
+  afterDeath?: TurnCycleResumeState;
+  [key: TurnCyclePlayerKey]: TurnCyclePlayerState | undefined;
 }
 
 export interface TurnCyclePlayerState {
   cards: GameCard[];
   choice?: string;
+}
+
+export interface TurnCycleResumeState {
+  action: TurnActionName;
+  phase: TurnCyclePhase;
 }
 
 export type RealtimeTransportStrategy = "polling";
@@ -130,7 +299,7 @@ export interface PopupState {
   canDismiss?: boolean;
   message: string;
   options: PopupOption[];
-  popupType?: string;
+  popupType?: PopupType;
 }
 
 export interface GameEvent {
@@ -141,7 +310,7 @@ export interface GameEvent {
   popup?: PopupState;
   table?: GameCard[];
   target: Array<number | string>;
-  [key: string]: unknown;
+  [key: GameEventBystanderKey]: PopupState | undefined;
 }
 
 export interface GameState {
@@ -161,7 +330,6 @@ export interface GameState {
   turnCycle: TurnCycle;
   turnOrder: number[];
   last_updated?: number;
-  [key: string]: unknown;
 }
 
 export type GameRoomDocument = GameState;
@@ -223,7 +391,6 @@ export interface WaitingChatMessage {
   player: number;
   text: string;
   time: number;
-  [key: string]: unknown;
 }
 
 export interface WaitingRoomState {
@@ -242,7 +409,6 @@ export interface WaitingRoomState {
   roomName: string;
   startedAt?: number;
   status?: WaitingRoomStatus;
-  [key: string]: unknown;
 }
 
 export type WaitingRoomDocument = WaitingRoomState;

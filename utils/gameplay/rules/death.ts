@@ -114,7 +114,7 @@ function applyAdvancedDeaths(state: BoardViewState, options?: string) {
     return;
   }
 
-  if (!(state.turnCycle.afterDeath as { phase?: string } | undefined)?.phase) {
+  if (!state.turnCycle.afterDeath?.phase) {
     state.turnCycle.afterDeath = {
       action: state.turnCycle.action,
       phase: state.turnCycle.phase,

@@ -1,4 +1,5 @@
 import type {
+  GameEventBystanderKey,
   GameEvent,
   GameplayTarget,
   PlayerState,
@@ -30,10 +31,11 @@ export function getPopupState(
       };
     }
 
-    const bystanderPopup = firstEvent[`bystanders-${playerId}`];
+    const bystanderKey: GameEventBystanderKey = `bystanders-${playerId}`;
+    const bystanderPopup = firstEvent[bystanderKey];
     if (bystanderPopup && typeof bystanderPopup === "object") {
       return {
-        ...(bystanderPopup as PopupState),
+        ...bystanderPopup,
         canDismiss: false,
       };
     }

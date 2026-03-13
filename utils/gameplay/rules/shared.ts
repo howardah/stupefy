@@ -3,8 +3,11 @@ import type {
   BoardViewState,
   GameCard,
   GameEvent,
+  TurnCyclePlayerKey,
   PlayerState,
   PopupOption,
+  PopupType,
+  TurnCycleResumeState,
   TurnCyclePlayerState,
 } from "../../types";
 import Deck from "../../deck";
@@ -105,14 +108,14 @@ function maybeRewardHermione(state: BoardViewState, player: PlayerState) {
 }
 
 function ensureReactionState(state: BoardViewState, playerId: number): TurnCyclePlayerState {
-  const key = `id${playerId}`;
+  const key: TurnCyclePlayerKey = `id${playerId}`;
   const currentValue = state.turnCycle[key];
 
-  if (!currentValue || typeof currentValue !== "object" || !("cards" in currentValue)) {
+  if (!currentValue) {
     state.turnCycle[key] = { cards: [] };
   }
 
-  return state.turnCycle[key] as TurnCyclePlayerState;
+  return state.turnCycle[key]!;
 }
 
 function discardCards(player: PlayerState, deck: Deck<GameCard>, cards: GameCard[]) {
@@ -148,7 +151,7 @@ function discardSelected(state: BoardViewState) {
   return { deck, player };
 }
 
-function createBystanderPopup(message: string, popupType: "resolution" | "subtle" = "resolution") {
+function createBystanderPopup(message: string, popupType: PopupType = "resolution") {
   return {
     message,
     options: [] as PopupOption[],
@@ -184,7 +187,7 @@ function clearCurrentEvent(state: BoardViewState) {
 }
 
 function restoreTurnCycleAfterDeath(state: BoardViewState) {
-  const afterDeath = state.turnCycle.afterDeath as { action?: string; phase?: string } | undefined;
+  const afterDeath: TurnCycleResumeState | undefined = state.turnCycle.afterDeath;
 
   if (!afterDeath?.phase) {
     return;
@@ -192,7 +195,7 @@ function restoreTurnCycleAfterDeath(state: BoardViewState) {
 
   state.turnCycle.phase = afterDeath.phase;
   state.turnCycle.action = afterDeath.action || "";
-  state.turnCycle.afterDeath = {};
+  state.turnCycle.afterDeath = undefined;
 }
 
 function summarizeDamagedPlayers(state: BoardViewState, prefix: string) {

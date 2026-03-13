@@ -1,4 +1,10 @@
-import type { BoardViewState, GameCard, PlayerState } from "../../types";
+import type {
+  BoardViewState,
+  GameCard,
+  GameEvent,
+  GameEventBystanderKey,
+  PlayerState,
+} from "../../types";
 import { cardIndex, cardsInclude, getPrimaryCharacter, titleCase } from "../core";
 import { createResolutionEvent, protegoOptions } from "../events";
 import { cycleCleanse } from "../turn-cycle";
@@ -24,6 +30,7 @@ function startStupefy(state: BoardViewState, subject: PlayerState) {
   state.turnCycle.shots -= 1;
   state.turnCycle.hotseat = subject.id;
   state.turnCycle.phase = "attack";
+  const bystanderKey: GameEventBystanderKey = `bystanders-${instigator.id}`;
 
   const options = protegoOptions(
     subject,
@@ -34,25 +41,24 @@ function startStupefy(state: BoardViewState, subject: PlayerState) {
     instigator,
   );
 
-  state.events = [
-    {
-      popup: {
-        message: `${getPrimaryCharacter(instigator)?.shortName || instigator.name} has fired a Stupefy at you!`,
-        options,
-      },
-      instigator,
-      cardType: "stupefy",
-      target: [subject.id],
-      bystanders: createBystanderPopup(
-        `${getPrimaryCharacter(instigator)?.shortName || instigator.name} has fired a Stupefy at ${getPrimaryCharacter(subject)?.shortName || subject.name}!`,
-        "subtle",
-      ),
-      [`bystanders-${instigator.id}`]: createBystanderPopup(
-        `You have fired a Stupefy at ${getPrimaryCharacter(subject)?.shortName || subject.name}!`,
-        "subtle",
-      ),
+  const event: GameEvent = {
+    popup: {
+      message: `${getPrimaryCharacter(instigator)?.shortName || instigator.name} has fired a Stupefy at you!`,
+      options,
     },
-  ];
+    instigator,
+    cardType: "stupefy",
+    target: [subject.id],
+    bystanders: createBystanderPopup(
+      `${getPrimaryCharacter(instigator)?.shortName || instigator.name} has fired a Stupefy at ${getPrimaryCharacter(subject)?.shortName || subject.name}!`,
+      "subtle",
+    ),
+  };
+  event[bystanderKey] = createBystanderPopup(
+    `You have fired a Stupefy at ${getPrimaryCharacter(subject)?.shortName || subject.name}!`,
+    "subtle",
+  );
+  state.events = [event];
 
   return true;
 }
@@ -70,6 +76,7 @@ function startFreeStupefy(state: BoardViewState, subject: PlayerState, selfDamag
 
   state.turnCycle.hotseat = subject.id;
   state.turnCycle.phase = "attack";
+  const bystanderKey: GameEventBystanderKey = `bystanders-${instigator.id}`;
 
   const options = protegoOptions(
     subject,
@@ -80,25 +87,24 @@ function startFreeStupefy(state: BoardViewState, subject: PlayerState, selfDamag
     instigator,
   );
 
-  state.events = [
-    {
-      popup: {
-        message: `${getPrimaryCharacter(instigator)?.shortName || instigator.name} has fired a Stupefy at you!`,
-        options,
-      },
-      instigator,
-      cardType: "stupefy",
-      target: [subject.id],
-      bystanders: createBystanderPopup(
-        `${getPrimaryCharacter(instigator)?.shortName || instigator.name} has fired a Stupefy at ${getPrimaryCharacter(subject)?.shortName || subject.name}!`,
-        "subtle",
-      ),
-      [`bystanders-${instigator.id}`]: createBystanderPopup(
-        `You have fired a Stupefy at ${getPrimaryCharacter(subject)?.shortName || subject.name}!`,
-        "subtle",
-      ),
+  const event: GameEvent = {
+    popup: {
+      message: `${getPrimaryCharacter(instigator)?.shortName || instigator.name} has fired a Stupefy at you!`,
+      options,
     },
-  ];
+    instigator,
+    cardType: "stupefy",
+    target: [subject.id],
+    bystanders: createBystanderPopup(
+      `${getPrimaryCharacter(instigator)?.shortName || instigator.name} has fired a Stupefy at ${getPrimaryCharacter(subject)?.shortName || subject.name}!`,
+      "subtle",
+    ),
+  };
+  event[bystanderKey] = createBystanderPopup(
+    `You have fired a Stupefy at ${getPrimaryCharacter(subject)?.shortName || subject.name}!`,
+    "subtle",
+  );
+  state.events = [event];
 
   return true;
 }
@@ -150,28 +156,28 @@ function startWizardsDuel(state: BoardViewState, subject: PlayerState) {
   state.deck = discarded.deck;
   state.turnCycle.hotseat = subject.id;
   state.turnCycle.phase = "attack";
-  state.events = [
-    {
-      popup: {
-        message: `${getPrimaryCharacter(instigator)?.shortName || instigator.name} has challenged you to a Wizard's Duel!`,
-        options: [
-          { label: "Take a hit", function: "takeHit" },
-          { label: "Play Stupefy", function: "duel" },
-        ],
-      },
-      [`bystanders-${instigator.id}`]: createBystanderPopup(
-        `You have challenged ${getPrimaryCharacter(subject)?.shortName || subject.name} to a Wizard's Duel!`,
-        "subtle",
-      ),
-      bystanders: createBystanderPopup(
-        `${getPrimaryCharacter(instigator)?.shortName || instigator.name} has challenged ${getPrimaryCharacter(subject)?.shortName || subject.name} to a Wizard's Duel!`,
-        "subtle",
-      ),
-      instigator,
-      cardType: "wizards_duel",
-      target: [subject.id],
+  const bystanderKey: GameEventBystanderKey = `bystanders-${instigator.id}`;
+  const event: GameEvent = {
+    popup: {
+      message: `${getPrimaryCharacter(instigator)?.shortName || instigator.name} has challenged you to a Wizard's Duel!`,
+      options: [
+        { label: "Take a hit", function: "takeHit" },
+        { label: "Play Stupefy", function: "duel" },
+      ],
     },
-  ];
+    bystanders: createBystanderPopup(
+      `${getPrimaryCharacter(instigator)?.shortName || instigator.name} has challenged ${getPrimaryCharacter(subject)?.shortName || subject.name} to a Wizard's Duel!`,
+      "subtle",
+    ),
+    instigator,
+    cardType: "wizards_duel",
+    target: [subject.id],
+  };
+  event[bystanderKey] = createBystanderPopup(
+    `You have challenged ${getPrimaryCharacter(subject)?.shortName || subject.name} to a Wizard's Duel!`,
+    "subtle",
+  );
+  state.events = [event];
 
   return true;
 }

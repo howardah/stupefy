@@ -28,7 +28,7 @@ describe("discard and draw accounting", () => {
 
     const startDiscard = handleRuleDeckClick(state, "discard", () => {});
     expect(startDiscard.handled).toBe(true);
-    expect(state.turnCycle.action).toBe("discardEvent");
+    expect<string>(state.turnCycle.action).toBe("discardEvent");
 
     const confirm = handleRulePopupChoice(state, "dump", 0, () => {});
     expect(confirm.handled).toBe(true);

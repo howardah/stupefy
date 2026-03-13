@@ -1,9 +1,12 @@
-import type { BoardViewState, GameCard, PlayerState } from "../types";
+import type { BoardViewState, CharacterPowerName, GameCard, PlayerState } from "../types";
 import { getPrimaryCharacter } from "./core";
 
 const HALLOWS = ["elder_wand", "invisibility_cloak", "resurrection_stone"] as const;
 
-export function hasPower(player: PlayerState | null | undefined, powerName: string): boolean {
+export function hasPower(
+  player: PlayerState | null | undefined,
+  powerName: CharacterPowerName,
+): boolean {
   if (!player) {
     return false;
   }
@@ -71,7 +74,9 @@ export function dobbyHasClothes(player: PlayerState | null | undefined): boolean
   return Boolean(player && player.tableau.length >= 2);
 }
 
-export function copiedPowerName(player: PlayerState | null | undefined): string | null {
+export function copiedPowerName(
+  player: PlayerState | null | undefined,
+): CharacterPowerName | null {
   if (!player) {
     return null;
   }
@@ -80,7 +85,7 @@ export function copiedPowerName(player: PlayerState | null | undefined): string 
 
   return (
     player.power.find(
-      (power): power is string => typeof power === "string" && power !== primaryPower,
+      (power): power is CharacterPowerName => power !== primaryPower,
     ) ?? null
   );
 }

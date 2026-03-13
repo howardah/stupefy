@@ -1,4 +1,4 @@
-import type { BoardViewState, GameCard } from "~/utils/types";
+import type { BoardViewState, GameCard, TurnCyclePlayerKey, TurnCyclePlayerState } from "~/utils/types";
 import { playerIndex } from "~/utils/gameplay/core";
 import { getPopupState } from "~/utils/gameplay/events";
 
@@ -11,14 +11,14 @@ function syncActions(state: BoardViewState) {
 }
 
 function ensureTurnCyclePlayerState(state: BoardViewState, playerId: number) {
-  const key = `id${playerId}`;
+  const key: TurnCyclePlayerKey = `id${playerId}`;
   const currentValue = state.turnCycle[key];
 
-  if (!currentValue || typeof currentValue !== "object" || !("cards" in currentValue)) {
+  if (!currentValue) {
     state.turnCycle[key] = { cards: [] };
   }
 
-  return state.turnCycle[key] as { cards: GameCard[]; choice?: string };
+  return state.turnCycle[key] as TurnCyclePlayerState;
 }
 
 function activePlayer(state: BoardViewState) {

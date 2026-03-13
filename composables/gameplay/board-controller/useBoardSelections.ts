@@ -1,4 +1,5 @@
 import type { BoardViewState, GameCard } from "~/utils/types";
+import { toTurnActionName } from "~/utils/types";
 import Deck from "~/utils/deck";
 import { cardIndex, cardsInclude } from "~/utils/gameplay/core";
 import { tableauProblems } from "~/utils/gameplay/events";
@@ -20,7 +21,7 @@ function useBoardSelections(pushAlert: (message: string, tone?: "info" | "warnin
       turnCycle.action =
         hasPower(viewerPlayer(state), "ginny_weasley") && card.name === "protego"
           ? "stupefy"
-          : card.name;
+          : toTurnActionName(card.name);
       return true;
     }
 
@@ -69,7 +70,7 @@ function useBoardSelections(pushAlert: (message: string, tone?: "info" | "warnin
           hasPower(viewerPlayer(state), "ginny_weasley") &&
           turnCycle.cards[0]!.name === "protego"
             ? "stupefy"
-            : turnCycle.cards[0]!.name;
+            : toTurnActionName(turnCycle.cards[0]!.name);
       } else if (turnCycle.cards.length === 0) {
         state.turnCycle = cycleCleanse(turnCycle, state.players, state.turn);
       }

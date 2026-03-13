@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import type { BoardViewState, GameCard, GameplayTarget, PlayerState } from "~/utils/types";
+import type {
+  BoardViewState,
+  GameCard,
+  GameplayTarget,
+  PlayerState,
+  TurnCyclePlayerKey,
+} from "~/utils/types";
 import {
   EMPTY_CARD,
   canApparateBetween,
@@ -34,14 +40,13 @@ function selected(card: GameCard) {
 }
 
 function reactionSelected(card: GameCard) {
-  const reactionState = props.boardState.turnCycle[`id${props.player.id}`];
-  if (!reactionState || typeof reactionState !== "object" || !("cards" in reactionState)) {
+  const reactionKey: TurnCyclePlayerKey = `id${props.player.id}`;
+  const reactionState = props.boardState.turnCycle[reactionKey];
+  if (!reactionState) {
     return false;
   }
 
-  return Array.isArray(reactionState.cards)
-    ? reactionState.cards.some((entry: GameCard) => entry.id === card.id)
-    : false;
+  return reactionState.cards.some((entry) => entry.id === card.id);
 }
 </script>
 

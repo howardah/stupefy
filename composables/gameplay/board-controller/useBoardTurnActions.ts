@@ -3,6 +3,7 @@ import type {
   BoardViewState,
   CharacterCard,
 } from "~/utils/types";
+import { isCharacterPowerName } from "~/utils/types";
 import Deck from "~/utils/deck";
 import { handleRulePopupChoice } from "~/utils/gameplay/card-rules";
 import { getPrimaryCharacter } from "~/utils/gameplay/core";
@@ -48,7 +49,7 @@ function useBoardTurnActions(options: {
       }
 
       player.character = nextCharacter;
-      player.power = [nextCharacter.fileName];
+      player.power = isCharacterPowerName(nextCharacter.fileName) ? [nextCharacter.fileName] : [];
       player.hand = deck.drawCards(nextCharacter.health);
       state.deck = deck;
 
@@ -172,7 +173,9 @@ function useBoardTurnActions(options: {
       const nextPlayer = activePlayer(state);
       if (nextPlayer) {
         const character = getPrimaryCharacter(nextPlayer);
-        nextPlayer.power = character?.fileName ? [character.fileName] : [];
+        nextPlayer.power = character?.fileName && isCharacterPowerName(character.fileName)
+          ? [character.fileName]
+          : [];
       }
 
       const setup = setupTurnCycleForTurn(state.players, nextTurn);

@@ -1,4 +1,5 @@
-import type { BoardViewState } from "../../types";
+import type { BoardViewState, CharacterPowerName } from "../../types";
+import { isCharacterPowerName } from "../../types";
 import { cardIndex, getPrimaryCharacter } from "../core";
 import { createResolutionEvent } from "../events";
 import { cycleCleanse } from "../turn-cycle";
@@ -110,7 +111,20 @@ function handleRuleCharacterClick(
         return { handled: true };
       }
 
-      player.power = [getPrimaryCharacter(player)?.fileName || "nymphadora_tonks", copiedCharacter.fileName];
+      const copiedPowers: CharacterPowerName[] = [];
+      const currentPower = getPrimaryCharacter(player)?.fileName;
+
+      if (isCharacterPowerName(currentPower)) {
+        copiedPowers.push(currentPower);
+      } else {
+        copiedPowers.push("nymphadora_tonks");
+      }
+
+      if (isCharacterPowerName(copiedCharacter.fileName)) {
+        copiedPowers.push(copiedCharacter.fileName);
+      }
+
+      player.power = copiedPowers;
       state.turnCycle.used.push("tonks_copy");
       resetTurnSelection(state);
       state.events.push(

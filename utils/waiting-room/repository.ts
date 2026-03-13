@@ -6,6 +6,8 @@ import { normalizeRoomKey } from "../room";
 import { normalizeGameRoom, prunePresence } from "./lifecycle";
 
 const ROOM_DOCUMENT_FILTER = { _id: 0 };
+type WaitingRoomRecord = WaitingRoomState & { _id: number };
+type GameRoomRecord = GameState & { _id: number };
 
 async function withClient<T>(runner: (client: MongoClient) => Promise<T>): Promise<T> {
   const client = createMongoClient();
@@ -21,15 +23,15 @@ async function withClient<T>(runner: (client: MongoClient) => Promise<T>): Promi
 async function getWaitingCollection(
   client: MongoClient,
   room: string,
-): Promise<Collection<WaitingRoomState>> {
-  return client.db("waiting_room").collection<WaitingRoomState>(normalizeRoomKey(room));
+): Promise<Collection<WaitingRoomRecord>> {
+  return client.db("waiting_room").collection<WaitingRoomRecord>(normalizeRoomKey(room));
 }
 
 async function getGameCollection(
   client: MongoClient,
   room: string,
-): Promise<Collection<GameState>> {
-  return client.db("stupefy").collection<GameState>(normalizeRoomKey(room));
+): Promise<Collection<GameRoomRecord>> {
+  return client.db("stupefy").collection<GameRoomRecord>(normalizeRoomKey(room));
 }
 
 async function listWaitingCollectionNames(client: MongoClient): Promise<string[]> {
@@ -56,7 +58,11 @@ async function writeWaitingRoom(
   const collection = await getWaitingCollection(client, room);
   const pruned = prunePresence(nextState);
 
-  await collection.replaceOne(ROOM_DOCUMENT_FILTER, { ...pruned, _id: 0 }, { upsert: true });
+  await collection.updateOne(
+    ROOM_DOCUMENT_FILTER,
+    { $set: pruned, $setOnInsert: { _id: 0 } },
+    { upsert: true },
+  );
   return pruned;
 }
 
