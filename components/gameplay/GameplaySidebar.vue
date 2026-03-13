@@ -7,6 +7,7 @@ const props = defineProps<{
   currentPlayer: PlayerState | null;
   nextTurn: number | null;
   players: PlayerState[];
+  powerActions: Array<{ id: string; label: string }>;
   roomName: string;
 }>();
 
@@ -14,6 +15,7 @@ const emit = defineEmits<{
   endTurn: [];
   resetBoard: [];
   toggleCards: [];
+  usePowerAction: [id: string];
 }>();
 </script>
 
@@ -76,6 +78,22 @@ const emit = defineEmits<{
           @click="emit('toggleCards')"
         />
         <UButton color="secondary" variant="subtle" icon="i-lucide-rotate-ccw" label="Reset view" block @click="emit('resetBoard')" />
+      </div>
+
+      <div v-if="powerActions.length > 0" class="space-y-2">
+        <div class="text-xs uppercase tracking-[0.18em] text-[rgba(33,22,15,0.55)]">Character powers</div>
+        <div class="grid gap-3 sm:grid-cols-2">
+          <UButton
+            v-for="action in powerActions"
+            :key="action.id"
+            color="secondary"
+            variant="soft"
+            class="justify-center"
+            @click="emit('usePowerAction', action.id)"
+          >
+            {{ action.label }}
+          </UButton>
+        </div>
       </div>
     </div>
   </UCard>

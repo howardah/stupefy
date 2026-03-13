@@ -20,7 +20,7 @@ Primary code references:
 | Card                    | Count | Special power                                                                                                             | Functional in current game? |
 | ----------------------- | ----: | ------------------------------------------------------------------------------------------------------------------------- | --------------------------- |
 | Accio                   |     4 | Steal a chosen card from another player's hand or tableau at close range.                                                 | Yes                         |
-| Apparate                |     1 | Reposition yourself between two players in turn order.                                                                    | No                          |
+| Apparate                |     1 | Reposition yourself between two players in turn order.                                                                    | Yes                         |
 | Aspen Wand              |     1 | Equip to your tableau; extends your wand attack range to 3.                                                               | Yes                         |
 | Azkaban                 |     3 | Jail a target; on their turn they must draw for a matching house to escape or lose the turn.                              | Yes                         |
 | Broomstick              |     2 | Equip to your tableau; makes you count as 1 farther away from attackers.                                                  | Yes                         |
@@ -49,6 +49,6 @@ Primary code references:
 
 ## Notes
 
-- `Apparate` is the main known deck card that still has an explicit UI placeholder but no migrated action handler yet.
+- `Apparate` is now fully wired through the Vue board UI and turn-order update flow.
 - `Holly Wand` range works, but the deck metadata still contains a `yew-immunity` flag that is not enforced anywhere in the current migrated rules.
-- When a player holds all three deathly hallows (`Invisibility Cloak`, `Elder Wand`, and `Resurrection Stone`), he is the 'master of death and his last life point cannot be taken away while all three are present on his tableau
+- The Deathly Hallows protection is now enforced: when a player holds `Invisibility Cloak`, `Elder Wand`, and `Resurrection Stone` together on their tableau, their last life point cannot be taken while all three remain in play.

@@ -47,7 +47,22 @@ export function getCardTargets(name: string, turnCycle: TurnCycle): GameplayTarg
       targets.push("characters");
       break;
     case "stupefy":
+    case "fenrir_stupefy":
       if (turnCycle.shots > 0) targets.push("characters", "wand-range");
+      break;
+    case "dobby_stupefy":
+    case "dobby_punish_stupefy":
+      if (turnCycle.shots > 0) targets.push("characters");
+      break;
+    case "peeves_draw":
+      targets.push("hand");
+      break;
+    case "peter_pettigrew":
+      targets.push("tableau");
+      break;
+    case "tonks_copy":
+    case "molly_protego":
+      targets.push("characters");
       break;
     case "butterbeer":
       targets.push("my-character");
@@ -78,12 +93,22 @@ export function getAvailableTargets(state: Pick<
       return targets;
     }
 
+    if (turnCycle.phase === "start-turn") {
+      targets.push(...getCardTargets(turnCycle.action, turnCycle));
+      return targets;
+    }
+
     if (turnCycle.phase === "felix") {
       targets.push("characters");
       return targets;
     }
 
     if (turnCycle.phase === "selected-stuck-in-azkaban") {
+      targets.push("my-hand", "discard");
+      return targets;
+    }
+
+    if (turnCycle.phase === "fred-george-discard") {
       targets.push("my-hand", "discard");
       return targets;
     }

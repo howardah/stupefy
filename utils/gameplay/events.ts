@@ -10,6 +10,7 @@ import {
   getPrimaryCharacter,
   titleCase,
 } from "./core";
+import { canUseHideCards, ignoresOpposingTableau } from "./powers";
 
 export function eventIndex(events: GameEvent[], message: string): number {
   return events.findIndex((event) => event.popup?.message?.includes(message));
@@ -138,11 +139,14 @@ export function tableauProblems(cards: PlayerState["tableau"]): string | false {
 
 export function protegoOptions(
   player: PlayerState,
-  currentOptions: PopupOption[]
+  currentOptions: PopupOption[],
+  attacker?: PlayerState | null,
 ): PopupOption[] {
   let popupOptions = [...currentOptions];
 
   if (popupOptions.length > 2) return popupOptions;
+  if (ignoresOpposingTableau(attacker)) return popupOptions;
+  if (!canUseHideCards(player)) return popupOptions;
 
   if (player.power.includes("mundungus_fletcher")) {
     popupOptions.push({

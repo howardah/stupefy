@@ -25,6 +25,11 @@ import {
   tableauProblems,
 } from "./events";
 import { cycleCleanse, incrementTurn } from "./turn-cycle";
+import {
+  hasPower,
+  ignoresOpposingTableau,
+  isMasterOfDeath,
+} from "./powers";
 
 type AlertTone = NonNullable<BoardAlert["tone"]>;
 type PushAlert = (message: string, tone?: AlertTone) => void;
@@ -53,6 +58,123 @@ function getPlayerById(state: BoardViewState, playerId: number) {
 
 function getCurrentEvent(state: BoardViewState) {
   return state.events[0] ?? null;
+}
+
+function resetTurnSelection(state: BoardViewState) {
+  state.turnCycle.cards = [];
+  state.turnCycle.action = "";
+  state.turnCycle.felix = [];
+  state.turnCycle.phase = "initial";
+}
+
+function drawCardsForPlayer(state: BoardViewState, player: PlayerState, count: number) {
+  const deck = cloneDeckState(state);
+  const drawnCards = deck.drawCards(count);
+
+  if (drawnCards.length > 0) {
+    player.hand.unshift(...drawnCards);
+  }
+
+  state.deck = deck;
+  return drawnCards;
+}
+
+function maybeTriggerLockhart(state: BoardViewState, player: PlayerState) {
+  if (!hasPower(player, "gilderoy_lockhart") || player.hand.length > 0) {
+    return;
+  }
+
+  const [drawnCard] = drawCardsForPlayer(state, player, 1);
+  if (!drawnCard) {
+    return;
+  }
+
+  state.events.push(
+    createResolutionEvent(
+      "You used Gilderoy Lockhart's power to draw a replacement card.",
+      [player.id],
+      `${getPrimaryCharacter(player)?.shortName || player.name} used Gilderoy Lockhart's power to draw a replacement card.`,
+    ),
+  );
+}
+
+function maybeRewardHermione(state: BoardViewState, player: PlayerState) {
+  if (state.turn === player.id || !hasPower(player, "hermione_granger")) {
+    return;
+  }
+
+  const [drawnCard] = drawCardsForPlayer(state, player, 1);
+  if (!drawnCard) {
+    return;
+  }
+
+  state.events.push(
+    createResolutionEvent(
+      "Hermione's quick thinking let you draw a card.",
+      [player.id],
+      `${getPrimaryCharacter(player)?.shortName || player.name} used a card out of turn and drew a card through Hermione's power.`,
+    ),
+  );
+}
+
+function applyDamage(
+  state: BoardViewState,
+  target: PlayerState,
+  amount: number,
+  context: { attacker?: PlayerState | null; source?: string } = {},
+) {
+  const character = getPrimaryCharacter(target);
+
+  if (!character || amount <= 0) {
+    return false;
+  }
+
+  if (character.health === 1 && amount >= 1 && isMasterOfDeath(target)) {
+    state.events.push(
+      createResolutionEvent(
+        "The Deathly Hallows protected your last life point.",
+        [target.id],
+        `${getPrimaryCharacter(target)?.shortName || target.name} was protected by the Deathly Hallows.`,
+      ),
+    );
+    return false;
+  }
+
+  character.health -= amount;
+
+  if (hasPower(target, "arthur_weasley")) {
+    const [drawnCard] = drawCardsForPlayer(state, target, 1);
+    if (drawnCard) {
+      state.events.push(
+        createResolutionEvent(
+          "Arthur's power let you draw a card after taking damage.",
+          [target.id],
+          `${character.shortName} drew a card through Arthur Weasley's power.`,
+        ),
+      );
+    }
+  }
+
+  if (
+    context.source === "stupefy" &&
+    hasPower(target, "draco_malfoy") &&
+    context.attacker &&
+    context.attacker.hand.length > 0
+  ) {
+    const stolenCard = context.attacker.hand.shift();
+    if (stolenCard) {
+      target.hand.unshift(stolenCard);
+      state.events.push(
+        createResolutionEvent(
+          "Draco stole a card from the attacker.",
+          [target.id],
+          `${character.shortName} stole a card from ${getPrimaryCharacter(context.attacker)?.shortName || context.attacker.name} through Draco Malfoy's power.`,
+        ),
+      );
+    }
+  }
+
+  return true;
 }
 
 function ensureReactionState(state: BoardViewState, playerId: number): TurnCyclePlayerState {
@@ -290,6 +412,14 @@ function applyFinalDeathConsequences(state: BoardViewState, player: PlayerState,
         character.maxHealth += 1;
       }
     }
+
+    if (
+      powerPlayer.id !== player.id &&
+      !state.deadPlayers.includes(powerPlayer.id) &&
+      powerPlayer.power.includes("lucius_malfoy")
+    ) {
+      powerPlayer.hand.unshift(...deck.drawCards(2));
+    }
   }
 
   if (player.hand.length > 0) {
@@ -462,15 +592,26 @@ function resolveProtectionChoice(
 
   switch (action) {
     case "takeHit": {
-      const character = getPrimaryCharacter(player);
-      if (character) {
-        character.health -= 1;
-      }
+      applyDamage(state, player, 1, { attacker: event.instigator as PlayerState | undefined, source: state.turnCycle.action });
       return true;
     }
     case "playProtego": {
       if (reaction.cards.length === 0) {
         pushAlert("Choose a Protego card first.", "info");
+        return false;
+      }
+
+      const requiredCards = hasPower(event.instigator as PlayerState | undefined, "bellatrix_lestrange")
+        ? 2
+        : 1;
+
+      if (reaction.cards.length !== requiredCards) {
+        pushAlert(
+          requiredCards === 2
+            ? "Bellatrix's Stupefy needs two Protego cards to block."
+            : "Choose exactly one Protego card.",
+          "warning",
+        );
         return false;
       }
 
@@ -483,6 +624,8 @@ function resolveProtectionChoice(
       discardCards(player, deck, reaction.cards);
       state.deck = deck;
       reaction.cards = [];
+      maybeRewardHermione(state, player);
+      maybeTriggerLockhart(state, player);
       return true;
     }
     case "playStupefy": {
@@ -495,6 +638,8 @@ function resolveProtectionChoice(
       discardCards(player, deck, reaction.cards);
       state.deck = deck;
       reaction.cards = [];
+      maybeRewardHermione(state, player);
+      maybeTriggerLockhart(state, player);
       return true;
     }
     case "houseHide":
@@ -588,7 +733,49 @@ function startStupefy(state: BoardViewState, subject: PlayerState) {
   const options = protegoOptions(subject, [
     { label: "Take a hit", function: "takeHit" },
     { label: "Play Protego", function: "playProtego" },
-  ]);
+  ], instigator);
+
+  state.events = [
+    {
+      popup: {
+        message: `${getPrimaryCharacter(instigator)?.shortName || instigator.name} has fired a Stupefy at you!`,
+        options,
+      },
+      instigator,
+      cardType: "stupefy",
+      target: [subject.id],
+      bystanders: createBystanderPopup(
+        `${getPrimaryCharacter(instigator)?.shortName || instigator.name} has fired a Stupefy at ${getPrimaryCharacter(subject)?.shortName || subject.name}!`,
+        "subtle",
+      ),
+      [`bystanders-${instigator.id}`]: createBystanderPopup(
+        `You have fired a Stupefy at ${getPrimaryCharacter(subject)?.shortName || subject.name}!`,
+        "subtle",
+      ),
+    },
+  ];
+
+  return true;
+}
+
+function startFreeStupefy(state: BoardViewState, subject: PlayerState, selfDamage = false) {
+  const instigator = activePlayer(state);
+
+  if (!instigator) {
+    return false;
+  }
+
+  if (selfDamage) {
+    applyDamage(state, instigator, 1, { source: "dobby" });
+  }
+
+  state.turnCycle.hotseat = subject.id;
+  state.turnCycle.phase = "attack";
+
+  const options = protegoOptions(subject, [
+    { label: "Take a hit", function: "takeHit" },
+    { label: "Play Protego", function: "playProtego" },
+  ], instigator);
 
   state.events = [
     {
@@ -814,7 +1001,8 @@ function startMassEvent(state: BoardViewState, cardType: "dementors" | "garrotin
     .filter((player) => !state.deadPlayers.includes(player.id))
     .filter((player) =>
       cardType === "dementors"
-        ? player.id !== instigator.id && !cardsIncludeName(player.tableau, "expecto_patronum")
+        ? player.id !== instigator.id &&
+          (ignoresOpposingTableau(instigator) || !cardsIncludeName(player.tableau, "expecto_patronum"))
         : true,
     )
     .map((player) => player.id);
@@ -1015,12 +1203,73 @@ export function handleRuleCharacterClick(
     }
     case "stupefy":
       return { handled: startStupefy(state, targetPlayer) };
+    case "dobby_stupefy":
+      return { handled: startFreeStupefy(state, targetPlayer) };
+    case "dobby_punish_stupefy":
+      return { handled: startFreeStupefy(state, targetPlayer, true) };
+    case "fenrir_stupefy":
+      return { handled: startStupefy(state, targetPlayer) };
     case "wizards_duel":
       return { handled: startWizardsDuel(state, targetPlayer) };
     case "felix":
       return { handled: startFelixSelection(state, targetPlayer, pushAlert) };
     case "fiendfyre":
       return { handled: startFiendfyre(state, targetPlayer.id) };
+    case "tonks_copy": {
+      const player = viewerPlayer(state);
+      const copiedCharacter = getPrimaryCharacter(targetPlayer);
+
+      if (
+        !player ||
+        targetPlayer.id === player.id ||
+        !copiedCharacter ||
+        copiedCharacter.fileName === "mad-eye_moody"
+      ) {
+        return { handled: true };
+      }
+
+      player.power = [getPrimaryCharacter(player)?.fileName || "nymphadora_tonks", copiedCharacter.fileName];
+      state.turnCycle.used.push("tonks_copy");
+      resetTurnSelection(state);
+      state.events.push(
+        createResolutionEvent(
+          `You copied ${copiedCharacter.shortName}'s power.`,
+          [player.id],
+          `${getPrimaryCharacter(player)?.shortName || player.name} copied ${copiedCharacter.shortName}'s power for the round.`,
+        ),
+      );
+      return { handled: true };
+    }
+    case "molly_protego": {
+      const molly = viewerPlayer(state);
+      const selectedCard = state.turnCycle.cards[0];
+
+      if (!molly || !selectedCard || selectedCard.name !== "protego") {
+        return { handled: false };
+      }
+
+      const selectedIndex = cardIndex(molly.hand, selectedCard);
+      if (selectedIndex === -1) {
+        return { handled: false };
+      }
+
+      const [giftedCard] = molly.hand.splice(selectedIndex, 1);
+      if (giftedCard) {
+        targetPlayer.hand.unshift(giftedCard);
+      }
+
+      resetTurnSelection(state);
+      state.events.push(
+        createResolutionEvent(
+          "You gave a Protego card away.",
+          [molly.id],
+          `${getPrimaryCharacter(molly)?.shortName || molly.name} gave a Protego card to ${getPrimaryCharacter(targetPlayer)?.shortName || targetPlayer.name}.`,
+        ),
+      );
+      maybeRewardHermione(state, molly);
+      maybeTriggerLockhart(state, molly);
+      return { handled: true };
+    }
     default:
       return { handled: false };
   }
@@ -1041,6 +1290,28 @@ export function handleRuleHandClick(
       return { handled: resolveAccio(state, targetPlayer, card) };
     case "expelliarmus":
       return { handled: resolveExpelliarmus(state, targetPlayer, card) };
+    case "peeves_draw": {
+      const player = viewerPlayer(state);
+      if (!player) {
+        return { handled: false };
+      }
+
+      const handIndex = cardIndex(targetPlayer.hand, card);
+      if (handIndex === -1) {
+        return { handled: false };
+      }
+
+      const [stolenCard] = targetPlayer.hand.splice(handIndex, 1);
+      if (stolenCard) {
+        player.hand.unshift(stolenCard);
+      }
+
+      state.turnCycle.draw = Math.max(0, state.turnCycle.draw - 1);
+      state.turnCycle.phase = "initial";
+      state.turnCycle.action = "";
+      clearCurrentEvent(state);
+      return { handled: true };
+    }
     default:
       return { handled: false };
   }
@@ -1065,6 +1336,28 @@ export function handleRuleTableauClick(
       return { handled: resolveAccio(state, targetPlayer, card) };
     case "expelliarmus":
       return { handled: resolveExpelliarmus(state, targetPlayer, card) };
+    case "peter_pettigrew": {
+      const player = viewerPlayer(state);
+      if (!player) {
+        return { handled: false };
+      }
+
+      const tableauIndex = cardIndex(targetPlayer.tableau, card);
+      if (tableauIndex === -1) {
+        return { handled: false };
+      }
+
+      const [stolenCard] = targetPlayer.tableau.splice(tableauIndex, 1);
+      if (stolenCard) {
+        player.hand.unshift(stolenCard);
+      }
+
+      state.turnCycle.draw = 0;
+      state.turnCycle.phase = "initial";
+      state.turnCycle.action = "";
+      clearCurrentEvent(state);
+      return { handled: true };
+    }
     default:
       return { handled: false };
   }
@@ -1181,6 +1474,24 @@ export function handleRuleTableClick(
       };
     case "three_broomsticks":
       return { handled: startThreeBroomsticks(state) };
+    case "ron_weasley": {
+      const player = viewerPlayer(state);
+      if (!player) {
+        return { handled: false };
+      }
+
+      const deck = cloneDeckState(state);
+      const [drawnCard] = deck.drawCards(1, true);
+      state.deck = deck;
+      if (drawnCard) {
+        player.hand.unshift(drawnCard);
+      }
+      state.turnCycle.draw = Math.max(0, state.turnCycle.draw - 1);
+      clearCurrentEvent(state);
+      state.turnCycle.phase = "initial";
+      state.turnCycle.action = "";
+      return { handled: true };
+    }
     default:
       pushAlert("This table interaction is still pending a later rule port.", "info");
       return { handled: true };
@@ -1262,6 +1573,30 @@ export function handleRulePopupChoice(
     }
   }
 
+  if (state.turnCycle.phase === "start-turn") {
+    if (action === "start_no") {
+      clearCurrentEvent(state);
+      state.turnCycle.phase = "initial";
+      state.turnCycle.action = "";
+      return { handled: true };
+    }
+
+    if (action === "start_yes") {
+      clearCurrentEvent(state);
+
+      if (state.turnCycle.action === "ron_weasley") {
+        return handleRuleTableClick(
+          state,
+          { fileName: "", house: "", name: "", power: {} },
+          pushAlert,
+        );
+      }
+
+      state.turnCycle.phase = "selected";
+      return { handled: true };
+    }
+  }
+
   switch (state.turnCycle.action) {
     case "discardEvent": {
       if (action === "dump") {
@@ -1327,10 +1662,10 @@ export function handleRulePopupChoice(
     }
     case "wizards_duel": {
       if (action === "takeHit") {
-        const character = getPrimaryCharacter(player);
-        if (character) {
-          character.health -= 1;
-        }
+        applyDamage(state, player, 1, {
+          attacker: event.instigator ? getPlayerById(state, event.instigator.id) : null,
+          source: "wizards_duel",
+        });
         applyAdvancedDeaths(state);
         if (state.turnCycle.phase === "death") {
           return { handled: true };
@@ -1361,6 +1696,8 @@ export function handleRulePopupChoice(
         discardCards(player, deck, reaction.cards);
         state.deck = deck;
         reaction.cards = [];
+        maybeRewardHermione(state, player);
+        maybeTriggerLockhart(state, player);
 
         const defender = event.instigator ? getPlayerById(state, event.instigator.id) : null;
         if (!defender) {
@@ -1420,8 +1757,8 @@ export function handleRulePopupChoice(
 
         for (const target of targets) {
           const character = target ? getPrimaryCharacter(target) : null;
-          if (character) {
-            character.health -= 1;
+          if (target && character) {
+            applyDamage(state, target, 1, { attacker: instigator, source: "stupefy" });
           }
         }
 
@@ -1496,7 +1833,7 @@ export function handleRulePopupChoice(
 
       const burningCharacter = getPrimaryCharacter(burningPlayer);
       if (burningCharacter) {
-        burningCharacter.health -= 1;
+        applyDamage(state, burningPlayer, 1, { attacker: instigator, source: "fiendfyre" });
       }
 
       const nextTargetId = incrementTurn(burningPlayer.id, state.turnOrder, state.deadPlayers);

@@ -1,5 +1,6 @@
 import type { BoardViewState, GameCard, GameplayTarget, PlayerState } from "../types";
 import { getPrimaryCharacter } from "./core";
+import { ignoresOpposingTableau } from "./powers";
 
 export const EMPTY_CARD: GameCard = {
   fileName: "",
@@ -58,10 +59,12 @@ export function checkPlayerDistance(
   }
 
   const targetPlayer = alivePlayers[thisIndex];
-  for (const card of targetPlayer?.tableau || []) {
-    if (card.power?.distance !== undefined) {
-      const distance = Number(card.power.distance);
-      range -= distance > 0 ? distance : 0;
+  if (!ignoresOpposingTableau(activePlayer)) {
+    for (const card of targetPlayer?.tableau || []) {
+      if (card.power?.distance !== undefined) {
+        const distance = Number(card.power.distance);
+        range -= distance > 0 ? distance : 0;
+      }
     }
   }
 

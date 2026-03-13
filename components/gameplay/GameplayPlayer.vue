@@ -18,6 +18,7 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
+  clickApparate: [index: number];
   clickCharacter: [playerId: number];
   clickHand: [playerId: number, card: GameCard];
   clickTableau: [playerId: number, card: GameCard];
@@ -114,9 +115,11 @@ function reactionSelected(card: GameCard) {
 
     <div
       v-if="canApparateBetween(index, players, targets)"
-      class="mt-4 rounded-2xl border border-dashed border-[rgba(82,57,29,0.18)] px-4 py-3 text-sm text-[rgba(33,22,15,0.62)]"
+      class="mt-4 rounded-2xl border border-dashed border-[rgba(82,57,29,0.18)] px-4 py-3 text-sm text-[rgba(33,22,15,0.62)] transition"
+      :class="targets.includes('between-characters') ? 'cursor-pointer hover:border-[rgba(180,83,9,0.45)] hover:bg-[rgba(255,249,241,0.72)]' : ''"
+      @click="emit('clickApparate', index)"
     >
-      Apparate positioning between players is detected here, but the move itself still depends on the unported spell rules.
+      Apparate here between these players.
     </div>
   </section>
 </template>

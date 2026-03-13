@@ -19,6 +19,13 @@ import {
 } from "~/utils/gameplay/card-rules";
 import { cardIndex, cardsInclude, getPrimaryCharacter, playerIndex } from "~/utils/gameplay/core";
 import { getPopupState, tableauProblems } from "~/utils/gameplay/events";
+import {
+  canUseDobbyPower,
+  copiedPowerName,
+  dobbyHasClothes,
+  hasPower,
+  isGrayCard,
+} from "~/utils/gameplay/powers";
 import { getGameplaySyncSignature } from "~/utils/gameplay/sync";
 import { getAvailableTargets, getCardTargets } from "~/utils/gameplay/targeting";
 import {
@@ -57,6 +64,13 @@ function activePlayer(state: BoardViewState) {
 function viewerPlayer(state: BoardViewState) {
   const index = playerIndex(state.players, state.playerId);
   return index === -1 ? null : state.players[index]!;
+}
+
+function resetSelection(state: BoardViewState) {
+  state.turnCycle.cards = [];
+  state.turnCycle.action = "";
+  state.turnCycle.felix = [];
+  state.turnCycle.phase = "initial";
 }
 
 export function useBoardController(sourceBoardState: ComputedRef<BoardViewState | null>) {
@@ -131,6 +145,76 @@ export function useBoardController(sourceBoardState: ComputedRef<BoardViewState 
   const choosingCharacter = computed(() => {
     const currentPlayer = orderedPlayers.value[0];
     return Boolean(currentPlayer && Array.isArray(currentPlayer.character));
+  });
+  const powerActions = computed(() => {
+    if (!boardState.value) {
+      return [];
+    }
+
+    const player = viewerPlayer(boardState.value);
+    if (!player) {
+      return [];
+    }
+
+    const actions: Array<{ id: string; label: string }> = [];
+    const selectedCards = boardState.value.turnCycle.cards;
+    const isTurnPlayer = boardState.value.turn === player.id;
+    const copiedPower = copiedPowerName(player);
+
+    if (isTurnPlayer && boardState.value.turnCycle.phase === "initial") {
+      if (hasPower(player, "james_potter") && !boardState.value.turnCycle.used.includes("james_potter")) {
+        actions.push({ id: "james_potter", label: "James: Lose 1, draw 2" });
+      }
+
+      if (canUseDobbyPower(player) && !boardState.value.turnCycle.used.includes("dobby_stupefy")) {
+        actions.push({
+          id: dobbyHasClothes(player) ? "dobby_stupefy" : "dobby_punish_stupefy",
+          label: dobbyHasClothes(player) ? "Dobby: Free Stupefy" : "Dobby: Self-hit Stupefy",
+        });
+      }
+
+      if (
+        (hasPower(player, "nymphadora_tonks") || copiedPower === "nymphadora_tonks") &&
+        !boardState.value.turnCycle.used.includes("tonks_copy")
+      ) {
+        actions.push({ id: "tonks_copy", label: "Tonks: Copy power" });
+      }
+    }
+
+    if (
+      isTurnPlayer &&
+      (boardState.value.turnCycle.phase === "initial" || boardState.value.turnCycle.phase === "selected") &&
+      selectedCards.length === 2 &&
+      hasPower(player, "fenrir_greyback")
+    ) {
+      actions.push({ id: "fenrir_stupefy", label: "Fenrir: 2-card Stupefy" });
+    }
+
+    if (
+      isTurnPlayer &&
+      (boardState.value.turnCycle.phase === "initial" || boardState.value.turnCycle.phase === "selected") &&
+      selectedCards.length === 2 &&
+      hasPower(player, "neville_longbottom")
+    ) {
+      actions.push({ id: "neville_longbottom", label: "Neville: Heal 1" });
+    }
+
+    if (
+      isTurnPlayer &&
+      (boardState.value.turnCycle.phase === "initial" || boardState.value.turnCycle.phase === "selected") &&
+      selectedCards.length === 1 &&
+      hasPower(player, "minerva_mchonagall") &&
+      isGrayCard(selectedCards[0]!) &&
+      boardState.value.turnCycle.used.filter((entry) => entry === "minerva_mchonagall").length < 2
+    ) {
+      actions.push({ id: "minerva_mchonagall", label: "Minerva: Discard gray, draw 2" });
+    }
+
+    if (selectedCards.length === 1 && selectedCards[0]?.name === "protego" && hasPower(player, "molly_weasley")) {
+      actions.push({ id: "molly_protego", label: "Molly: Give Protego" });
+    }
+
+    return actions;
   });
 
   function removeAlert(id: string) {
@@ -215,7 +299,10 @@ export function useBoardController(sourceBoardState: ComputedRef<BoardViewState 
     if (turnCycle.phase === "initial") {
       turnCycle.cards = [card];
       turnCycle.phase = "selected";
-      turnCycle.action = card.name;
+      turnCycle.action =
+        hasPower(viewerPlayer(state), "ginny_weasley") && card.name === "protego"
+          ? "stupefy"
+          : card.name;
       return true;
     }
 
@@ -245,7 +332,12 @@ export function useBoardController(sourceBoardState: ComputedRef<BoardViewState 
         turnCycle.cards.splice(cardIndex(turnCycle.cards, card), 1);
       } else {
         turnCycle.cards.push(card);
-        turnCycle.action = "discard";
+        turnCycle.action =
+          turnCycle.cards.length === 1 &&
+          hasPower(viewerPlayer(state), "ginny_weasley") &&
+          card.name === "protego"
+            ? "stupefy"
+            : "discard";
       }
 
       if (
@@ -255,9 +347,23 @@ export function useBoardController(sourceBoardState: ComputedRef<BoardViewState 
       ) {
         turnCycle.action = "felix";
       } else if (turnCycle.cards.length === 1) {
-        turnCycle.action = turnCycle.cards[0]!.name;
+        turnCycle.action =
+          hasPower(viewerPlayer(state), "ginny_weasley") &&
+          turnCycle.cards[0]!.name === "protego"
+            ? "stupefy"
+            : turnCycle.cards[0]!.name;
       } else if (turnCycle.cards.length === 0) {
         state.turnCycle = cycleCleanse(turnCycle, state.players, state.turn);
+      }
+
+      return true;
+    }
+
+    if (turnCycle.phase === "fred-george-discard") {
+      if (cardsInclude(turnCycle.cards, card)) {
+        turnCycle.cards.splice(cardIndex(turnCycle.cards, card), 1);
+      } else {
+        turnCycle.cards = [card];
       }
 
       return true;
@@ -346,6 +452,57 @@ export function useBoardController(sourceBoardState: ComputedRef<BoardViewState 
 
     state.turnCycle = cycleCleanse(state.turnCycle, state.players, state.turn);
     return true;
+  }
+
+  function handleApparate(index: number) {
+    withBoardState((state) => {
+      if (state.turnCycle.action !== "apparate" || state.turnCycle.cards[0]?.name !== "apparate") {
+        pushAlert("Select Apparate before choosing a new position.", "info");
+        return true;
+      }
+
+      const afterPlayer = [...orderedPlayers.value];
+      const thisPlayer = afterPlayer.splice(0, 1);
+      const beforePlayer = afterPlayer.splice(0, index);
+      const players = [...beforePlayer, ...thisPlayer, ...afterPlayer];
+      const turnOrder = players.map((player) => player.id);
+      const player = players.find((entry) => entry.id === state.playerId);
+
+      if (!player) {
+        return false;
+      }
+
+      const deck = new Deck([...state.deck.cards], [...state.deck.discards]);
+      const selectedCard = state.turnCycle.cards[0];
+      const selectedIndex = selectedCard ? player.hand.findIndex((card) => card.id === selectedCard.id) : -1;
+      const [discardedCard] = selectedIndex === -1 ? [] : player.hand.splice(selectedIndex, 1);
+
+      if (discardedCard) {
+        deck.discards.unshift(discardedCard);
+      }
+
+      state.players = players;
+      state.turnOrder = turnOrder;
+      state.deck = deck;
+      state.turnCycle = cycleCleanse(state.turnCycle, state.players, state.turn);
+      state.events = [
+        {
+          popup: {
+            message: "You apparated to a new position in turn order.",
+            options: [],
+            popupType: "resolution",
+          },
+          bystanders: {
+            message: `${getPrimaryCharacter(player)?.shortName || player.name} apparated to a new position in turn order.`,
+            options: [],
+            popupType: "resolution",
+          },
+          cardType: "resolution",
+          target: [player.id],
+        },
+      ];
+      return true;
+    });
   }
 
   function handleHandClick(playerId: number, card: GameCard) {
@@ -462,8 +619,16 @@ export function useBoardController(sourceBoardState: ComputedRef<BoardViewState 
 
   function handleTableClick(card: GameCard) {
     withBoardState((state) => {
-      if (state.turnCycle.phase === "selected" && state.turnCycle.action === "discard") {
-        return discardSelectedCards(state);
+      if (
+        (state.turnCycle.phase === "selected" || state.turnCycle.phase === "fred-george-discard") &&
+        state.turnCycle.action === "discard"
+      ) {
+        const fredDiscard = state.turnCycle.phase === "fred-george-discard";
+        const discarded = discardSelectedCards(state);
+        if (fredDiscard) {
+          state.turnCycle.used.push("fred_and_george");
+        }
+        return discarded;
       }
 
       const handled = handleRuleTableClick(state, card, pushAlert);
@@ -495,6 +660,25 @@ export function useBoardController(sourceBoardState: ComputedRef<BoardViewState 
         player.hand.unshift(drawnCard);
         state.deck = deck;
         state.turnCycle.draw = Math.max(0, state.turnCycle.draw - 1);
+
+        if (
+          hasPower(player, "cedric_diggory") &&
+          !state.turnCycle.used.includes("cedric_bonus") &&
+          drawnCard.house === "H" &&
+          state.turnCycle.draw <= 1
+        ) {
+          state.turnCycle.draw += 1;
+          state.turnCycle.used.push("cedric_bonus");
+        }
+
+        if (
+          hasPower(player, "fred_and_george") &&
+          state.turnCycle.draw === 0 &&
+          !state.turnCycle.used.includes("fred_and_george")
+        ) {
+          state.turnCycle.phase = "fred-george-discard";
+          state.turnCycle.action = "discard";
+        }
         return true;
       }
 
@@ -531,6 +715,72 @@ export function useBoardController(sourceBoardState: ComputedRef<BoardViewState 
         );
       }
       return true;
+    });
+  }
+
+  function usePowerAction(action: string) {
+    withBoardState((state) => {
+      const player = viewerPlayer(state);
+      if (!player) {
+        return false;
+      }
+
+      switch (action) {
+        case "james_potter": {
+          const character = getPrimaryCharacter(player);
+          if (!character || state.turnCycle.used.includes("james_potter")) {
+            return true;
+          }
+
+          if (character.health <= 1) {
+            pushAlert("James needs more than 1 health to use this power safely.", "warning");
+            return true;
+          }
+
+          character.health -= 1;
+          const deck = new Deck([...state.deck.cards], [...state.deck.discards]);
+          player.hand.unshift(...deck.drawCards(2));
+          state.deck = deck;
+          state.turnCycle.used.push("james_potter");
+          return true;
+        }
+        case "dobby_stupefy":
+        case "dobby_punish_stupefy":
+        case "fenrir_stupefy":
+        case "tonks_copy":
+        case "molly_protego":
+          state.turnCycle.phase = "selected";
+          state.turnCycle.action = action;
+          if (action.startsWith("dobby")) {
+            state.turnCycle.used.push("dobby_stupefy");
+          }
+          return true;
+        case "neville_longbottom": {
+          const character = getPrimaryCharacter(player);
+          if (!character || state.turnCycle.cards.length !== 2) {
+            pushAlert("Select exactly two cards for Neville's power.", "info");
+            return true;
+          }
+
+          if (character.health < character.maxHealth) {
+            character.health += 1;
+          }
+          return discardSelectedCards(state);
+        }
+        case "minerva_mchonagall":
+          if (state.turnCycle.cards.length !== 1 || !isGrayCard(state.turnCycle.cards[0]!)) {
+            pushAlert("Select one gray card for McGonagall's power.", "info");
+            return true;
+          }
+
+          discardSelectedCards(state);
+          state.turnCycle.draw += 2;
+          state.turnCycle.used.push("minerva_mchonagall");
+          resetSelection(state);
+          return true;
+        default:
+          return true;
+      }
     });
   }
 
@@ -585,13 +835,16 @@ export function useBoardController(sourceBoardState: ComputedRef<BoardViewState 
     handleCharacterClick,
     handleDeckClick,
     handleHandClick,
+    handleApparate,
     handleTableClick,
     handleTableauClick,
     isMyTurn,
     orderedPlayers,
+    powerActions,
     removeAlert,
     resetBoard,
     toggleCards,
+    usePowerAction,
     mutationNonce,
   };
 }

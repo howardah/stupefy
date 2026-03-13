@@ -9,6 +9,7 @@ defineProps<{
   currentPlayer: PlayerState | null;
   nextTurn: number | null;
   orderedPlayers: PlayerState[];
+  powerActions: Array<{ id: string; label: string }>;
   roomName: string;
   targets: GameplayTarget[];
 }>();
@@ -22,10 +23,12 @@ const emit = defineEmits<{
   clickHand: [playerId: number, card: GameCard];
   clickTable: [card: GameCard];
   clickTableau: [playerId: number, card: GameCard];
+  clickApparate: [index: number];
   closeAlert: [id: string];
   endTurn: [];
   resetBoard: [];
   toggleCards: [];
+  usePowerAction: [id: string];
 }>();
 
 function onChooseAction(value: string, index: number) {
@@ -74,10 +77,12 @@ function onClickTableau(playerId: number, card: GameCard) {
         :current-player="currentPlayer"
         :next-turn="nextTurn"
         :players="orderedPlayers"
+        :power-actions="powerActions"
         :room-name="roomName"
         @end-turn="emit('endTurn')"
         @reset-board="emit('resetBoard')"
         @toggle-cards="emit('toggleCards')"
+        @use-power-action="emit('usePowerAction', $event)"
       />
 
       <div class="grid gap-4 lg:grid-cols-[minmax(0,280px)_minmax(0,1fr)]">
@@ -102,6 +107,7 @@ function onClickTableau(playerId: number, card: GameCard) {
         @click-character="emit('clickCharacter', $event)"
         @click-hand="onClickHand"
         @click-tableau="onClickTableau"
+        @click-apparate="emit('clickApparate', $event)"
       />
     </div>
   </div>

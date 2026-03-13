@@ -64,6 +64,67 @@ describe("damage and protection resolution", () => {
     expect(state.deck.discards.some((card) => card.name === "protego")).toBe(true);
     expect(countAllCards(state).length).toBe(totalBefore);
   });
+
+  test("bellatrix requires two protego cards to block her stupefy", () => {
+    const state = createState(11);
+    const protego = state.players[0]!.hand.find((card) => card.name === "protego");
+
+    state.players[1]!.power = ["bellatrix_lestrange"];
+    state.events = [
+      {
+        popup: {
+          message: "Bellatrix has fired a Stupefy at you!",
+          options: [
+            { label: "Take a hit", function: "takeHit" },
+            { label: "Play Protego", function: "playProtego" },
+          ],
+        },
+        instigator: state.players[1],
+        cardType: "stupefy",
+        target: [11],
+      },
+    ];
+    state.turnCycle.action = "stupefy";
+    state.turnCycle.hotseat = 11;
+    state.turnCycle.phase = "attack";
+    state.turnCycle.id11 = { cards: protego ? [protego] : [] };
+
+    const alerts: string[] = [];
+    const result = handleRulePopupChoice(state, "playProtego", 1, (message) => {
+      alerts.push(message);
+    });
+
+    expect(result.handled).toBe(false);
+    expect(alerts[0]).toContain("Bellatrix");
+    expect(state.events[0]?.cardType).toBe("stupefy");
+  });
+
+  test("arthur draws a card after taking damage", () => {
+    const state = createState(22);
+    const target = state.players[1]!;
+    target.power = ["arthur_weasley"];
+
+    state.events = [
+      {
+        popup: {
+          message: "Dumbledore has fired a Stupefy at you!",
+          options: [{ label: "Take a hit", function: "takeHit" }],
+        },
+        instigator: state.players[0],
+        cardType: "stupefy",
+        target: [22],
+      },
+    ];
+    state.turnCycle.action = "stupefy";
+    state.turnCycle.hotseat = 22;
+    state.turnCycle.phase = "attack";
+    state.turnCycle.id22 = { cards: [] };
+
+    const handSize = target.hand.length;
+    handleRulePopupChoice(state, "takeHit", 0, () => {});
+
+    expect(target.hand.length).toBe(handSize + 1);
+  });
 });
 
 describe("death handling", () => {
@@ -132,6 +193,39 @@ describe("death handling", () => {
     expect(state.deadPlayers).not.toContain(22);
     expect(targetCharacter.health).toBe(1);
     expect((targetCharacter as { end?: { deaths?: number } }).end?.deaths).toBe(1);
+  });
+
+  test("the deathly hallows protect the last life point", () => {
+    const state = createState(22);
+    const target = state.players[1]!;
+    const targetCharacter = Array.isArray(target.character) ? target.character[0]! : target.character;
+    targetCharacter.health = 1;
+    target.tableau = [
+      { id: 501, name: "elder_wand", fileName: "elder_wand", house: "G", power: {} },
+      { id: 502, name: "invisibility_cloak", fileName: "invisibility_cloak", house: "G", power: {} },
+      { id: 503, name: "resurrection_stone", fileName: "resurrection_stone", house: "G", power: {} },
+    ];
+
+    state.events = [
+      {
+        popup: {
+          message: "Dumbledore has fired a Stupefy at you!",
+          options: [{ label: "Take a hit", function: "takeHit" }],
+        },
+        instigator: state.players[0],
+        cardType: "stupefy",
+        target: [22],
+      },
+    ];
+    state.turnCycle.action = "stupefy";
+    state.turnCycle.hotseat = 22;
+    state.turnCycle.phase = "attack";
+    state.turnCycle.id22 = { cards: [] };
+
+    handleRulePopupChoice(state, "takeHit", 0, () => {});
+
+    expect(targetCharacter.health).toBe(1);
+    expect(state.deadPlayers).not.toContain(22);
   });
 
   test("lily can interrupt a death and save the target", () => {

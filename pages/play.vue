@@ -54,15 +54,18 @@ const {
   chooseCharacter,
   clearResolutionAction,
   endTurn,
+  handleApparate,
   handleCharacterClick,
   handleDeckClick,
   handleHandClick,
   handleTableClick,
   handleTableauClick,
   orderedPlayers,
+  powerActions,
   removeAlert,
   resetBoard,
   toggleCards,
+  usePowerAction,
   mutationNonce,
 } = useBoardController(sourceBoardState);
 const { currentPlayer, nextTurn } = useTurnCycle(computed(() => boardState.value));
@@ -286,11 +289,13 @@ onBeforeUnmount(() => {
         :current-player="currentPlayer"
         :next-turn="nextTurn"
         :ordered-players="orderedPlayers"
+        :power-actions="powerActions"
         :room-name="playQuery.room"
         :targets="availableTargets"
         @choose-action="chooseAction"
         @choose-character="chooseCharacter"
         @clear-action="clearResolutionAction"
+        @click-apparate="handleApparate"
         @click-character="handleCharacterClick"
         @click-deck-pile="handleDeckClick"
         @click-hand="handleHandClick"
@@ -300,6 +305,7 @@ onBeforeUnmount(() => {
         @end-turn="endTurn"
         @reset-board="resetBoard"
         @toggle-cards="toggleCards"
+        @use-power-action="usePowerAction"
       />
     </div>
   </div>

@@ -7,6 +7,7 @@ import type {
   TurnCycle,
 } from "../types";
 import { cloneDeck, getPrimaryCharacter, playerIndex, cardsIncludeName } from "./core";
+import { handLimitForPlayer, hasPower } from "./powers";
 
 export function hasUnlimitedShots(player: PlayerState): boolean {
   const character = getPrimaryCharacter(player);
@@ -19,12 +20,16 @@ export function hasUnlimitedShots(player: PlayerState): boolean {
 
 export function createBaseTurnCycle(players: PlayerState[], activeTurn: number): TurnCycle {
   const player = players[playerIndex(players, activeTurn)];
+  const draw =
+    player && hasPower(player, "fred_and_george")
+      ? 3
+      : 2;
 
   return {
     action: "",
     cards: [],
     felix: [],
-    draw: 2,
+    draw,
     hotseat: -1,
     phase: "initial",
     shots: player && hasUnlimitedShots(player) ? 9999 : 1,
@@ -68,6 +73,102 @@ export function setupTurnCycleForTurn(
         action: "azkaban",
         phase: "azkaban",
       },
+    };
+  }
+
+  if (currentPlayer?.power.includes("peeves")) {
+    const availableVictims = players.some(
+      (player) => player.id !== currentPlayer.id && player.hand.length > 0,
+    );
+
+    if (availableVictims) {
+      turnCycle.action = "peeves_draw";
+      turnCycle.phase = "start-turn";
+
+      return {
+        events: [
+          {
+            popup: {
+              message: "Use Peeves' power to steal your first draw from another player's hand?",
+              options: [
+                { label: "Yes", function: "start_yes" },
+                { label: "No", function: "start_no" },
+              ],
+              popupType: "subtle",
+            },
+            bystanders: {
+              message: `${getPrimaryCharacter(currentPlayer)?.shortName || currentPlayer.name} is choosing whether to use Peeves' power.`,
+              options: [],
+              popupType: "subtle",
+            },
+            cardType: "peeves",
+            target: [turn],
+          },
+        ],
+        turnCycle,
+      };
+    }
+  }
+
+  if (currentPlayer?.power.includes("peter_pettigrew")) {
+    const availableVictims = players.some(
+      (player) => player.id !== currentPlayer.id && player.tableau.length > 0,
+    );
+
+    if (availableVictims) {
+      turnCycle.action = "peter_pettigrew";
+      turnCycle.phase = "start-turn";
+
+      return {
+        events: [
+          {
+            popup: {
+              message: "Use Peter Pettigrew's power instead of drawing two cards?",
+              options: [
+                { label: "Yes", function: "start_yes" },
+                { label: "No", function: "start_no" },
+              ],
+              popupType: "subtle",
+            },
+            bystanders: {
+              message: `${getPrimaryCharacter(currentPlayer)?.shortName || currentPlayer.name} is choosing whether to use Peter Pettigrew's power.`,
+              options: [],
+              popupType: "subtle",
+            },
+            cardType: "peter_pettigrew",
+            target: [turn],
+          },
+        ],
+        turnCycle,
+      };
+    }
+  }
+
+  if (currentPlayer?.power.includes("ron_weasley") && players.length > 0) {
+    turnCycle.action = "ron_weasley";
+    turnCycle.phase = "start-turn";
+
+    return {
+      events: [
+        {
+          popup: {
+            message: "Draw your first card from the discard pile instead of the draw pile?",
+            options: [
+              { label: "Yes", function: "start_yes" },
+              { label: "No", function: "start_no" },
+            ],
+            popupType: "subtle",
+          },
+          bystanders: {
+            message: `${getPrimaryCharacter(currentPlayer)?.shortName || currentPlayer.name} is choosing how to start the turn.`,
+            options: [],
+            popupType: "subtle",
+          },
+          cardType: "ron_weasley",
+          target: [turn],
+        },
+      ],
+      turnCycle,
     };
   }
 
@@ -169,13 +270,11 @@ export function endTurnState(
     nextDeck = cleared.deck;
   }
 
-  const character = getPrimaryCharacter(player);
-  const health = character?.health ?? 0;
+  const handLimit = handLimitForPlayer(player);
 
-  if (player.hand.length > health) {
+  if (player.hand.length > handLimit) {
     return {
-      alert:
-        "You must discard until you have at most the same number of cards as you do health",
+      alert: `You must discard until you have at most ${handLimit} cards in hand.`,
       nextState: {},
     };
   }
