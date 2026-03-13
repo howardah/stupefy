@@ -650,6 +650,10 @@ export function useBoardController(sourceBoardState: ComputedRef<BoardViewState 
         return false;
       }
 
+      if (pile === "discard" && state.turnCycle.phase === "selected-stuck-in-azkaban") {
+        return discardSelectedCards(state);
+      }
+
       if (pile === "draw" && state.turnCycle.phase === "initial") {
         const drawnCard = deck.drawCards(1)[0];
         if (!drawnCard) {

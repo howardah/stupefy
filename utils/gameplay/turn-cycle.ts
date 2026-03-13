@@ -12,18 +12,12 @@ import { handLimitForPlayer, hasPower } from "./powers";
 export function hasUnlimitedShots(player: PlayerState): boolean {
   const character = getPrimaryCharacter(player);
 
-  return (
-    cardsIncludeName(player.tableau, "elder_wand") ||
-    character?.fileName === "sirius_black"
-  );
+  return cardsIncludeName(player.tableau, "elder_wand") || character?.fileName === "sirius_black";
 }
 
 export function createBaseTurnCycle(players: PlayerState[], activeTurn: number): TurnCycle {
   const player = players[playerIndex(players, activeTurn)];
-  const draw =
-    player && hasPower(player, "fred_and_george")
-      ? 3
-      : 2;
+  const draw = player && hasPower(player, "fred_and_george") ? 3 : 2;
 
   return {
     action: "",
@@ -60,7 +54,7 @@ export function createAzkabanEvent(player: PlayerState, turn: number): GameEvent
 
 export function setupTurnCycleForTurn(
   players: PlayerState[],
-  turn: number
+  turn: number,
 ): { events?: GameEvent[]; turnCycle: TurnCycle } {
   const turnCycle = createBaseTurnCycle(players, turn);
   const currentPlayer = players[playerIndex(players, turn)];
@@ -178,9 +172,10 @@ export function setupTurnCycleForTurn(
 export function cycleCleanse(
   turnCycle: TurnCycle,
   players: PlayerState[],
-  turn: number
+  turn: number,
 ): TurnCycle {
   const next = createBaseTurnCycle(players, turn);
+  const currentPlayer = players[playerIndex(players, turn)];
 
   return {
     ...turnCycle,
@@ -189,14 +184,14 @@ export function cycleCleanse(
     felix: next.felix,
     hotseat: next.hotseat,
     phase: next.phase,
-    shots: next.shots,
+    shots: currentPlayer && hasUnlimitedShots(currentPlayer) ? next.shots : turnCycle.shots,
   };
 }
 
 export function incrementTurn(
   currentTurn: number,
   turnOrder: number[],
-  deadPlayers: number[]
+  deadPlayers: number[],
 ): number {
   let turnIndex = turnOrder.indexOf(currentTurn);
   if (turnIndex === -1) {
@@ -217,7 +212,7 @@ export function incrementTurn(
 export function clearTable(
   table: GameState["table"],
   inputDeck: DeckState,
-  number = table?.length ?? 0
+  number = table?.length ?? 0,
 ): false | { deck: DeckState; table: NonNullable<GameState["table"]> } {
   const currentTable = [...(table || [])];
   if (currentTable.length === 0) return false;
@@ -238,13 +233,11 @@ export function clearTable(
 }
 
 export function endTurnState(
-  state: Pick<BoardViewState, "deck" | "players" | "table" | "turn">
+  state: Pick<BoardViewState, "deck" | "players" | "table" | "turn">,
 ): { alert?: string; nextState: Partial<BoardViewState> } | false {
   const players = state.players.map((player) => ({
     ...player,
-    character: Array.isArray(player.character)
-      ? [...player.character]
-      : { ...player.character },
+    character: Array.isArray(player.character) ? [...player.character] : { ...player.character },
     hand: [...player.hand],
     power: [...player.power],
     tableau: [...player.tableau],
