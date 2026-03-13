@@ -55,11 +55,11 @@ These files look like leftovers from the pre-Nuxt realtime architecture. They ar
 
 ## Acceptance criteria
 
-- [ ] The repo no longer contains unsupported legacy realtime helpers in active utility paths.
-- [ ] `utils/presence.ts` is either removed or rebuilt with declared dependencies and current code conventions.
-- [ ] Dead legacy helpers are removed or relocated behind an intentional subsystem boundary.
-- [ ] `bunx tsc --noEmit` passes.
+- [x] The repo no longer contains unsupported legacy realtime helpers in active utility paths.
+- [x] `utils/presence.ts` is either removed or rebuilt with declared dependencies and current code conventions.
+- [x] Dead legacy helpers are removed or relocated behind an intentional subsystem boundary.
+- [x] `bunx tsc --noEmit` passes.
 
 ## Issue Status
 
-Open
+Closed
