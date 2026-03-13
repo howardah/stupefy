@@ -39,12 +39,12 @@ This file is over the style guide target size, and it combines two concerns that
 
 ## Acceptance criteria
 
-- [ ] Canonical card and character definitions live in data-focused modules.
-- [ ] Runtime deck-construction logic is separate from the catalog data.
-- [ ] No resulting module exceeds the style guide hard limit.
-- [ ] Existing deck contents and character definitions remain unchanged.
-- [ ] `bunx tsc --noEmit` passes.
+- [x] Canonical card and character definitions live in data-focused modules.
+- [x] Runtime deck-construction logic is separate from the catalog data.
+- [x] No resulting module exceeds the style guide hard limit.
+- [x] Existing deck contents and character definitions remain unchanged.
+- [x] `bunx tsc --noEmit` passes.
 
 ## Issue Status
 
-Open
+Closed
