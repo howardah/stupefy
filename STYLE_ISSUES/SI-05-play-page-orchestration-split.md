@@ -43,12 +43,12 @@
 
 ## Acceptance criteria
 
-- [ ] `pages/play.vue` is reduced to route setup and high-level wiring.
-- [ ] Realtime sync and authoritative-state reconciliation move into focused composables.
-- [ ] The page drops below the style guide target size.
-- [ ] Board persistence and conflict behavior remain unchanged.
-- [ ] `bunx tsc --noEmit` passes.
+- [x] `pages/play.vue` is reduced to route setup and high-level wiring.
+- [x] Realtime sync and authoritative-state reconciliation move into focused composables.
+- [x] The page drops below the style guide target size.
+- [x] Board persistence and conflict behavior remain unchanged.
+- [x] `bunx tsc --noEmit` passes.
 
 ## Issue Status
 
-Open
+Closed

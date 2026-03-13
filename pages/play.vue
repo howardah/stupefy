@@ -1,13 +1,10 @@
 <script setup lang="ts">
-import type { FetchError } from "ofetch";
-import type { GameCard, GameRoomSyncResponse, GameState } from "~/utils/types";
+import type { GameCard } from "~/utils/types";
 import { useBoardController } from "~/composables/gameplay/useBoardController";
-import { useRealtimeRoom } from "~/composables/gameplay/useRealtimeRoom";
+import { usePlayRoomSync } from "~/composables/gameplay/usePlayRoomSync";
+import { usePlayStatusItems } from "~/composables/gameplay/usePlayStatusItems";
 import { useRoomState } from "~/composables/gameplay/useRoomState";
 import { useTurnCycle } from "~/composables/gameplay/useTurnCycle";
-import { createBoardViewState } from "~/utils/gameplay/bootstrap";
-import { createGameStatePatch } from "~/utils/gameplay/sync";
-import { getGameplaySyncSignature } from "~/utils/gameplay/sync";
 import { normalizeRoomKey } from "~/utils/room";
 
 definePageMeta({
@@ -69,159 +66,27 @@ const {
   mutationNonce,
 } = useBoardController(sourceBoardState);
 const { currentPlayer, nextTurn } = useTurnCycle(computed(() => boardState.value));
-const isApplyingAuthoritativeState = ref(false);
-
-const statusItems = computed(() => {
-  if (!boardState.value) return [];
-
-  return [
-    `You: ${playerId.value || "?"}`,
-    `Phase: ${boardState.value.turnCycle.phase}`,
-    `Targets: ${availableTargets.value.join(", ") || "None"}`,
-    `Updated: ${realtimeRoom.lastSyncedAt ? new Date(realtimeRoom.lastSyncedAt).toLocaleTimeString() : "Waiting"}`,
-  ];
+const { realtimeRoom, reloadRoom } = usePlayRoomSync({
+  api,
+  boardState,
+  currentRoom,
+  mutationNonce,
+  normalizedRoomKey,
+  playerId,
+  playQuery,
+  roomState,
+  toast,
 });
-
-function extractConflictRoom(error: unknown) {
-  const fetchError = error as FetchError<GameRoomSyncResponse>;
-  return fetchError?.data?.room ?? null;
-}
-
-async function applyAuthoritativeRoom(room: GameState | null) {
-  isApplyingAuthoritativeState.value = true;
-  roomState.value = room ? [room] : false;
-  await nextTick();
-  isApplyingAuthoritativeState.value = false;
-}
-
-function getRoomFromResponse(response: GameState[] | false): GameState | null {
-  return Array.isArray(response) && response[0] ? response[0] : null;
-}
-
-function getRoomSignature(room: GameState | null) {
-  if (!room || !normalizedRoomKey.value || playerId.value <= 0) {
-    return null;
-  }
-
-  return getGameplaySyncSignature(
-    createBoardViewState(room, {
-      id: playerId.value,
-      key: route.query.key ? String(route.query.key) : undefined,
-      room: roomName.value,
-    })
-  );
-}
-
-async function fetchLatestRoom() {
-  const response = await api.getGameRoom({ room: normalizedRoomKey.value });
-  const nextRoom = getRoomFromResponse(response);
-  const currentSignature = getRoomSignature(currentRoom.value);
-  const nextSignature = getRoomSignature(nextRoom);
-
-  if (
-    nextRoom &&
-    (
-      !currentRoom.value ||
-      currentRoom.value.last_updated !== nextRoom.last_updated ||
-      currentSignature !== nextSignature
-    )
-  ) {
-    await applyAuthoritativeRoom(nextRoom);
-    return;
-  }
-
-  if (!nextRoom && currentRoom.value) {
-    await applyAuthoritativeRoom(null);
-  }
-}
-
-async function reloadRoom() {
-  try {
-    await fetchLatestRoom();
-  } catch (refreshError) {
-    console.error("[play] Failed to refresh the game room.", refreshError);
-    toast.add({
-      title: "Unable to refresh room",
-      description: "The latest game state could not be loaded from the server.",
-      color: "error",
-      icon: "i-lucide-octagon-alert",
-    });
-  }
-}
-
-const realtimeRoom = useRealtimeRoom({
-  enabled: computed(() => Boolean(normalizedRoomKey.value && playerId.value > 0)),
-  fetchLatest: fetchLatestRoom,
-  pushUpdate: api.updateGameRoom,
-  room: normalizedRoomKey,
+const { statusItems } = usePlayStatusItems({
+  availableTargets,
+  boardState,
+  lastSyncedAt: realtimeRoom.lastSyncedAt,
+  playerId,
 });
-
-async function persistBoardState() {
-  if (!boardState.value || !normalizedRoomKey.value) {
-    return;
-  }
-
-  try {
-    const response = await realtimeRoom.pushStateUpdate({
-      data: createGameStatePatch(boardState.value),
-      expectedLastUpdated: currentRoom.value?.last_updated,
-      playerId: playerId.value,
-      room: normalizedRoomKey.value,
-      transport: "polling",
-    });
-
-    if (response?.room) {
-      await applyAuthoritativeRoom(response.room);
-    }
-  } catch (persistError) {
-    const conflictRoom = extractConflictRoom(persistError);
-
-    if (conflictRoom) {
-      console.warn("[play] Room update conflict. Applying authoritative state.", persistError);
-      await applyAuthoritativeRoom(conflictRoom);
-      toast.add({
-        title: "Room updated by another player",
-        description: "Your view has been refreshed to the latest shared game state.",
-        color: "warning",
-        icon: "i-lucide-refresh-cw",
-      });
-      return;
-    }
-
-    console.error("[play] Failed to persist board state.", persistError);
-    toast.add({
-      title: "Unable to sync game state",
-      description: "Your action was applied locally, but the shared room could not be updated.",
-      color: "error",
-      icon: "i-lucide-octagon-alert",
-    });
-  }
-}
 
 function onTableClick(card: GameCard) {
   handleTableClick(card);
 }
-
-watch(
-  mutationNonce,
-  (nextMutation, previousMutation) => {
-    if (
-      nextMutation === previousMutation ||
-      nextMutation === 0 ||
-      isApplyingAuthoritativeState.value
-    ) {
-      return;
-    }
-
-    void persistBoardState();
-  }
-);
-
-onBeforeUnmount(() => {
-  if (realtimeRoom.status.value !== "disabled") {
-    realtimeRoom.disconnect();
-  }
-});
 </script>
 
 <template>
