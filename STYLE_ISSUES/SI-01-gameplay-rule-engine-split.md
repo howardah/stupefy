@@ -82,13 +82,13 @@
 
 ## Acceptance criteria
 
-- [ ] `utils/gameplay/card-rules.ts` is reduced to a small export surface or removed in favor of smaller modules.
-- [ ] No new rule module exceeds the style guide hard limits.
-- [ ] Shared gameplay helpers are extracted once instead of duplicated across rule modules and composables.
-- [ ] Existing gameplay regression coverage is preserved or improved after the split.
-- [ ] `bunx tsc --noEmit` passes.
-- [ ] Relevant gameplay tests pass.
+- [x] `utils/gameplay/card-rules.ts` is reduced to a small export surface or removed in favor of smaller modules.
+- [x] No new rule module exceeds the style guide hard limits.
+- [x] Shared gameplay helpers are extracted once instead of duplicated across rule modules and composables.
+- [x] Existing gameplay regression coverage is preserved or improved after the split.
+- [x] `bunx tsc --noEmit` passes.
+- [x] Relevant gameplay tests pass.
 
 ## Issue Status
 
-Open
+Closed

@@ -1,136 +1,10 @@
 import { describe, expect, test } from "bun:test";
-import { sampleGameRoomSnapshot } from "../../fixtures/sample-game-room";
-import { createBoardViewState } from "./bootstrap";
-import {
-  handleRuleCharacterClick,
-  handleRuleDeckClick,
-  handleRulePopupChoice,
-} from "./card-rules";
-import { countAllCards } from "./core";
-import { getAvailableTargets } from "./targeting";
-import { cycleCleanse } from "./turn-cycle";
-import { incrementTurn } from "./turn-cycle";
-
-function createState(playerId = 11) {
-  return createBoardViewState(structuredClone(sampleGameRoomSnapshot), {
-    id: playerId,
-    room: "Sample Room",
-  });
-}
-
-describe("gameplay targeting", () => {
-  test("selected stupefy exposes character targets", () => {
-    const state = createState(11);
-    const targets = getAvailableTargets(state);
-
-    expect(targets).toContain("characters");
-    expect(targets).toContain("wand-range");
-  });
-});
-
-describe("damage and protection resolution", () => {
-  test("protego resolves a stupefy and discards the reaction card", () => {
-    const state = createState(11);
-    const totalBefore = countAllCards(state).length;
-    const protego = state.players[0]!.hand.find((card) => card.name === "protego");
-
-    state.events = [
-      {
-        popup: {
-          message: "Bellatrix has fired a Stupefy at you!",
-          options: [
-            { label: "Take a hit", function: "takeHit" },
-            { label: "Play Protego", function: "playProtego" },
-          ],
-        },
-        instigator: state.players[1],
-        cardType: "stupefy",
-        target: [11],
-      },
-    ];
-    state.turnCycle.action = "stupefy";
-    state.turnCycle.hotseat = 11;
-    state.turnCycle.phase = "attack";
-    state.turnCycle.id11 = { cards: protego ? [protego] : [] };
-
-    const alerts: string[] = [];
-    const result = handleRulePopupChoice(state, "playProtego", 1, (message) => {
-      alerts.push(message);
-    });
-
-    expect(result.handled).toBe(true);
-    expect(alerts).toHaveLength(0);
-    expect(state.events[0]?.cardType).toBe("resolution");
-    expect(state.players[0]!.hand.some((card) => card.name === "protego")).toBe(false);
-    expect(state.deck.discards.some((card) => card.name === "protego")).toBe(true);
-    expect(countAllCards(state).length).toBe(totalBefore);
-  });
-
-  test("bellatrix requires two protego cards to block her stupefy", () => {
-    const state = createState(11);
-    const protego = state.players[0]!.hand.find((card) => card.name === "protego");
-
-    state.players[1]!.power = ["bellatrix_lestrange"];
-    state.events = [
-      {
-        popup: {
-          message: "Bellatrix has fired a Stupefy at you!",
-          options: [
-            { label: "Take a hit", function: "takeHit" },
-            { label: "Play Protego", function: "playProtego" },
-          ],
-        },
-        instigator: state.players[1],
-        cardType: "stupefy",
-        target: [11],
-      },
-    ];
-    state.turnCycle.action = "stupefy";
-    state.turnCycle.hotseat = 11;
-    state.turnCycle.phase = "attack";
-    state.turnCycle.id11 = { cards: protego ? [protego] : [] };
-
-    const alerts: string[] = [];
-    const result = handleRulePopupChoice(state, "playProtego", 1, (message) => {
-      alerts.push(message);
-    });
-
-    expect(result.handled).toBe(false);
-    expect(alerts[0]).toContain("Bellatrix");
-    expect(state.events[0]?.cardType).toBe("stupefy");
-  });
-
-  test("arthur draws a card after taking damage", () => {
-    const state = createState(22);
-    const target = state.players[1]!;
-    target.power = ["arthur_weasley"];
-
-    state.events = [
-      {
-        popup: {
-          message: "Dumbledore has fired a Stupefy at you!",
-          options: [{ label: "Take a hit", function: "takeHit" }],
-        },
-        instigator: state.players[0],
-        cardType: "stupefy",
-        target: [22],
-      },
-    ];
-    state.turnCycle.action = "stupefy";
-    state.turnCycle.hotseat = 22;
-    state.turnCycle.phase = "attack";
-    state.turnCycle.id22 = { cards: [] };
-
-    const handSize = target.hand.length;
-    handleRulePopupChoice(state, "takeHit", 0, () => {});
-
-    expect(target.hand.length).toBe(handSize + 1);
-  });
-});
+import { handleRuleCharacterClick, handleRulePopupChoice } from "../card-rules";
+import { createGameplayTestState } from "../test-helpers";
 
 describe("death handling", () => {
   test("taking a lethal hit marks the player as dead and discards their cards", () => {
-    const state = createState(22);
+    const state = createGameplayTestState(22);
     const target = state.players[1]!;
     const targetCharacter = Array.isArray(target.character) ? target.character[0]! : target.character;
 
@@ -165,7 +39,7 @@ describe("death handling", () => {
   });
 
   test("harry potter survives the first lethal hit in a round", () => {
-    const state = createState(22);
+    const state = createGameplayTestState(22);
     const target = state.players[1]!;
     target.power = ["harry_potter"];
     const targetCharacter = Array.isArray(target.character) ? target.character[0]! : target.character;
@@ -197,7 +71,7 @@ describe("death handling", () => {
   });
 
   test("the deathly hallows protect the last life point", () => {
-    const state = createState(22);
+    const state = createGameplayTestState(22);
     const target = state.players[1]!;
     const targetCharacter = Array.isArray(target.character) ? target.character[0]! : target.character;
     targetCharacter.health = 1;
@@ -230,7 +104,7 @@ describe("death handling", () => {
   });
 
   test("lily can interrupt a death and save the target", () => {
-    const state = createState(22);
+    const state = createGameplayTestState(22);
     const target = state.players[1]!;
     const targetCharacter = Array.isArray(target.character) ? target.character[0]! : target.character;
     targetCharacter.health = 1;
@@ -258,6 +132,7 @@ describe("death handling", () => {
     state.turnCycle.id22 = { cards: [] };
 
     const interrupt = handleRulePopupChoice(state, "takeHit", 0, () => {});
+
     expect(interrupt.handled).toBe(true);
     expect(state.turnCycle.phase).toBe("death");
     expect(state.events[0]?.popup?.options.map((option) => option.function)).toContain("lily_yes");
@@ -271,7 +146,7 @@ describe("death handling", () => {
   });
 
   test("molly can will her hand to another player on death", () => {
-    const state = createState(22);
+    const state = createGameplayTestState(22);
     const molly = state.players[1]!;
     molly.power = ["molly_weasley"];
     molly.hand = [{ id: 301, name: "accio", fileName: "accio", house: "G", power: {} }];
@@ -307,7 +182,7 @@ describe("death handling", () => {
   });
 
   test("umbridge inherits cards and voldemort gains health on another player's death", () => {
-    const state = createState(22);
+    const state = createGameplayTestState(22);
     const target = state.players[1]!;
     target.hand = [{ id: 401, name: "accio", fileName: "accio", house: "G", power: {} }];
     const targetCharacter = Array.isArray(target.character) ? target.character[0]! : target.character;
@@ -344,48 +219,5 @@ describe("death handling", () => {
     expect(umbridge.hand.some((card) => card.id === 401)).toBe(true);
     expect(voldemortCharacter.health).toBe(3);
     expect(voldemortCharacter.maxHealth).toBe(4);
-  });
-});
-
-describe("discard and draw accounting", () => {
-  test("discard confirmation moves the selected card from hand to discard without losing cards", () => {
-    const state = createState(11);
-    const totalBefore = countAllCards(state).length;
-
-    state.turnCycle.phase = "selected";
-    state.turnCycle.action = "discard";
-    state.turnCycle.cards = [state.players[0]!.hand[0]!];
-
-    const startDiscard = handleRuleDeckClick(state, "discard", () => {});
-    expect(startDiscard.handled).toBe(true);
-    expect(state.turnCycle.action).toBe("discardEvent");
-
-    const confirm = handleRulePopupChoice(state, "dump", 0, () => {});
-    expect(confirm.handled).toBe(true);
-    expect(state.players[0]!.hand.some((card) => card.id === 9)).toBe(false);
-    expect(state.deck.discards.some((card) => card.id === 9)).toBe(true);
-    expect(countAllCards(state).length).toBe(totalBefore);
-  });
-});
-
-describe("turn transitions", () => {
-  test("incrementTurn skips dead players", () => {
-    expect(incrementTurn(11, [11, 22, 33], [22])).toBe(33);
-  });
-
-  test("cycleCleanse preserves spent shots for normal players", () => {
-    const state = createState(11);
-    state.turnCycle.shots = 0;
-    state.players[0]!.tableau = [];
-    state.players[0]!.power = ["albus_dumbledore"];
-    const character = Array.isArray(state.players[0]!.character)
-      ? state.players[0]!.character[0]!
-      : state.players[0]!.character;
-    character.fileName = "albus_dumbledore";
-
-    const cleansed = cycleCleanse(state.turnCycle, state.players, state.turn);
-
-    expect(cleansed.shots).toBe(0);
-    expect(cleansed.phase).toBe("initial");
   });
 });
