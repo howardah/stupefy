@@ -79,7 +79,11 @@ async function join(payload: { player: string; pw?: string; room: string }) {
   isSubmitting.value = true;
 
   try {
-    console.info("[room/join] Joining room", payload);
+    console.info("[room/join] Joining room", {
+      hasPassword: Boolean(payload.pw),
+      player: payload.player,
+      room: payload.room,
+    });
     const result = await api.joinRoom(payload);
     const error = pickError(result);
 

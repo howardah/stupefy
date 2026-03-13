@@ -69,7 +69,11 @@ async function newRoom(data: NewRoomRequest): Promise<GameState[] | undefined> {
       return [nextState];
     });
   } catch (error) {
-    console.error(error);
+    console.error("[new-room] Failed to create or load game room.", {
+      error,
+      room: data.room,
+      sourceWaitingRoom: data.sourceWaitingRoom ?? data.room,
+    });
     return undefined;
   }
 }

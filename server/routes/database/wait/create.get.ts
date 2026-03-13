@@ -15,7 +15,10 @@ export default defineEventHandler(async (event) => {
   const dbResult = await makeWaitRoom(query);
 
   if (dbResult === false) {
-    console.error("[wait/create] Room is still active and cannot be recreated.", query);
+    console.error("[wait/create] Room is still active and cannot be recreated.", {
+      player: query.player,
+      room: query.room,
+    });
     throw createError({
       statusCode: 409,
       statusMessage: "This room already exists and is still active.",
@@ -23,7 +26,10 @@ export default defineEventHandler(async (event) => {
   }
 
   if (!dbResult) {
-    console.error("[wait/create] Waiting room creation returned no result.", query);
+    console.error("[wait/create] Waiting room creation returned no result.", {
+      player: query.player,
+      room: query.room,
+    });
     throw createError({
       statusCode: 500,
       statusMessage: "Unable to create the room.",

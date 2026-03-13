@@ -45,7 +45,7 @@ class Presence {
       }),
       function (err: unknown) {
         if (err) {
-          console.error("Failed to store presence in redis: " + err);
+          console.error("[presence] Failed to store presence in Redis.", err);
         }
       }
     );
@@ -54,7 +54,7 @@ class Presence {
   remove(connectionId: string): void {
     this.client.hdel("presence", connectionId, function (err: unknown) {
       if (err) {
-        console.error("Failed to remove presence in redis: " + err);
+        console.error("[presence] Failed to remove presence from Redis.", err);
       }
     });
   }
@@ -68,7 +68,7 @@ class Presence {
       "presence",
       (err: unknown, presence: Record<string, string> | null) => {
         if (err) {
-          console.error("Failed to get presence from Redis: " + err);
+          console.error("[presence] Failed to load presence from Redis.", err);
           returnPresent([]);
           return;
         }
@@ -101,7 +101,9 @@ class Presence {
   }
 
   _clean(toDelete: PresenceEntry[]): void {
-    console.log(`Cleaning ${toDelete.length} expired presences`);
+    console.info("[presence] Cleaning expired presences.", {
+      count: toDelete.length,
+    });
     for (const presence of toDelete) {
       this.remove(presence.connection);
     }

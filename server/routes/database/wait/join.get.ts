@@ -15,7 +15,10 @@ export default defineEventHandler(async (event) => {
   const dbResult = await joinWaitRoom(query);
 
   if (!dbResult) {
-    console.error("[wait/join] Waiting room join returned no result.", query);
+    console.error("[wait/join] Waiting room join returned no result.", {
+      player: query.player,
+      room: query.room,
+    });
     throw createError({
       statusCode: 500,
       statusMessage: "Unable to join the room.",

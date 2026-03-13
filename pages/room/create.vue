@@ -51,7 +51,11 @@ async function create(payload: { player: string; pw?: string; room: string }) {
   isSubmitting.value = true;
 
   try {
-    console.info("[room/create] Creating room", payload);
+    console.info("[room/create] Creating room", {
+      hasPassword: Boolean(payload.pw),
+      player: payload.player,
+      room: payload.room,
+    });
     const result = await api.createRoom(payload);
     const error = pickError(result);
 
