@@ -40,7 +40,7 @@ const {
   }
 );
 
-const { boardState: sourceBoardState, cardCount, currentRoom } = useRoomState({
+const { boardState: sourceBoardState, currentRoom } = useRoomState({
   playQuery,
   roomState,
 });
@@ -67,6 +67,17 @@ const {
 } = useBoardController(sourceBoardState);
 const { currentPlayer, nextTurn } = useTurnCycle(computed(() => boardState.value));
 const isApplyingAuthoritativeState = ref(false);
+
+const statusItems = computed(() => {
+  if (!boardState.value) return [];
+
+  return [
+    `You: ${playerId.value || "?"}`,
+    `Phase: ${boardState.value.turnCycle.phase}`,
+    `Targets: ${availableTargets.value.join(", ") || "None"}`,
+    `Updated: ${realtimeRoom.lastSyncedAt ? new Date(realtimeRoom.lastSyncedAt).toLocaleTimeString() : "Waiting"}`,
+  ];
+});
 
 function extractConflictRoom(error: unknown) {
   const fetchError = error as FetchError<GameRoomSyncResponse>;
@@ -212,26 +223,16 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="stu-shell !max-w-[1400px]">
-    <AppHeader />
-
-    <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
-      <div>
-        <div class="text-xs uppercase tracking-[0.22em] text-[rgba(33,22,15,0.55)]">Game Room</div>
-        <h1 class="text-4xl font-semibold">{{ roomName }}</h1>
-        <p class="mt-2 max-w-3xl text-sm text-[rgba(33,22,15,0.68)]">
-          Follow the turn order, choose your actions, and watch the table as the round unfolds.
-        </p>
+    <div class="mb-6 flex flex-wrap items-start justify-between gap-4 border-b border-[rgba(82,57,29,0.12)] pb-5">
+      <div class="min-w-0">
+        <div class="text-xs uppercase tracking-[0.22em] text-[rgba(33,22,15,0.55)]">Stupefy</div>
+        <h1 class="text-3xl font-semibold sm:text-4xl">{{ roomName }}</h1>
       </div>
 
-      <div class="flex flex-wrap gap-3">
+      <div class="flex flex-wrap items-center gap-2">
         <UBadge color="secondary" variant="subtle">Connection: {{ realtimeRoom.status }}</UBadge>
-        <UBadge color="neutral" variant="subtle">Sync: {{ realtimeRoom.transport }}</UBadge>
-        <UBadge color="neutral" variant="subtle">
-          Cards in deck:
-          {{ cardCount ? `${cardCount.length} / ${cardCount.duplicates} duplicates` : "unknown" }}
-        </UBadge>
-        <UButton color="neutral" variant="ghost" icon="i-lucide-refresh-cw" label="Refresh room" @click="reloadRoom" />
-        <UButton to="/" color="neutral" variant="soft" icon="i-lucide-arrow-left" label="Back to lobby" />
+        <UButton color="neutral" variant="ghost" icon="i-lucide-refresh-cw" label="Refresh" @click="reloadRoom" />
+        <UButton to="/" color="neutral" variant="soft" icon="i-lucide-arrow-left" label="Leave table" />
       </div>
     </div>
 
@@ -267,29 +268,14 @@ onBeforeUnmount(() => {
         :description="realtimeRoom.errorMessage"
       />
 
-      <div class="grid gap-4 md:grid-cols-5">
-        <UCard class="stu-panel rounded-[1.6rem] border-0">
-          <div class="text-xs uppercase tracking-[0.18em] text-[rgba(33,22,15,0.55)]">You</div>
-          <div class="mt-2 text-xl font-semibold">{{ playerId }}</div>
-        </UCard>
-        <UCard class="stu-panel rounded-[1.6rem] border-0">
-          <div class="text-xs uppercase tracking-[0.18em] text-[rgba(33,22,15,0.55)]">Phase</div>
-          <div class="mt-2 text-xl font-semibold">{{ boardState.turnCycle.phase }}</div>
-        </UCard>
-        <UCard class="stu-panel rounded-[1.6rem] border-0">
-          <div class="text-xs uppercase tracking-[0.18em] text-[rgba(33,22,15,0.55)]">Targets</div>
-          <div class="mt-2 text-sm">{{ availableTargets.join(", ") || "None" }}</div>
-        </UCard>
-        <UCard class="stu-panel rounded-[1.6rem] border-0">
-          <div class="text-xs uppercase tracking-[0.18em] text-[rgba(33,22,15,0.55)]">Room code</div>
-          <div class="mt-2 text-sm">{{ normalizedRoomKey }}</div>
-        </UCard>
-        <UCard class="stu-panel rounded-[1.6rem] border-0">
-          <div class="text-xs uppercase tracking-[0.18em] text-[rgba(33,22,15,0.55)]">Last update</div>
-          <div class="mt-2 text-sm">
-            {{ realtimeRoom.lastSyncedAt ? new Date(realtimeRoom.lastSyncedAt).toLocaleTimeString() : "Waiting" }}
-          </div>
-        </UCard>
+      <div class="flex flex-wrap gap-x-5 gap-y-2 text-sm text-[rgba(33,22,15,0.72)]">
+        <span
+          v-for="item in statusItems"
+          :key="item"
+          class="border-b border-[rgba(82,57,29,0.12)] pb-1"
+        >
+          {{ item }}
+        </span>
       </div>
 
       <GameplayBoard

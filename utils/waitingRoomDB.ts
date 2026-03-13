@@ -421,7 +421,9 @@ async function makeWaitRoom(
           time: Date.now(),
         },
       ],
-      expiresAt: now,
+      // Let lifecycle assign the standard idle TTL for newly created waiting rooms.
+      expiresAt: undefined,
+      last_updated: now,
       password: info.pw || false,
       players,
       ready: { [String(players[0]?.id || 0)]: false },

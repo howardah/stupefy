@@ -45,7 +45,7 @@ const readyCount = computed(() =>
 </script>
 
 <template>
-  <div class="grid gap-6 lg:grid-cols-[0.95fr_1.25fr]">
+  <div class="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
     <UCard class="stu-panel rounded-[2rem] border-0">
       <template #header>
         <div class="flex items-center justify-between">
@@ -126,7 +126,7 @@ const readyCount = computed(() =>
         <div>
           <h2 class="text-2xl font-semibold">Chat</h2>
           <p class="text-sm text-[rgba(33,22,15,0.6)]">
-            Use chat to coordinate before the game starts.
+            Keep it quick while everyone gets ready.
           </p>
         </div>
       </template>

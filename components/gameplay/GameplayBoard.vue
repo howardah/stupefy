@@ -67,33 +67,7 @@ function onClickTableau(playerId: number, card: GameCard) {
       />
     </div>
 
-    <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
-      <div class="space-y-6">
-        <div class="grid gap-4 lg:grid-cols-[minmax(0,280px)_minmax(0,1fr)]">
-          <UCard class="stu-panel rounded-[1.8rem] border-0">
-            <template #header>
-              <div class="text-xs uppercase tracking-[0.2em] text-[rgba(33,22,15,0.55)]">Deck</div>
-            </template>
-            <GameplayCardDeck :deck="boardState.deck" :targets="targets" @click-pile="emit('clickDeckPile', $event)" />
-          </UCard>
-
-          <GameplayTable :table="boardState.table" :targets="targets" @click-card="emit('clickTable', $event)" />
-        </div>
-
-        <GameplayPlayer
-          v-for="(player, index) in orderedPlayers"
-          :key="player.id"
-          :board-state="boardState"
-          :index="index"
-          :player="player"
-          :players="orderedPlayers"
-          :targets="targets"
-          @click-character="emit('clickCharacter', $event)"
-          @click-hand="onClickHand"
-          @click-tableau="onClickTableau"
-        />
-      </div>
-
+    <div class="space-y-6">
       <GameplaySidebar
         :board-state="boardState"
         :can-end-turn="canEndTurn"
@@ -104,6 +78,30 @@ function onClickTableau(playerId: number, card: GameCard) {
         @end-turn="emit('endTurn')"
         @reset-board="emit('resetBoard')"
         @toggle-cards="emit('toggleCards')"
+      />
+
+      <div class="grid gap-4 lg:grid-cols-[minmax(0,280px)_minmax(0,1fr)]">
+        <UCard class="stu-panel rounded-[1.8rem] border-0">
+          <template #header>
+            <div class="text-xs uppercase tracking-[0.2em] text-[rgba(33,22,15,0.55)]">Deck</div>
+          </template>
+          <GameplayCardDeck :deck="boardState.deck" :targets="targets" @click-pile="emit('clickDeckPile', $event)" />
+        </UCard>
+
+        <GameplayTable :table="boardState.table" :targets="targets" @click-card="emit('clickTable', $event)" />
+      </div>
+
+      <GameplayPlayer
+        v-for="(player, index) in orderedPlayers"
+        :key="player.id"
+        :board-state="boardState"
+        :index="index"
+        :player="player"
+        :players="orderedPlayers"
+        :targets="targets"
+        @click-character="emit('clickCharacter', $event)"
+        @click-hand="onClickHand"
+        @click-tableau="onClickTableau"
       />
     </div>
   </div>
