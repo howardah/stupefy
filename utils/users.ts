@@ -34,9 +34,10 @@ function getRoomUsers(room: string): User[] {
   return users.filter((user) => user.room === room);
 }
 
-module.exports = {
+export {
+  type User,
   userJoin,
   getCurrentUser,
   userLeave,
-  getRoomUsers
+  getRoomUsers,
 };

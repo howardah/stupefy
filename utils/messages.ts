@@ -1,11 +1,12 @@
-const moment = require('moment');
-
 function formatMessage(username: string, text: string) {
   return {
     username,
     text,
-    time: moment().format('h:mm a')
+    time: new Intl.DateTimeFormat("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(new Date()),
   };
 }
 
-module.exports = formatMessage;
+export { formatMessage };
