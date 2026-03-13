@@ -122,7 +122,10 @@ export function useBoardController(sourceBoardState: ComputedRef<BoardViewState 
       Boolean(
         boardState.value &&
           boardState.value.turn === boardState.value.playerId &&
-          boardState.value.turnCycle.phase === "initial"
+          (
+            boardState.value.turnCycle.phase === "initial" ||
+            boardState.value.turnCycle.phase === "stuck-in-azkaban"
+          )
       )
   );
   const choosingCharacter = computed(() => {
@@ -534,7 +537,7 @@ export function useBoardController(sourceBoardState: ComputedRef<BoardViewState 
   function endTurn() {
     withBoardState((state) => {
       if (!canEndTurn.value) {
-        pushAlert("You can only end your turn from the initial phase.", "info");
+        pushAlert("You can only end your turn from the initial phase or after losing a turn in Azkaban.", "info");
         return true;
       }
 
