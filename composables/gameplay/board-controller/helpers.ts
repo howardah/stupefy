@@ -1,0 +1,48 @@
+import type { BoardViewState, GameCard } from "~/utils/types";
+import { playerIndex } from "~/utils/gameplay/core";
+import { getPopupState } from "~/utils/gameplay/events";
+
+function cloneSelectedCards(cards: GameCard[]) {
+  return cards.map((card) => ({ ...card, power: { ...card.power } }));
+}
+
+function syncActions(state: BoardViewState) {
+  state.actions = getPopupState(state.events, state.playerId);
+}
+
+function ensureTurnCyclePlayerState(state: BoardViewState, playerId: number) {
+  const key = `id${playerId}`;
+  const currentValue = state.turnCycle[key];
+
+  if (!currentValue || typeof currentValue !== "object" || !("cards" in currentValue)) {
+    state.turnCycle[key] = { cards: [] };
+  }
+
+  return state.turnCycle[key] as { cards: GameCard[]; choice?: string };
+}
+
+function activePlayer(state: BoardViewState) {
+  const index = playerIndex(state.players, state.turn);
+  return index === -1 ? null : state.players[index]!;
+}
+
+function viewerPlayer(state: BoardViewState) {
+  const index = playerIndex(state.players, state.playerId);
+  return index === -1 ? null : state.players[index]!;
+}
+
+function resetSelection(state: BoardViewState) {
+  state.turnCycle.cards = [];
+  state.turnCycle.action = "";
+  state.turnCycle.felix = [];
+  state.turnCycle.phase = "initial";
+}
+
+export {
+  activePlayer,
+  cloneSelectedCards,
+  ensureTurnCyclePlayerState,
+  resetSelection,
+  syncActions,
+  viewerPlayer,
+};

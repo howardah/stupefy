@@ -54,13 +54,13 @@
 
 ## Acceptance criteria
 
-- [ ] `useBoardController.ts` is reduced below the style guide hard limit.
-- [ ] Internal responsibilities are split into focused composables or helper modules with clear names.
-- [ ] Duplicate gameplay helper logic is reduced instead of copied into each new file.
-- [ ] The exported API used by `pages/play.vue` remains stable or is migrated cleanly in one pass.
-- [ ] `bunx tsc --noEmit` passes.
-- [ ] Existing gameplay tests still pass.
+- [x] `useBoardController.ts` is reduced below the style guide hard limit.
+- [x] Internal responsibilities are split into focused composables or helper modules with clear names.
+- [x] Duplicate gameplay helper logic is reduced instead of copied into each new file.
+- [x] The exported API used by `pages/play.vue` remains stable or is migrated cleanly in one pass.
+- [x] `bunx tsc --noEmit` passes.
+- [x] Existing gameplay tests still pass.
 
 ## Issue Status
 
-Open
+Closed
