@@ -60,12 +60,12 @@
 
 ## Acceptance criteria
 
-- [ ] No waiting-room persistence module exceeds the style guide hard limit.
-- [ ] Mongo collection access is separated from waiting-room command/query logic.
-- [ ] Presence pruning and ready-map normalization live in one reusable helper module.
-- [ ] Existing server route behavior remains unchanged.
-- [ ] `bunx tsc --noEmit` passes.
+- [x] No waiting-room persistence module exceeds the style guide hard limit.
+- [x] Mongo collection access is separated from waiting-room command/query logic.
+- [x] Presence pruning and ready-map normalization live in one reusable helper module.
+- [x] Existing server route behavior remains unchanged.
+- [x] `bunx tsc --noEmit` passes.
 
 ## Issue Status
 
-Open
+Closed
