@@ -51,3 +51,4 @@ Primary code references:
 
 - `Apparate` is the main known deck card that still has an explicit UI placeholder but no migrated action handler yet.
 - `Holly Wand` range works, but the deck metadata still contains a `yew-immunity` flag that is not enforced anywhere in the current migrated rules.
+- When a player holds all three deathly hallows (`Invisibility Cloak`, `Elder Wand`, and `Resurrection Stone`), he is the 'master of death and his last life point cannot be taken away while all three are present on his tableau
