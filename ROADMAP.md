@@ -145,6 +145,10 @@ This roadmap tracks the full migration from the legacy React/Express application
   - discard/draw accounting
 - [x] Verify that total card counts remain stable across all major turn paths.
 - [x] Audit character-specific powers and document which are incomplete or broken today.
+- [ ] Implement the remaining missing gameplay powers documented in:
+  - [`docs/deck-card-status.md`](/Users/innocentsmith/Sites/node/stupefy/docs/deck-card-status.md)
+  - [`docs/character-card-status.md`](/Users/innocentsmith/Sites/node/stupefy/docs/character-card-status.md)
+  This includes unresolved deck effects such as `Apparate`, `Holly Wand`'s Yew immunity, and the Deathly Hallows protection, along with the incomplete and missing character powers tracked in the character audit.
 - [x] Fix existing rule bugs as they are discovered, but only once parity with the legacy behavior is understood.
 
 ## Phase 9: Backend Reliability and Cleanup
@@ -175,6 +179,7 @@ This roadmap tracks the full migration from the legacy React/Express application
 ## Immediate Next Steps
 
 - [ ] Port the remaining spell/event rule handlers from the recovered `card-rules/*` modules into typed shared modules.
+- [ ] Implement the documented missing deck-card and character-card powers after the remaining core rule handlers are in place.
 - [ ] Replace the current Phase 6 “explicit fallback alerts” with real action-option handlers once the relevant rules are ported.
 - [ ] Tighten the current polling-based room sync into smaller action-level server mutations once the card-rule port is further along.
 - [ ] Add gameplay tests around authoritative sync conflicts so simultaneous actions are exercised intentionally.
