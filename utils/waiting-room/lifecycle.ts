@@ -1,12 +1,9 @@
 import type { GameState, PlayerState, WaitingRoomState } from "../types";
-import {
-  applyGameRoomLifecycle,
-  applyWaitingRoomLifecycle,
-} from "../room-lifecycle";
+import { applyGameRoomLifecycle, applyWaitingRoomLifecycle } from "../room-lifecycle";
 
 function prunePresence(room: WaitingRoomState): WaitingRoomState {
-  const active = { ...(room.active || {}) };
-  const activeUpdatedAt = { ...(room.activeUpdatedAt || {}) };
+  const active = { ...room.active };
+  const activeUpdatedAt = { ...room.activeUpdatedAt };
   const now = Date.now();
 
   for (const sessionId of Object.keys(activeUpdatedAt)) {
@@ -20,12 +17,12 @@ function prunePresence(room: WaitingRoomState): WaitingRoomState {
     ...room,
     active,
     activeUpdatedAt,
-    ready: { ...(room.ready || {}) },
+    ready: { ...room.ready },
   });
 }
 
 function ensureReadyMap(room: WaitingRoomState): Record<string, boolean> {
-  const ready = { ...(room.ready || {}) };
+  const ready = { ...room.ready };
 
   for (const player of room.players) {
     const key = String(player.id);
@@ -67,10 +64,4 @@ function normalizeGameRoom(room: GameState | null) {
   return room ? applyGameRoomLifecycle(room) : null;
 }
 
-export {
-  areAllPlayersReady,
-  ensureReadyMap,
-  normalizeGameRoom,
-  playersForGame,
-  prunePresence,
-};
+export { areAllPlayersReady, ensureReadyMap, normalizeGameRoom, playersForGame, prunePresence };
