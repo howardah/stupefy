@@ -9,28 +9,14 @@ import type {
 } from "../types";
 import { idGenerator } from "../db-tools";
 import { newRoom } from "../new-room";
-import {
-  isGameRoomActive,
-  isWaitingRoomAvailable,
-} from "../room-lifecycle";
+import { isGameRoomActive, isWaitingRoomAvailable } from "../room-lifecycle";
 import { normalizeRoomKey, normalizeRoomName } from "../room";
-import {
-  areAllPlayersReady,
-  ensureReadyMap,
-  playersForGame,
-} from "./lifecycle";
-import {
-  readGameRoom,
-  readWaitingRoom,
-  withClient,
-  writeWaitingRoom,
-} from "./repository";
+import { areAllPlayersReady, ensureReadyMap, playersForGame } from "./lifecycle";
+import { readGameRoom, readWaitingRoom, withClient, writeWaitingRoom } from "./repository";
 
 type WaitingRoomResult = Array<ErrorResult | WaitingRoomState>;
 
-async function joinWaitRoom(
-  data: WaitingRoomJoinQuery,
-): Promise<WaitingRoomResult | undefined> {
+async function joinWaitRoom(data: WaitingRoomJoinQuery): Promise<WaitingRoomResult | undefined> {
   return withClient(async (client) => {
     const currentRoom = await readWaitingRoom(client, data.room);
     if (!currentRoom) {
@@ -98,20 +84,20 @@ async function updateActive(data: {
       ...data.data,
       status: currentRoom.status ?? "waiting",
       active: {
-        ...(currentRoom.active || {}),
-        ...(data.data.active || {}),
+        ...currentRoom.active,
+        ...data.data.active,
       },
       activeUpdatedAt: {
-        ...(currentRoom.activeUpdatedAt || {}),
-        ...(data.data.activeUpdatedAt || {}),
+        ...currentRoom.activeUpdatedAt,
+        ...data.data.activeUpdatedAt,
       },
       ready: ensureReadyMap({
         ...currentRoom,
         ...data.data,
         players: nextPlayers,
         ready: {
-          ...(currentRoom.ready || {}),
-          ...((data.data.ready as Record<string, boolean> | undefined) || {}),
+          ...currentRoom.ready,
+          ...(data.data.ready as Record<string, boolean> | undefined),
         },
       } as WaitingRoomState),
     };
@@ -161,8 +147,8 @@ async function removeActiveSession(data: {
       return [{ error: "room not found" }];
     }
 
-    const active = { ...(currentRoom.active || {}) };
-    const activeUpdatedAt = { ...(currentRoom.activeUpdatedAt || {}) };
+    const active = { ...currentRoom.active };
+    const activeUpdatedAt = { ...currentRoom.activeUpdatedAt };
 
     delete active[data.sessionId];
     delete activeUpdatedAt[data.sessionId];
@@ -211,8 +197,7 @@ async function makeWaitRoom(
       createdAt: now,
       chat: [
         {
-          text:
-            "Once everyone has joined the room, each player can click Ready. The game launches automatically once everyone is ready.",
+          text: "Once everyone has joined the room, each player can click Ready. The game launches automatically once everyone is ready.",
           player: 100,
           time: Date.now(),
         },
