@@ -5,3 +5,6 @@ archives/
 app.yaml
 .nuxt/
 .output/
+.claude/
+.codex/
+.recovered-react/
