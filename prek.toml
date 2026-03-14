@@ -1,0 +1,22 @@
+minimum_prek_version = "0.2.0"
+
+[[repos]]
+repo = "local"
+
+[[repos.hooks]]
+id = "lint"
+name = "lint"
+language = "system"
+entry = "bun run lint --"
+files = { glob = ["**/*.js", "**/*.ts", "**/*.jsx", "**/*.tsx", "**/*.vue"] }
+priority = 10
+env = { PATH = "/home/YOUR_USER/.bun/bin:/usr/local/bin:/usr/bin:/bin" }
+
+[[repos.hooks]]
+id = "fmt-check"
+name = "fmt:check"
+language = "system"
+entry = "bun run fmt:check --"
+files = { glob = ["**/*.js", "**/*.ts", "**/*.jsx", "**/*.tsx", "**/*.vue"] }
+priority = 20
+env = { PATH = "/home/YOUR_USER/.bun/bin:/usr/local/bin:/usr/bin:/bin" }

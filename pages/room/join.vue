@@ -53,10 +53,7 @@ async function refreshOpenRooms() {
     openRooms.value = await api.getOpenRooms();
   } catch (error) {
     openRooms.value = [];
-    openRoomsError.value = messageFromThrownError(
-      error,
-      "Unable to load open rooms right now."
-    );
+    openRoomsError.value = messageFromThrownError(error, "Unable to load open rooms right now.");
     console.error("[room/join] Failed to load open rooms.", error);
   } finally {
     isRefreshingRooms.value = false;

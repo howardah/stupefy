@@ -30,22 +30,18 @@ const connectedPlayers = computed<WaitingPlayer[]>(() => {
   const currentRoom = roomState.value;
   if (!currentRoom) return [];
 
-  const activeIds = new Set(
-    Object.values(currentRoom.active || {}).map((value) => Number(value))
-  );
+  const activeIds = new Set(Object.values(currentRoom.active || {}).map((value) => Number(value)));
 
   return currentRoom.players.filter((player) => activeIds.has(Number(player.id)));
 });
 
 const readyState = computed<Record<string, boolean>>(() => roomState.value?.ready || {});
 const activePlayerIds = computed(() => connectedPlayers.value.map((player) => Number(player.id)));
-const currentPlayerReady = computed(
-  () => readyState.value[String(currentPlayerId.value)] === true
-);
+const currentPlayerReady = computed(() => readyState.value[String(currentPlayerId.value)] === true);
 const everyoneReady = computed(
   () =>
     allPlayers.value.length > 0 &&
-    allPlayers.value.every((player) => readyState.value[String(player.id)] === true)
+    allPlayers.value.every((player) => readyState.value[String(player.id)] === true),
 );
 
 function presentError(messageText: string, error?: unknown) {
@@ -186,7 +182,7 @@ watch(
     if (!ready || !hasLoaded.value) return;
     void launchGameIfReady();
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 let refreshTimer: ReturnType<typeof setInterval> | undefined;

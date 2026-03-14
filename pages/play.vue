@@ -34,7 +34,7 @@ const {
   () => api.getGameRoom({ room: normalizedRoomKey.value }),
   {
     watch: [normalizedRoomKey],
-  }
+  },
 );
 
 const { boardState: sourceBoardState, currentRoom } = useRoomState({
@@ -93,7 +93,9 @@ function onTableClick(card: GameCard) {
 
 <template>
   <div class="stu-shell !max-w-[1400px]">
-    <div class="mb-6 flex flex-wrap items-start justify-between gap-4 border-b border-[rgba(82,57,29,0.12)] pb-5">
+    <div
+      class="mb-6 flex flex-wrap items-start justify-between gap-4 border-b border-[rgba(82,57,29,0.12)] pb-5"
+    >
       <div class="min-w-0">
         <div class="text-xs uppercase tracking-[0.22em] text-[rgba(33,22,15,0.55)]">Stupefy</div>
         <h1 class="text-3xl font-semibold sm:text-4xl">{{ roomName }}</h1>
@@ -101,12 +103,27 @@ function onTableClick(card: GameCard) {
 
       <div class="flex flex-wrap items-center gap-2">
         <UBadge color="secondary" variant="subtle">Connection: {{ realtimeStatus }}</UBadge>
-        <UButton color="neutral" variant="ghost" icon="i-lucide-refresh-cw" label="Refresh" @click="reloadRoom" />
-        <UButton to="/" color="neutral" variant="soft" icon="i-lucide-arrow-left" label="Leave table" />
+        <UButton
+          color="neutral"
+          variant="ghost"
+          icon="i-lucide-refresh-cw"
+          label="Refresh"
+          @click="reloadRoom"
+        />
+        <UButton
+          to="/"
+          color="neutral"
+          variant="soft"
+          icon="i-lucide-arrow-left"
+          label="Leave table"
+        />
       </div>
     </div>
 
-    <div v-if="status === 'pending'" class="rounded-[2rem] bg-white/60 p-8 text-lg shadow-[0_24px_80px_rgba(62,39,15,0.08)]">
+    <div
+      v-if="status === 'pending'"
+      class="rounded-[2rem] bg-white/60 p-8 text-lg shadow-[0_24px_80px_rgba(62,39,15,0.08)]"
+    >
       Loading game...
     </div>
 
@@ -129,8 +146,7 @@ function onTableClick(card: GameCard) {
     <div v-else class="space-y-6">
       <UAlert
         v-if="
-          realtimeErrorMessage &&
-          (realtimeStatus === 'error' || realtimeStatus === 'reconnecting')
+          realtimeErrorMessage && (realtimeStatus === 'error' || realtimeStatus === 'reconnecting')
         "
         color="warning"
         variant="subtle"
