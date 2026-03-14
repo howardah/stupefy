@@ -15,6 +15,7 @@ import {
   readGameRoom,
   readWaitingRoom,
   withClient,
+  writeWaitingRoom,
 } from "./repository";
 
 type WaitingRoomResult = Array<ErrorResult | WaitingRoomState>;
@@ -69,18 +70,14 @@ async function listOpenWaitRooms(): Promise<OpenWaitingRoomSummary[]> {
     const roomKeys = await listWaitingCollectionNames(client);
     const openRooms = await Promise.all(
       roomKeys.map(async (roomKey) => {
-        const waitingCollection = await getWaitingCollection(client, roomKey);
+        const _waitingCollection = await getWaitingCollection(client, roomKey);
         const waitingRoom = await readWaitingRoom(client, roomKey);
 
         if (!waitingRoom) {
           return null;
         }
         if (!isWaitingRoomAvailable(waitingRoom)) {
-          await waitingCollection.updateOne(
-            { _id: 0 },
-            { $set: waitingRoom, $setOnInsert: { _id: 0 } },
-            { upsert: true },
-          );
+          await writeWaitingRoom(client, roomKey, waitingRoom);
           return null;
         }
         if (typeof waitingRoom.password === "string" && waitingRoom.password.length > 0) {

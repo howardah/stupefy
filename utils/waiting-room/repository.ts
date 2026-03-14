@@ -58,9 +58,12 @@ async function writeWaitingRoom(
   const collection = await getWaitingCollection(client, room);
   const pruned = prunePresence(nextState);
 
+  // Remove _id from pruned to avoid conflict during update
+  const { _id, ...updateData } = pruned;
+
   await collection.updateOne(
     ROOM_DOCUMENT_FILTER,
-    { $set: pruned, $setOnInsert: { _id: 0 } },
+    { $set: updateData, $setOnInsert: { _id: 0 } },
     { upsert: true },
   );
   return pruned;
