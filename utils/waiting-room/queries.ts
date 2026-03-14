@@ -10,7 +10,6 @@ import { isGameRoomActive, isWaitingRoomAvailable } from "../room-lifecycle";
 import { normalizeRoomKey, normalizeRoomName, roomPasswordKey } from "../room";
 import { prunePresence } from "./lifecycle";
 import {
-  getWaitingCollection,
   listWaitingCollectionNames,
   readGameRoom,
   readWaitingRoom,
@@ -70,7 +69,7 @@ async function listOpenWaitRooms(): Promise<OpenWaitingRoomSummary[]> {
     const roomKeys = await listWaitingCollectionNames(client);
     const openRooms = await Promise.all(
       roomKeys.map(async (roomKey) => {
-        const _waitingCollection = await getWaitingCollection(client, roomKey);
+        // const _waitingCollection = await getWaitingCollection(client, roomKey);
         const waitingRoom = await readWaitingRoom(client, roomKey);
 
         if (!waitingRoom) {
