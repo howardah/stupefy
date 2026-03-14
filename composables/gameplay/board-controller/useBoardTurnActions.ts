@@ -1,19 +1,11 @@
 import type { ComputedRef } from "vue";
-import type {
-  BoardViewState,
-  CharacterCard,
-} from "~/utils/types";
+import type { BoardViewState, CharacterCard } from "~/utils/types";
 import { isCharacterPowerName } from "~/utils/types";
 import Deck from "~/utils/deck";
 import { handleRulePopupChoice } from "~/utils/gameplay/card-rules";
 import { getPrimaryCharacter } from "~/utils/gameplay/core";
 import { isGrayCard } from "~/utils/gameplay/powers";
-import {
-  cycleCleanse,
-  endTurnState,
-  incrementTurn,
-  setupTurnCycleForTurn,
-} from "~/utils/gameplay/turn-cycle";
+import { endTurnState, incrementTurn, setupTurnCycleForTurn } from "~/utils/gameplay/turn-cycle";
 import { activePlayer, resetSelection, viewerPlayer } from "./helpers";
 import type { useBoardSelections } from "./useBoardSelections";
 
@@ -30,7 +22,7 @@ function useBoardTurnActions(options: {
   selections: ReturnType<typeof useBoardSelections>;
   withBoardState: WithBoardState;
 }) {
-  const { boardState, canEndTurn, pushAlert, selections, withBoardState } = options;
+  const { canEndTurn, pushAlert, selections, withBoardState } = options;
 
   function chooseCharacter(character: CharacterCard) {
     withBoardState((state) => {
@@ -150,7 +142,10 @@ function useBoardTurnActions(options: {
   function endTurn() {
     withBoardState((state) => {
       if (!canEndTurn.value) {
-        pushAlert("You can only end your turn from the initial phase or after losing a turn in Azkaban.", "info");
+        pushAlert(
+          "You can only end your turn from the initial phase or after losing a turn in Azkaban.",
+          "info",
+        );
         return true;
       }
 
@@ -173,9 +168,10 @@ function useBoardTurnActions(options: {
       const nextPlayer = activePlayer(state);
       if (nextPlayer) {
         const character = getPrimaryCharacter(nextPlayer);
-        nextPlayer.power = character?.fileName && isCharacterPowerName(character.fileName)
-          ? [character.fileName]
-          : [];
+        nextPlayer.power =
+          character?.fileName && isCharacterPowerName(character.fileName)
+            ? [character.fileName]
+            : [];
       }
 
       const setup = setupTurnCycleForTurn(state.players, nextTurn);
