@@ -55,7 +55,7 @@ Two notes regarding the current setup:
 1. The application stores waiting room data in MongoDB, but active game rooms are partially held in memory, which may cause issues across multiple instances. Redis is a planned improvement.
 2. The `app.yaml` file containing environment variables is excluded from this repo. [`demo-app.yaml`](demo-app.yaml) shows the expected structure.
 
-## Notes on the current build
+## Notes on the current status
 
 Some features are still in progress:
 
