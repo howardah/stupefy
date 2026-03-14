@@ -35,9 +35,7 @@ export const sampleGameRoomSnapshot: GameState = {
       id: 11,
       name: "Ada",
       role: "minister",
-      tableau: [
-        { id: 8, name: "elder_wand", fileName: "elder_wand", house: "G", power: {} },
-      ],
+      tableau: [{ id: 8, name: "elder_wand", fileName: "elder_wand", house: "G", power: {} }],
       hand: [
         { id: 9, name: "stupefy", fileName: "stupefy", house: "R", power: {} },
         { id: 10, name: "protego", fileName: "protego", house: "H", power: {} },
@@ -60,9 +58,7 @@ export const sampleGameRoomSnapshot: GameState = {
       tableau: [
         { id: 11, name: "vanishing_cabinet", fileName: "vanishing_cabinet", house: "S", power: {} },
       ],
-      hand: [
-        { id: 12, name: "expelliarmus", fileName: "expelliarmus_1", house: "S", power: {} },
-      ],
+      hand: [{ id: 12, name: "expelliarmus", fileName: "expelliarmus_1", house: "S", power: {} }],
       power: [],
       character: {
         fileName: "bellatrix_lestrange",
@@ -79,9 +75,7 @@ export const sampleGameRoomSnapshot: GameState = {
       name: "Cy",
       role: "auror",
       tableau: [],
-      hand: [
-        { id: 13, name: "butterbeer", fileName: "butterbeer", house: "H", power: {} },
-      ],
+      hand: [{ id: 13, name: "butterbeer", fileName: "butterbeer", house: "H", power: {} }],
       power: [],
       character: {
         fileName: "remus_lupin",
@@ -94,9 +88,7 @@ export const sampleGameRoomSnapshot: GameState = {
       },
     },
   ],
-  table: [
-    { id: 14, name: "diagon_alley", fileName: "diagon_alley", house: "R", power: {} },
-  ],
+  table: [{ id: 14, name: "diagon_alley", fileName: "diagon_alley", house: "R", power: {} }],
   turn: 11,
   turnCycle: {
     action: "stupefy",
