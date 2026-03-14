@@ -9,7 +9,7 @@
     "build": "nuxt build",
     "dev": "nuxt dev",
     "preview": "nuxt preview",
-    "typecheck": "nuxt typecheck && node ./node_modules/typescript/bin/tsc --noEmit"
+    "typecheck": "nuxt typecheck && bun run tsc --noEmit"
   },
   "dependencies": {
     "@nuxt/ui": "^4.1.0",
