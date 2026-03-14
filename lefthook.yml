@@ -20,11 +20,13 @@
 pre-commit:
   parallel: true
   jobs:
-    - run: bun run lint {staged_files}
-      glob: "*.{js,ts,jsx,tsx}"
+    - name: lint
+      run: PATH="$HOME/.bun/bin:$PATH" bun run lint {staged_files}
+      glob: "*.{js,ts,jsx,tsx,vue}"
 
-    - run: bun run fmt:check {staged_files}
-      glob: "*.{js,ts,jsx,tsx,yml}"
+    - name: fmt:check
+      run: PATH="$HOME/.bun/bin:$PATH" bun run fmt:check {staged_files}
+      glob: "*.{js,ts,jsx,tsx,vue}"
 #
 #     - name: rubocop
 #       glob: "*.rb"
