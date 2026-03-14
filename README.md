@@ -1,59 +1,66 @@
-﻿# Stupefy!
+# Stupefy!
 
-Stupefy is a card game application originally built with React and Socket.IO. This repository is now being migrated to Nuxt and Vue while preserving the original gameplay logic as a reference.
+Stupefy is a card game application built with Nuxt 4, Vue 3, and Socket.IO. The application is a digital version of a game developed by Hanna Hutchinson, Bethany Shorey-Fennell, Peter Myers, Jordan Howard, Kelsey Howard, Henry Fennell, Chloe Fennell, Dan Hutchinson, and Adam Howard.
 
-## What’s this?
+## What's this?
 
-This repository originally comprised the Node.js backend for the application, hosted via Google Cloud on [stupefy.fun](https://stupefy.fun/), and served a compiled build from the React [Stupefy Front-End](https://github.com/howardah/stupefy-front-end). The project is now being restructured into a Nuxt application with Nitro server routes replacing the old Express layer.
+The original app was a Node.js backend hosted on Google Cloud at [stupefy.fun](https://stupefy.fun/), serving a compiled React build. It has been restructured into a Nuxt application with Nitro server routes replacing the old Express layer and Vue components replacing the React frontend.
 
-The original frontend source was recovered from the production source map and is stored in [`.recovered-react/`](/Users/innocentsmith/Sites/node/stupefy/.recovered-react) as the migration reference.
+The lobby flow, waiting room, and gameplay board are all running in Vue. Some character special abilities are still being implemented.
+
+The original frontend source was recovered from the production source map and is stored in [`.recovered-react/`](.recovered-react) as the migration reference.
 
 ## Install & Run
 
-To run the app on your local machine you must download the source, `cd` into the directory, then install the dependencies with:
+Download the source, `cd` into the directory, then install dependencies:
 
     bun install
 
-The application also requires connection to a [MongoDB](http://mongodb.com/) database. You can create one for free on the MongoDB website. After which you should create a .env file in your local Stupefy directory and add the lines:
+The application requires a [MongoDB](http://mongodb.com/) database. Create a `.env` file in the project root with:
 
     MONGO_STUPEFY_UN=<your-mongo-user>
     MONGO_STUPEFY_PW=<your-mongo-pw>
     MONGO_STUPEFY_CLUSTER=<your-mongo-cluster>
 
-replacing the values with your own.
-
-Now, you’re all set to run the app with:
+Start the development server:
 
     bun run dev
 
-The Nuxt development server should then be available at [localhost:3000](http://localhost:3000).
-
-At the moment, the lobby flow has been migrated into Nuxt, while the full board/gameplay UI is still being ported from the recovered React source.
+The app will be available at [localhost:3000](http://localhost:3000).
 
 ## Run With Docker
 
-The repository now includes a [`docker-config.yaml`](/Users/innocentsmith/Sites/node/stupefy/docker-config.yaml) file that starts both the app and a local MongoDB container. The app will automatically use `MONGO_URI` when it is set, so its database calls are routed to the Docker Mongo service instead of MongoDB Atlas.
-
-Start everything with:
+A [`docker-config.yaml`](docker-config.yaml) file starts both the app and a local MongoDB container. When `MONGO_URI` is set, database calls are routed to the Docker Mongo service instead of MongoDB Atlas.
 
     docker compose -f docker-config.yaml up --build
 
-The app will be available at [localhost:3000](http://localhost:3000) and MongoDB will be available at `localhost:27017`.
+The app will be available at [localhost:3000](http://localhost:3000) and MongoDB at `localhost:27017`.
+
+## Other Scripts
+
+    bun run build       # Production build
+    bun run preview     # Preview production build
+    bun run typecheck   # TypeScript type checking
+    bun run lint        # Lint with oxlint
+    bun run lint:fix    # Auto-fix lint issues
+    bun run fmt         # Format with oxfmt
+    bun test            # Run tests
 
 ## Google Cloud
 
-As noted above, the app is currently live, running with google cloud. I used the google cloud [websocket example](https://github.com/GoogleCloudPlatform/nodejs-docs-samples/tree/master/appengine/websockets#setup) to set it up.
+The app is currently live on Google Cloud. Setup followed the Google Cloud [websocket example](https://github.com/GoogleCloudPlatform/nodejs-docs-samples/tree/master/appengine/websockets#setup).
 
-Two notes regarding Google Cloud and the Application’s current setup:
+Two notes regarding the current setup:
 
-1.  The Application stores data for the initial waiting room in the variable `rooms`. This might cause problems as the application scales to multiple instances. I plan to try using [Redis](https://redis.io/) to deal with this issue.
-2.  As the information for the environment variables, which contain my mongo login details, are stored in the “app.yaml” file, I have excluded it from this repo. “demo-app.yaml” has been include to show how the file is otherwise setup.
+1. The application stores waiting room data in MongoDB, but active game rooms are partially held in memory, which may cause issues across multiple instances. Redis is a planned improvement.
+2. The `app.yaml` file containing environment variables is excluded from this repo. [`demo-app.yaml`](demo-app.yaml) shows the expected structure.
 
 ## Notes on the current build
 
-The application is still in its initial development. There are some key features still missing from it. I will be addressing these over the next couple of weeks:
+Some features are still in progress:
 
-- There is no end-game summary nor does the code even check for win conditions. Like playing the card game, players have to recognize the game has ended and stop on their own.
-- Because of lack of built-in resolution, the db & the room are not closed at the end of the game and therefore the room name will not be re-usable until the room expires by sitting 3 days without activity.
-- The rules and functionality are not explained anywhere.
-- Many of the characters special abilities are not yet functional.
+- The game is currently in active development and provides the ability to see all players' hands during gameplay. If you are wanting to play the game, this should be disabled per-player before starting.
+- There is no end-game summary, nor does the code check for win conditions. Players must recognize when the game has ended.
+- Rooms do not auto-close after a game ends. The room name will not be reusable until the room expires after 3 days of inactivity.
+- Rules and functionality are not explained in the UI.
+- Some character special abilities are not yet functional. See [`docs/character-power-audit.md`](docs/character-power-audit.md) for the current status.
