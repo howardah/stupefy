@@ -10,7 +10,7 @@
     "dev": "nuxt dev",
     "preview": "nuxt preview",
     "typecheck": "nuxt typecheck && bun run tsc --noEmit",
-    "lint": "oxlint",
+    "lint": "oxlint --deny-warnings",
     "lint:fix": "oxlint --fix",
     "fmt": "oxfmt",
     "fmt:check": "oxfmt --check"
