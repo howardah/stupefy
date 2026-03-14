@@ -2,8 +2,8 @@
 
 ## Files affected
 
-| File | Problem |
-| ---- | ------- |
+| File                     | Problem                                                                                                                                            |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `utils/waitingRoomDB.ts` | 516 lines, combines collection access, lifecycle normalization, presence pruning, room access checks, room mutation commands, and game-start logic |
 
 `utils/waitingRoomDB.ts` is a backend utility that currently acts as both repository layer and business-rule layer. That violates the style guide’s module-boundary rules and makes persistence changes harder to isolate.

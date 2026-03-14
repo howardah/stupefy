@@ -2,11 +2,11 @@
 
 ## Files affected
 
-| File | Problem |
-| ---- | ------- |
-| `utils/types.ts` | Core state types use `unknown[]`, broad index signatures, and stringly-typed gameplay fields |
-| `utils/gameplay/*.ts` | Many modules rely on dynamic keys and untyped phase/action strings because the shared types are too loose |
-| `composables/gameplay/*.ts` | Consumers compensate for loose types with repeated guards and casts |
+| File                        | Problem                                                                                                   |
+| --------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `utils/types.ts`            | Core state types use `unknown[]`, broad index signatures, and stringly-typed gameplay fields              |
+| `utils/gameplay/*.ts`       | Many modules rely on dynamic keys and untyped phase/action strings because the shared types are too loose |
+| `composables/gameplay/*.ts` | Consumers compensate for loose types with repeated guards and casts                                       |
 
 The style guide explicitly calls out broad `unknown[]`, catch-all index signatures, and scattered string values as smells. `utils/types.ts` is the main source of that looseness.
 

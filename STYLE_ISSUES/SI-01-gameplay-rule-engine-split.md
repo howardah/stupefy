@@ -2,10 +2,10 @@
 
 ## Files affected
 
-| File | Problem |
-| ---- | ------- |
-| `utils/gameplay/card-rules.ts` | 1,940 lines, many unrelated responsibilities, and too many exported entry points routing through one file |
-| `utils/gameplay/card-rules.test.ts` | Regression tests are coupled to the monolithic rule file instead of matching smaller rule modules |
+| File                                | Problem                                                                                                   |
+| ----------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `utils/gameplay/card-rules.ts`      | 1,940 lines, many unrelated responsibilities, and too many exported entry points routing through one file |
+| `utils/gameplay/card-rules.test.ts` | Regression tests are coupled to the monolithic rule file instead of matching smaller rule modules         |
 
 `utils/gameplay/card-rules.ts` is the clearest violation of the style guide. It mixes shared helpers, damage/death resolution, popup handling, spell execution, targeting side-effects, and click routing in one module. That makes rule changes hard to review and increases regression risk.
 

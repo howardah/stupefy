@@ -2,8 +2,8 @@
 
 ## Files affected
 
-| File | Problem |
-| ---- | ------- |
+| File                                         | Problem                                                                                                  |
+| -------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
 | `composables/gameplay/useBoardController.ts` | 854 lines, too many responsibilities, and repeated gameplay helper logic that overlaps with rule modules |
 
 `useBoardController.ts` is carrying orchestration, local mutation, click dispatch, power-action discovery, alerting, synchronization bookkeeping, and turn-end rules. It is beyond the style guide limits and is now difficult to change safely.

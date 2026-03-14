@@ -148,7 +148,7 @@ This roadmap tracks the full migration from the legacy React/Express application
 - [ ] Implement the remaining missing gameplay powers documented in:
   - [`docs/deck-card-status.md`](/Users/innocentsmith/Sites/node/stupefy/docs/deck-card-status.md)
   - [`docs/character-card-status.md`](/Users/innocentsmith/Sites/node/stupefy/docs/character-card-status.md)
-  This includes unresolved deck effects such as `Apparate`, `Holly Wand`'s Yew immunity, and the Deathly Hallows protection, along with the incomplete and missing character powers tracked in the character audit.
+    This includes unresolved deck effects such as `Apparate`, `Holly Wand`'s Yew immunity, and the Deathly Hallows protection, along with the incomplete and missing character powers tracked in the character audit.
 - [x] Fix existing rule bugs as they are discovered, but only once parity with the legacy behavior is understood.
 
 ## Phase 9: Backend Reliability and Cleanup

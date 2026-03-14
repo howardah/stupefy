@@ -2,8 +2,8 @@
 
 ## Files affected
 
-| File | Problem |
-| ---- | ------- |
+| File                     | Problem                                                                                    |
+| ------------------------ | ------------------------------------------------------------------------------------------ |
 | `utils/stupefy-decks.ts` | 352 lines, mixes canonical card/character catalog data with randomized deck-building logic |
 
 This file is over the style guide target size, and it combines two concerns that should evolve independently: the definition of canonical card/character data and the runtime assembly of a shuffled deck.

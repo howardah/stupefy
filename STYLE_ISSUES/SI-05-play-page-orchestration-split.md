@@ -2,8 +2,8 @@
 
 ## Files affected
 
-| File | Problem |
-| ---- | ------- |
+| File             | Problem                                                                                                             |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------- |
 | `pages/play.vue` | 312 lines and combines route data loading, realtime sync, conflict handling, persistence, and UI wiring in one page |
 
 `pages/play.vue` is only slightly over the target size limit, but the problem is not just length. It currently mixes route orchestration with realtime synchronization and persistence conflict handling, which makes the page harder to reason about than the simpler route pages in the repository.

@@ -2,11 +2,11 @@
 
 ## Files affected
 
-| File | Problem |
-| ---- | ------- |
-| `utils/presence.ts` | Legacy CommonJS module, class-based API, and depends on `redis`, which is not declared in `package.json` |
+| File                | Problem                                                                                                                |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `utils/presence.ts` | Legacy CommonJS module, class-based API, and depends on `redis`, which is not declared in `package.json`               |
 | `utils/messages.ts` | Legacy chat helper from the old realtime stack; now modernized, but its purpose in the current app should be confirmed |
-| `utils/users.ts` | Legacy in-memory chat helper from the old socket-based flow; now modernized, but appears unused in the Nuxt app |
+| `utils/users.ts`    | Legacy in-memory chat helper from the old socket-based flow; now modernized, but appears unused in the Nuxt app        |
 
 These files look like leftovers from the pre-Nuxt realtime architecture. They are small, but the bigger issue is architectural: it is unclear whether they are still intended to exist. `utils/presence.ts` is especially problematic because it references an undeclared dependency and does not fit the current HTTP-polling waiting-room architecture.
 
