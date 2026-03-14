@@ -6,21 +6,14 @@ import type {
   PopupOption,
   PopupState,
 } from "../types";
-import {
-  cardsIncludeName,
-  getPrimaryCharacter,
-  titleCase,
-} from "./core";
+import { cardsIncludeName, getPrimaryCharacter, titleCase } from "./core";
 import { canUseHideCards, ignoresOpposingTableau } from "./powers";
 
 export function eventIndex(events: GameEvent[], message: string): number {
   return events.findIndex((event) => event.popup?.message?.includes(message));
 }
 
-export function getPopupState(
-  events: GameEvent[] | undefined,
-  playerId: number
-): PopupState {
+export function getPopupState(events: GameEvent[] | undefined, playerId: number): PopupState {
   if (events?.[0]) {
     const firstEvent = events[0];
 
@@ -54,7 +47,7 @@ export function getPopupState(
 export function createResolutionEvent(
   message: string,
   targets: Array<number | string>,
-  bystanders?: string
+  bystanders?: string,
 ): GameEvent {
   const event: GameEvent = {
     popup: {
@@ -80,7 +73,7 @@ export function createResolutionEvent(
 export function resolveSystemEvent(
   key: string,
   turnOrder: number[],
-  resolutionText = ""
+  resolutionText = "",
 ): GameEvent | false {
   const targets = [...turnOrder];
 
@@ -108,13 +101,7 @@ export function deathCheck(players: PlayerState[], deadPlayers: number[]): numbe
 }
 
 export function tableauProblems(cards: PlayerState["tableau"]): string | false {
-  const wands = [
-    "larch_wand",
-    "yew_wand",
-    "aspen_wand",
-    "holly_wand",
-    "elder_wand",
-  ];
+  const wands = ["larch_wand", "yew_wand", "aspen_wand", "holly_wand", "elder_wand"];
   const cardNames: string[] = [];
   let wandCount = 0;
 

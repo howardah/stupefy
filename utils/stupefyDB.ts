@@ -19,10 +19,7 @@ async function withClient<T>(runner: (client: MongoClient) => Promise<T>): Promi
   }
 }
 
-async function getCollection(
-  client: MongoClient,
-  room: string
-): Promise<Collection<GameState>> {
+async function getCollection(client: MongoClient, room: string): Promise<Collection<GameState>> {
   const db = client.db("stupefy");
   return db.collection<GameState>(normalizeRoomKey(room));
 }
@@ -48,7 +45,7 @@ async function getRoom(room: string): Promise<GameState[] | false> {
 async function updateRoom(
   room: string,
   data: Partial<GameState>,
-  expectedLastUpdated?: number
+  expectedLastUpdated?: number,
 ): Promise<GameRoomSyncResponse> {
   return withClient(async (client) => {
     const collection = await getCollection(client, room);
@@ -85,7 +82,7 @@ async function updateRoom(
     await collection.replaceOne(
       ROOM_DOCUMENT_FILTER,
       parseGameState(normalizedState) ?? normalizedState,
-      { upsert: true }
+      { upsert: true },
     );
 
     return {
@@ -116,11 +113,7 @@ async function makeRoom(room: string): Promise<GameState[]> {
       status: "active",
     });
 
-    await collection.replaceOne(
-      ROOM_DOCUMENT_FILTER,
-      nextState,
-      { upsert: true }
-    );
+    await collection.replaceOne(ROOM_DOCUMENT_FILTER, nextState, { upsert: true });
 
     return [nextState];
   });

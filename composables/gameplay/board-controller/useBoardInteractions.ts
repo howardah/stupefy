@@ -11,10 +11,7 @@ import {
 import { cardIndex, cardsInclude, getPrimaryCharacter } from "~/utils/gameplay/core";
 import { hasPower } from "~/utils/gameplay/powers";
 import { cycleCleanse } from "~/utils/gameplay/turn-cycle";
-import {
-  activePlayer,
-  viewerPlayer,
-} from "./helpers";
+import { viewerPlayer } from "./helpers";
 import type { useBoardSelections } from "./useBoardSelections";
 
 type WithBoardState = (
@@ -33,9 +30,13 @@ function useBoardInteractions(options: {
   const { actionTargets, orderedPlayers, pushAlert, selections, withBoardState } = options;
 
   function toggleCards() {
-    withBoardState((state) => {
-      state.showCards = !state.showCards;
-    }, undefined, "presentation");
+    withBoardState(
+      (state) => {
+        state.showCards = !state.showCards;
+      },
+      undefined,
+      "presentation",
+    );
   }
 
   function handleApparate(index: number) {
@@ -58,7 +59,9 @@ function useBoardInteractions(options: {
 
       const deck = new Deck([...state.deck.cards], [...state.deck.discards]);
       const selectedCard = state.turnCycle.cards[0];
-      const selectedIndex = selectedCard ? player.hand.findIndex((card) => card.id === selectedCard.id) : -1;
+      const selectedIndex = selectedCard
+        ? player.hand.findIndex((card) => card.id === selectedCard.id)
+        : -1;
       const [discardedCard] = selectedIndex === -1 ? [] : player.hand.splice(selectedIndex, 1);
 
       if (discardedCard) {
@@ -131,10 +134,7 @@ function useBoardInteractions(options: {
           return true;
         }
 
-        if (
-          turnCycle.phase === "selected-tableau" ||
-          turnCycle.phase === "ressurection_stone"
-        ) {
+        if (turnCycle.phase === "selected-tableau" || turnCycle.phase === "ressurection_stone") {
           if (cardsInclude(turnCycle.cards, card)) {
             turnCycle.cards.splice(cardIndex(turnCycle.cards, card), 1);
           } else {
@@ -266,7 +266,10 @@ function useBoardInteractions(options: {
         return true;
       }
 
-      pushAlert(`The ${pile} pile click path still needs the legacy rule handlers for this phase.`, "info");
+      pushAlert(
+        `The ${pile} pile click path still needs the legacy rule handlers for this phase.`,
+        "info",
+      );
       return true;
     });
   }

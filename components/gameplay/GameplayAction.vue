@@ -29,7 +29,9 @@ const emit = defineEmits<{
         <template #header>
           <div class="flex items-start justify-between gap-4">
             <div>
-              <div class="text-xs uppercase tracking-[0.2em] text-[rgba(33,22,15,0.55)]">Action</div>
+              <div class="text-xs uppercase tracking-[0.2em] text-[rgba(33,22,15,0.55)]">
+                Action
+              </div>
               <h3 class="text-xl font-semibold">{{ actions.message }}</h3>
             </div>
             <UButton

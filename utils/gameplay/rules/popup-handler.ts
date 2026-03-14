@@ -22,11 +22,7 @@ import {
   type RuleResult,
   viewerPlayer,
 } from "./shared";
-import {
-  isStupefyCard,
-  resolveProtectionChoice,
-  resolveStupefyResolution,
-} from "./reactions";
+import { isStupefyCard, resolveProtectionChoice, resolveStupefyResolution } from "./reactions";
 import { handleRuleTableClick } from "./table-handler";
 
 function handleStartTurnChoice(
@@ -52,11 +48,7 @@ function handleStartTurnChoice(
   clearCurrentEvent(state);
 
   if (state.turnCycle.action === "ron_weasley") {
-    return handleRuleTableClick(
-      state,
-      { fileName: "", house: "", name: "", power: {} },
-      pushAlert,
-    );
+    return handleRuleTableClick(state, { fileName: "", house: "", name: "", power: {} }, pushAlert);
   }
 
   state.turnCycle.phase = "selected";
@@ -186,7 +178,11 @@ function handleWizardsDuelChoice(
   return { handled: true };
 }
 
-function handleFelixChoice(state: BoardViewState, action: string, pushAlert: PushAlert): RuleResult {
+function handleFelixChoice(
+  state: BoardViewState,
+  action: string,
+  pushAlert: PushAlert,
+): RuleResult {
   const instigator = state.players.find((player) => player.id === state.turn);
   if (!instigator) {
     return { handled: false };

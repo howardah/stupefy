@@ -3,12 +3,7 @@ import { cardsIncludeName, getPrimaryCharacter } from "../core";
 import { createResolutionEvent } from "../events";
 import { ignoresOpposingTableau } from "../powers";
 import { cycleCleanse } from "../turn-cycle";
-import {
-  activePlayer,
-  createBystanderPopup,
-  discardSelected,
-  viewerPlayer,
-} from "./shared";
+import { activePlayer, createBystanderPopup, discardSelected, viewerPlayer } from "./shared";
 
 function startMassEvent(state: BoardViewState, cardType: "dementors" | "garroting_gas") {
   const discarded = discardSelected(state);
@@ -23,7 +18,8 @@ function startMassEvent(state: BoardViewState, cardType: "dementors" | "garrotin
     .filter((player) =>
       cardType === "dementors"
         ? player.id !== instigator.id &&
-          (ignoresOpposingTableau(instigator) || !cardsIncludeName(player.tableau, "expecto_patronum"))
+          (ignoresOpposingTableau(instigator) ||
+            !cardsIncludeName(player.tableau, "expecto_patronum"))
         : true,
     )
     .map((player) => player.id);
@@ -163,9 +159,4 @@ function startDiagonAlley(state: BoardViewState) {
   return true;
 }
 
-export {
-  startDiagonAlley,
-  startMassEvent,
-  startSelfBuff,
-  startThreeBroomsticks,
-};
+export { startDiagonAlley, startMassEvent, startSelfBuff, startThreeBroomsticks };

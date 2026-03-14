@@ -18,18 +18,14 @@ export function useRoomState(options: UseRoomStateOptions) {
   });
 
   const boardState = computed(() =>
-    currentRoom.value
-      ? createBoardViewState(currentRoom.value, options.playQuery.value)
-      : null
+    currentRoom.value ? createBoardViewState(currentRoom.value, options.playQuery.value) : null,
   );
 
   const fixtureBoardState = computed(() =>
-    createBoardViewState(sampleGameRoomSnapshot, options.playQuery.value)
+    createBoardViewState(sampleGameRoomSnapshot, options.playQuery.value),
   );
 
-  const cardCount = computed(() =>
-    boardState.value ? countAllCards(boardState.value) : null
-  );
+  const cardCount = computed(() => (boardState.value ? countAllCards(boardState.value) : null));
 
   return {
     boardState,

@@ -64,21 +64,23 @@ describe("waiting-room lifecycle helpers", () => {
     ]);
 
     expect(normalizeGameRoom(null)).toBeNull();
-    expect(normalizeGameRoom({
-      deck: { cards: [], discards: [] },
-      players,
-      turn: 11,
-      turnCycle: {
-        action: "",
-        cards: [],
-        draw: 2,
-        felix: [],
-        hotseat: -1,
-        phase: "initial",
-        shots: 1,
-        used: [],
-      },
-      turnOrder: [11],
-    })?.status).toBe("active");
+    expect(
+      normalizeGameRoom({
+        deck: { cards: [], discards: [] },
+        players,
+        turn: 11,
+        turnCycle: {
+          action: "",
+          cards: [],
+          draw: 2,
+          felix: [],
+          hotseat: -1,
+          phase: "initial",
+          shots: 1,
+          used: [],
+        },
+        turnOrder: [11],
+      })?.status,
+    ).toBe("active");
   });
 });

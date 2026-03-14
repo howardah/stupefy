@@ -30,8 +30,7 @@ function samePlayers(left: PlayerState[], right: PlayerState[]): boolean {
   const rightIds = right.map((player) => player.id).sort((a, b) => a - b);
 
   return (
-    leftIds.length === rightIds.length &&
-    leftIds.every((value, index) => value === rightIds[index])
+    leftIds.length === rightIds.length && leftIds.every((value, index) => value === rightIds[index])
   );
 }
 
@@ -60,11 +59,7 @@ async function newRoom(data: NewRoomRequest): Promise<GameState[] | undefined> {
         status: "active",
       });
 
-      await collection.replaceOne(
-        ROOM_DOCUMENT_FILTER,
-        nextState,
-        { upsert: true }
-      );
+      await collection.replaceOne(ROOM_DOCUMENT_FILTER, nextState, { upsert: true });
 
       return [nextState];
     });

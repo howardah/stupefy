@@ -3,7 +3,6 @@ import type { BoardViewState } from "~/utils/types";
 import { rotatePlayersForViewer } from "~/utils/gameplay/board-ui";
 import { getPopupState } from "~/utils/gameplay/events";
 import { getAvailableTargets, getCardTargets } from "~/utils/gameplay/targeting";
-import { viewerPlayer } from "./board-controller/helpers";
 import { useBoardAlerts } from "./board-controller/useBoardAlerts";
 import { useBoardInteractions } from "./board-controller/useBoardInteractions";
 import { useBoardPowerActions } from "./board-controller/useBoardPowerActions";
@@ -22,28 +21,33 @@ export function useBoardController(sourceBoardState: ComputedRef<BoardViewState 
   );
 
   const orderedPlayers = computed(() =>
-    boardState.value ? rotatePlayersForViewer(boardState.value.players, boardState.value.playerId) : [],
+    boardState.value
+      ? rotatePlayersForViewer(boardState.value.players, boardState.value.playerId)
+      : [],
   );
   const currentActions = computed(() =>
-    boardState.value ? getPopupState(boardState.value.events, boardState.value.playerId) : POPUP_EMPTY,
+    boardState.value
+      ? getPopupState(boardState.value.events, boardState.value.playerId)
+      : POPUP_EMPTY,
   );
-  const availableTargets = computed(() => (boardState.value ? getAvailableTargets(boardState.value) : []));
+  const availableTargets = computed(() =>
+    boardState.value ? getAvailableTargets(boardState.value) : [],
+  );
   const actionTargets = computed(() =>
     boardState.value
       ? getCardTargets(boardState.value.turnCycle.action, boardState.value.turnCycle)
       : [],
   );
-  const isMyTurn = computed(() => Boolean(boardState.value && boardState.value.turn === boardState.value.playerId));
-  const canEndTurn = computed(
-    () =>
-      Boolean(
-        boardState.value &&
-          boardState.value.turn === boardState.value.playerId &&
-          (
-            boardState.value.turnCycle.phase === "initial" ||
-            boardState.value.turnCycle.phase === "stuck-in-azkaban"
-          ),
-      ),
+  const isMyTurn = computed(() =>
+    Boolean(boardState.value && boardState.value.turn === boardState.value.playerId),
+  );
+  const canEndTurn = computed(() =>
+    Boolean(
+      boardState.value &&
+      boardState.value.turn === boardState.value.playerId &&
+      (boardState.value.turnCycle.phase === "initial" ||
+        boardState.value.turnCycle.phase === "stuck-in-azkaban"),
+    ),
   );
   const choosingCharacter = computed(() => {
     const currentPlayer = orderedPlayers.value[0];

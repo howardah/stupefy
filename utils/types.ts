@@ -160,7 +160,10 @@ export function isCharacterPowerName(value: string | undefined): value is Charac
   return typeof value === "string" && CHARACTER_POWER_NAMES.includes(value as CharacterPowerName);
 }
 
-export function toTurnActionName(value: string | undefined, fallback: TurnActionName = ""): TurnActionName {
+export function toTurnActionName(
+  value: string | undefined,
+  fallback: TurnActionName = "",
+): TurnActionName {
   return typeof value === "string" && TURN_ACTION_NAMES.includes(value as TurnActionName)
     ? (value as TurnActionName)
     : fallback;

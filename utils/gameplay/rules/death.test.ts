@@ -6,11 +6,15 @@ describe("death handling", () => {
   test("taking a lethal hit marks the player as dead and discards their cards", () => {
     const state = createGameplayTestState(22);
     const target = state.players[1]!;
-    const targetCharacter = Array.isArray(target.character) ? target.character[0]! : target.character;
+    const targetCharacter = Array.isArray(target.character)
+      ? target.character[0]!
+      : target.character;
 
     targetCharacter.health = 1;
     target.hand = [{ id: 201, name: "accio", fileName: "accio", house: "G", power: {} }];
-    target.tableau = [{ id: 202, name: "elder_wand", fileName: "elder_wand", house: "G", power: {} }];
+    target.tableau = [
+      { id: 202, name: "elder_wand", fileName: "elder_wand", house: "G", power: {} },
+    ];
 
     state.events = [
       {
@@ -42,7 +46,9 @@ describe("death handling", () => {
     const state = createGameplayTestState(22);
     const target = state.players[1]!;
     target.power = ["harry_potter"];
-    const targetCharacter = Array.isArray(target.character) ? target.character[0]! : target.character;
+    const targetCharacter = Array.isArray(target.character)
+      ? target.character[0]!
+      : target.character;
     targetCharacter.health = 1;
     targetCharacter.fileName = "harry_potter";
 
@@ -73,12 +79,26 @@ describe("death handling", () => {
   test("the deathly hallows protect the last life point", () => {
     const state = createGameplayTestState(22);
     const target = state.players[1]!;
-    const targetCharacter = Array.isArray(target.character) ? target.character[0]! : target.character;
+    const targetCharacter = Array.isArray(target.character)
+      ? target.character[0]!
+      : target.character;
     targetCharacter.health = 1;
     target.tableau = [
       { id: 501, name: "elder_wand", fileName: "elder_wand", house: "G", power: {} },
-      { id: 502, name: "invisibility_cloak", fileName: "invisibility_cloak", house: "G", power: {} },
-      { id: 503, name: "resurrection_stone", fileName: "resurrection_stone", house: "G", power: {} },
+      {
+        id: 502,
+        name: "invisibility_cloak",
+        fileName: "invisibility_cloak",
+        house: "G",
+        power: {},
+      },
+      {
+        id: 503,
+        name: "resurrection_stone",
+        fileName: "resurrection_stone",
+        house: "G",
+        power: {},
+      },
     ];
 
     state.events = [
@@ -106,7 +126,9 @@ describe("death handling", () => {
   test("lily can interrupt a death and save the target", () => {
     const state = createGameplayTestState(22);
     const target = state.players[1]!;
-    const targetCharacter = Array.isArray(target.character) ? target.character[0]! : target.character;
+    const targetCharacter = Array.isArray(target.character)
+      ? target.character[0]!
+      : target.character;
     targetCharacter.health = 1;
 
     const lily = state.players[0]!;
@@ -185,14 +207,18 @@ describe("death handling", () => {
     const state = createGameplayTestState(22);
     const target = state.players[1]!;
     target.hand = [{ id: 401, name: "accio", fileName: "accio", house: "G", power: {} }];
-    const targetCharacter = Array.isArray(target.character) ? target.character[0]! : target.character;
+    const targetCharacter = Array.isArray(target.character)
+      ? target.character[0]!
+      : target.character;
     targetCharacter.health = 1;
 
     const umbridge = state.players[0]!;
     umbridge.power = ["dolores_umbridge"];
     const voldemort = state.players[2]!;
     voldemort.power = ["voldemort"];
-    const voldemortCharacter = Array.isArray(voldemort.character) ? voldemort.character[0]! : voldemort.character;
+    const voldemortCharacter = Array.isArray(voldemort.character)
+      ? voldemort.character[0]!
+      : voldemort.character;
     voldemortCharacter.health = 2;
     voldemortCharacter.maxHealth = 3;
 

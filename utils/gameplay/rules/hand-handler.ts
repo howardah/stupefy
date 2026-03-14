@@ -1,15 +1,7 @@
 import type { BoardViewState, GameCard } from "../../types";
 import { cardIndex } from "../core";
-import {
-  resolveAccio,
-  resolveExpelliarmus,
-} from "./actions";
-import {
-  clearCurrentEvent,
-  getPlayerById,
-  type RuleResult,
-  viewerPlayer,
-} from "./shared";
+import { resolveAccio, resolveExpelliarmus } from "./actions";
+import { clearCurrentEvent, getPlayerById, type RuleResult, viewerPlayer } from "./shared";
 
 function handleRuleHandClick(
   state: BoardViewState,

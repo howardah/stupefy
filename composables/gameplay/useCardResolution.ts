@@ -11,7 +11,7 @@ export function useCardResolution(boardState: ComputedRef<BoardViewState | null>
     return resolveSystemEvent(
       currentEvent.value.cardType,
       boardState.value.turnOrder,
-      currentEvent.value.popup?.message || ""
+      currentEvent.value.popup?.message || "",
     );
   });
 

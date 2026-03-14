@@ -74,20 +74,14 @@ export function dobbyHasClothes(player: PlayerState | null | undefined): boolean
   return Boolean(player && player.tableau.length >= 2);
 }
 
-export function copiedPowerName(
-  player: PlayerState | null | undefined,
-): CharacterPowerName | null {
+export function copiedPowerName(player: PlayerState | null | undefined): CharacterPowerName | null {
   if (!player) {
     return null;
   }
 
   const primaryPower = getPrimaryCharacter(player)?.fileName;
 
-  return (
-    player.power.find(
-      (power): power is CharacterPowerName => power !== primaryPower,
-    ) ?? null
-  );
+  return player.power.find((power): power is CharacterPowerName => power !== primaryPower) ?? null;
 }
 
 export function canSeeRoleDetails(state: BoardViewState, subject: PlayerState): boolean {

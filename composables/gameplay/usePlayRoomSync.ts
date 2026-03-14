@@ -14,7 +14,7 @@ import { createGameStatePatch, getGameplaySyncSignature } from "~/utils/gameplay
 interface PlayRoomSyncApi {
   getGameRoom: (payload: { room: string }) => Promise<GameRoomApiResponse>;
   updateGameRoom: (
-    payload: Parameters<ReturnType<typeof useDatabaseApi>["updateGameRoom"]>[0]
+    payload: Parameters<ReturnType<typeof useDatabaseApi>["updateGameRoom"]>[0],
   ) => Promise<GameRoomSyncResponse>;
 }
 
@@ -54,9 +54,7 @@ export function usePlayRoomSync(options: UsePlayRoomSyncOptions) {
       return null;
     }
 
-    return getGameplaySyncSignature(
-      createBoardViewState(room, options.playQuery.value),
-    );
+    return getGameplaySyncSignature(createBoardViewState(room, options.playQuery.value));
   }
 
   async function fetchLatestRoom() {
@@ -67,11 +65,9 @@ export function usePlayRoomSync(options: UsePlayRoomSyncOptions) {
 
     if (
       nextRoom &&
-      (
-        !options.currentRoom.value ||
+      (!options.currentRoom.value ||
         options.currentRoom.value.last_updated !== nextRoom.last_updated ||
-        currentSignature !== nextSignature
-      )
+        currentSignature !== nextSignature)
     ) {
       await applyAuthoritativeRoom(nextRoom);
       return;
@@ -97,9 +93,7 @@ export function usePlayRoomSync(options: UsePlayRoomSyncOptions) {
   }
 
   const realtimeRoom = useRealtimeRoom({
-    enabled: computed(() =>
-      Boolean(options.normalizedRoomKey.value && options.playerId.value > 0),
-    ),
+    enabled: computed(() => Boolean(options.normalizedRoomKey.value && options.playerId.value > 0)),
     fetchLatest: fetchLatestRoom,
     pushUpdate: options.api.updateGameRoom,
     room: options.normalizedRoomKey,

@@ -201,7 +201,9 @@ function resolveDeathChoice(state: BoardViewState, action: string) {
     }
 
     const promptMessage = `${getPrimaryCharacter(dyingPlayer)?.shortName || dyingPlayer.name} is about to die. Would you like to give up a life point to save them?`;
-    state.events = state.events.filter((currentEvent) => currentEvent.popup?.message !== promptMessage);
+    state.events = state.events.filter(
+      (currentEvent) => currentEvent.popup?.message !== promptMessage,
+    );
     state.events.unshift(
       createResolutionEvent(
         `${getPrimaryCharacter(lily)?.shortName || lily.name} sacrificed a life point to save your life!`,
@@ -217,7 +219,10 @@ function resolveDeathChoice(state: BoardViewState, action: string) {
     const currentMessage = event?.popup?.message || "";
     clearCurrentEvent(state);
 
-    if (currentMessage && state.events.some((currentEvent) => currentEvent.popup?.message === currentMessage)) {
+    if (
+      currentMessage &&
+      state.events.some((currentEvent) => currentEvent.popup?.message === currentMessage)
+    ) {
       return { handled: true };
     }
 
@@ -242,9 +247,4 @@ function resolveDeathChoice(state: BoardViewState, action: string) {
   return { handled: false };
 }
 
-export {
-  applyAdvancedDeaths,
-  getDyingPlayers,
-  queueLilySavePrompts,
-  resolveDeathChoice,
-};
+export { applyAdvancedDeaths, getDyingPlayers, queueLilySavePrompts, resolveDeathChoice };

@@ -54,7 +54,9 @@ function cloneEvent(event: GameEvent): GameEvent {
   };
 }
 
-function cloneTurnCyclePlayerState(value: TurnCyclePlayerState | undefined): TurnCyclePlayerState | undefined {
+function cloneTurnCyclePlayerState(
+  value: TurnCyclePlayerState | undefined,
+): TurnCyclePlayerState | undefined {
   if (!value) {
     return value;
   }
@@ -120,10 +122,7 @@ export function cloneBoardViewState(state: BoardViewState): BoardViewState {
   };
 }
 
-export function createBoardViewState(
-  setupObj: GameState,
-  query: PlayQuery
-): BoardViewState {
+export function createBoardViewState(setupObj: GameState, query: PlayQuery): BoardViewState {
   const players = sortPlayers(setupObj.players, setupObj.turnOrder);
   const events = setupObj.events || [];
 

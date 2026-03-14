@@ -15,23 +15,10 @@ export default function roles(length: number): Role[] {
       characters = ["minister", "death eater", "death eater", "werewolf"];
       break;
     case 5:
-      characters = [
-        "minister",
-        "death eater",
-        "death eater",
-        "werewolf",
-        "auror",
-      ];
+      characters = ["minister", "death eater", "death eater", "werewolf", "auror"];
       break;
     case 6:
-      characters = [
-        "minister",
-        "death eater",
-        "death eater",
-        "death eater",
-        "werewolf",
-        "auror",
-      ];
+      characters = ["minister", "death eater", "death eater", "death eater", "werewolf", "auror"];
       break;
     case 7:
       characters = [

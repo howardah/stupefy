@@ -54,7 +54,9 @@ function reactionSelected(card: GameCard) {
   <section
     class="rounded-[1.8rem] border p-4 transition"
     :class="[
-      isSelf ? 'border-[rgba(180,83,9,0.28)] bg-[rgba(255,249,241,0.85)]' : 'border-[rgba(82,57,29,0.12)] bg-[rgba(255,251,245,0.62)]',
+      isSelf
+        ? 'border-[rgba(180,83,9,0.28)] bg-[rgba(255,249,241,0.85)]'
+        : 'border-[rgba(82,57,29,0.12)] bg-[rgba(255,251,245,0.62)]',
       isDead ? 'opacity-65 saturate-50' : '',
     ]"
   >
@@ -80,7 +82,11 @@ function reactionSelected(card: GameCard) {
         v-if="character"
         :character="character"
         :clickable="isCharacterTargetClickable(player, boardState.playerId, targets, players)"
-        :selected="boardState.turnCycle.felix.some((entry) => typeof entry === 'object' && 'id' in entry && entry.id === player.id)"
+        :selected="
+          boardState.turnCycle.felix.some(
+            (entry) => typeof entry === 'object' && 'id' in entry && entry.id === player.id,
+          )
+        "
         @click="emit('clickCharacter', player.id)"
       />
 
@@ -92,7 +98,9 @@ function reactionSelected(card: GameCard) {
               v-for="(card, cardIndex) in tableau"
               :key="`${card.id || 'empty'}-${cardIndex}`"
               :card="card"
-              :clickable="isTableauTargetClickable(player, boardState.playerId, targets, players, card)"
+              :clickable="
+                isTableauTargetClickable(player, boardState.playerId, targets, players, card)
+              "
               :selected="selected(card)"
               @click="emit('clickTableau', player.id, card)"
             />
@@ -121,7 +129,11 @@ function reactionSelected(card: GameCard) {
     <div
       v-if="canApparateBetween(index, players, targets)"
       class="mt-4 rounded-2xl border border-dashed border-[rgba(82,57,29,0.18)] px-4 py-3 text-sm text-[rgba(33,22,15,0.62)] transition"
-      :class="targets.includes('between-characters') ? 'cursor-pointer hover:border-[rgba(180,83,9,0.45)] hover:bg-[rgba(255,249,241,0.72)]' : ''"
+      :class="
+        targets.includes('between-characters')
+          ? 'cursor-pointer hover:border-[rgba(180,83,9,0.45)] hover:bg-[rgba(255,249,241,0.72)]'
+          : ''
+      "
       @click="emit('clickApparate', index)"
     >
       Apparate here between these players.

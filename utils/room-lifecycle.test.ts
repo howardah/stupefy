@@ -29,7 +29,10 @@ describe("room lifecycle", () => {
   });
 
   test("applyGameRoomLifecycle defaults active rooms and archives expired ones", () => {
-    const active = applyGameRoomLifecycle({ ...structuredClone(sampleGameRoomSnapshot), last_updated: 500 }, 600);
+    const active = applyGameRoomLifecycle(
+      { ...structuredClone(sampleGameRoomSnapshot), last_updated: 500 },
+      600,
+    );
     const archived = applyGameRoomLifecycle(
       { ...structuredClone(sampleGameRoomSnapshot), expiresAt: 10, last_updated: 5 },
       GAME_ROOM_IDLE_TTL_MS,
@@ -39,6 +42,14 @@ describe("room lifecycle", () => {
     expect(active.startedAt).toBe(active.createdAt);
     expect(archived.status).toBe("archived");
     expect(isGameRoomActive(active)).toBe(true);
-    expect(isWaitingRoomAvailable({ chat: [], password: false, players: [], roomName: "X", status: "waiting" })).toBe(true);
+    expect(
+      isWaitingRoomAvailable({
+        chat: [],
+        password: false,
+        players: [],
+        roomName: "X",
+        status: "waiting",
+      }),
+    ).toBe(true);
   });
 });

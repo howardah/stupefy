@@ -6,15 +6,8 @@ import type {
   WaitingRoomState,
 } from "../types";
 import { decode } from "../encrypt";
-import {
-  isGameRoomActive,
-  isWaitingRoomAvailable,
-} from "../room-lifecycle";
-import {
-  normalizeRoomKey,
-  normalizeRoomName,
-  roomPasswordKey,
-} from "../room";
+import { isGameRoomActive, isWaitingRoomAvailable } from "../room-lifecycle";
+import { normalizeRoomKey, normalizeRoomName, roomPasswordKey } from "../room";
 import { prunePresence } from "./lifecycle";
 import {
   getWaitingCollection,
@@ -26,9 +19,7 @@ import {
 
 type WaitingRoomResult = Array<ErrorResult | WaitingRoomState>;
 
-async function getWaitRoom(
-  data: WaitingRoomGetQuery,
-): Promise<WaitingRoomResult | undefined> {
+async function getWaitRoom(data: WaitingRoomGetQuery): Promise<WaitingRoomResult | undefined> {
   return withClient(async (client) => {
     const currentRoom = await readWaitingRoom(client, data.room);
     if (!currentRoom) {
@@ -124,8 +115,4 @@ async function listOpenWaitRooms(): Promise<OpenWaitingRoomSummary[]> {
   });
 }
 
-export {
-  getWaitRoom,
-  getWaitRoomAccess,
-  listOpenWaitRooms,
-};
+export { getWaitRoom, getWaitRoomAccess, listOpenWaitRooms };

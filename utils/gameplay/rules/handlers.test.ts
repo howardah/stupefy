@@ -1,8 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import {
-  handleRuleDeckClick,
-  handleRulePopupChoice,
-} from "../card-rules";
+import { handleRuleDeckClick, handleRulePopupChoice } from "../card-rules";
 import { countAllCards } from "../core";
 import { createGameplayTestState } from "../test-helpers";
 import { getAvailableTargets } from "../targeting";

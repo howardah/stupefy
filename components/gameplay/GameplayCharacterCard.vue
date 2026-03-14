@@ -21,7 +21,9 @@ const emit = defineEmits<{
     }"
     @click="emit('click')"
   >
-    <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[rgba(20,12,7,0.92)] via-[rgba(20,12,7,0.58)] to-transparent px-3 py-3 text-white">
+    <div
+      class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[rgba(20,12,7,0.92)] via-[rgba(20,12,7,0.58)] to-transparent px-3 py-3 text-white"
+    >
       <div class="text-sm font-semibold">{{ character.name }}</div>
       <div class="text-[10px] uppercase tracking-[0.18em] text-white/75">
         {{ character.house || "No house" }} · {{ character.health }} health

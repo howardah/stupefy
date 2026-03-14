@@ -102,12 +102,13 @@ function asCardPower(value: unknown): CardPower {
   if (!isObject(value)) return {};
 
   return Object.fromEntries(
-    Object.entries(value).filter(([, entry]) =>
-      typeof entry === "boolean" ||
-      typeof entry === "number" ||
-      typeof entry === "string" ||
-      typeof entry === "undefined"
-    )
+    Object.entries(value).filter(
+      ([, entry]) =>
+        typeof entry === "boolean" ||
+        typeof entry === "number" ||
+        typeof entry === "string" ||
+        typeof entry === "undefined",
+    ),
   ) as CardPower;
 }
 
@@ -240,7 +241,7 @@ function asGameEvent(value: unknown): GameEvent {
     Object.entries(value)
       .filter(([key]) => isGameEventBystanderKey(key))
       .map(([key, entry]) => [key, asPopupState(entry)])
-      .filter(([, entry]) => entry)
+      .filter(([, entry]) => entry),
   ) as Partial<Record<GameEventBystanderKey, PopupState>>;
 
   return {
@@ -280,10 +281,7 @@ export function parseGameState(value: unknown): GameState | null {
     sourceWaitingRoom:
       typeof value.sourceWaitingRoom === "string" ? value.sourceWaitingRoom : undefined,
     startedAt: typeof value.startedAt === "number" ? value.startedAt : undefined,
-    status:
-      value.status === "active" || value.status === "archived"
-        ? value.status
-        : undefined,
+    status: value.status === "active" || value.status === "archived" ? value.status : undefined,
     table: Array.isArray(value.table) ? value.table.map(asGameCard) : [],
     turn: typeof value.turn === "number" ? value.turn : 0,
     turnCycle: asTurnCycle(value.turnCycle),
@@ -315,25 +313,23 @@ export function parseWaitingRoomState(value: unknown): WaitingRoomState | null {
   if (!isObject(value)) return null;
 
   const active: Record<string, number | string> = isObject(value.active)
-    ? Object.fromEntries(
-        Object.entries(value.active).filter(([, entry]) =>
-          typeof entry === "number" || typeof entry === "string"
-        )
-      ) as Record<string, number | string>
+    ? (Object.fromEntries(
+        Object.entries(value.active).filter(
+          ([, entry]) => typeof entry === "number" || typeof entry === "string",
+        ),
+      ) as Record<string, number | string>)
     : {};
 
   const activeUpdatedAt: Record<string, number> = isObject(value.activeUpdatedAt)
-    ? Object.fromEntries(
-        Object.entries(value.activeUpdatedAt).filter(
-          ([, entry]) => typeof entry === "number"
-        )
-      ) as Record<string, number>
+    ? (Object.fromEntries(
+        Object.entries(value.activeUpdatedAt).filter(([, entry]) => typeof entry === "number"),
+      ) as Record<string, number>)
     : {};
 
   const ready: Record<string, boolean> = isObject(value.ready)
-    ? Object.fromEntries(
-        Object.entries(value.ready).filter(([, entry]) => typeof entry === "boolean")
-      ) as Record<string, boolean>
+    ? (Object.fromEntries(
+        Object.entries(value.ready).filter(([, entry]) => typeof entry === "boolean"),
+      ) as Record<string, boolean>)
     : {};
 
   return {
@@ -347,17 +343,13 @@ export function parseWaitingRoomState(value: unknown): WaitingRoomState | null {
     gameRoomKey: typeof value.gameRoomKey === "string" ? value.gameRoomKey : undefined,
     last_updated: typeof value.last_updated === "number" ? value.last_updated : undefined,
     password:
-      value.password === false || typeof value.password === "string"
-        ? value.password
-        : false,
+      value.password === false || typeof value.password === "string" ? value.password : false,
     players: Array.isArray(value.players) ? value.players.map(parseWaitingPlayer) : [],
     ready,
     roomName: typeof value.roomName === "string" ? value.roomName : "",
     startedAt: typeof value.startedAt === "number" ? value.startedAt : undefined,
     status:
-      value.status === "waiting" ||
-      value.status === "in-game" ||
-      value.status === "archived"
+      value.status === "waiting" || value.status === "in-game" || value.status === "archived"
         ? value.status
         : undefined,
   };

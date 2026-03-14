@@ -45,13 +45,7 @@ function formatUpdatedAt(updatedAt: number): string {
       </div>
     </template>
 
-    <UAlert
-      v-if="loadError"
-      color="error"
-      variant="soft"
-      :title="loadError"
-      class="mb-4"
-    />
+    <UAlert v-if="loadError" color="error" variant="soft" :title="loadError" class="mb-4" />
 
     <div v-if="rooms.length" class="grid gap-3">
       <button

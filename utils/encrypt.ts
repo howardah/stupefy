@@ -25,9 +25,7 @@ export const decode = (message: string, key: string): string => {
     const keyIn = indexArr.indexOf(keyArr[i % keyArr.length]!);
     const length = indexArr.length;
 
-    returnArr.push(
-      indexArr[(((thisIn - keyIn) % length) + length) % length] ?? ""
-    );
+    returnArr.push(indexArr[(((thisIn - keyIn) % length) + length) % length] ?? "");
   });
 
   return returnArr.join("");

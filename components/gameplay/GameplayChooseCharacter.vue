@@ -30,7 +30,9 @@ function roleSentence(role: PlayerState["role"]) {
     <UCard class="stu-panel w-full max-w-5xl rounded-[2rem] border-0">
       <template #header>
         <div class="space-y-2">
-          <div class="text-xs uppercase tracking-[0.22em] text-[rgba(33,22,15,0.55)]">Choose Character</div>
+          <div class="text-xs uppercase tracking-[0.22em] text-[rgba(33,22,15,0.55)]">
+            Choose Character
+          </div>
           <h2 class="text-2xl font-semibold">{{ player.name }}, choose your character</h2>
           <p class="max-w-3xl text-sm text-[rgba(33,22,15,0.7)]">
             {{ roleSentence(player.role) }}

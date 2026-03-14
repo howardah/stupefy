@@ -19,7 +19,9 @@ describe("game data builders", () => {
 
   test("character catalog preserves the expected roster size", () => {
     expect(CHARACTER_CATALOG).toHaveLength(31);
-    expect(CHARACTER_CATALOG.some((character) => character.fileName === "albus_dumbledore")).toBe(true);
+    expect(CHARACTER_CATALOG.some((character) => character.fileName === "albus_dumbledore")).toBe(
+      true,
+    );
     expect(CHARACTER_CATALOG.some((character) => character.fileName === "voldemort")).toBe(true);
   });
 });

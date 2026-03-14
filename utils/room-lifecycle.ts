@@ -9,7 +9,7 @@ function asTimestamp(value: number | undefined, fallback: number) {
 
 export function applyWaitingRoomLifecycle(
   room: WaitingRoomState,
-  now = Date.now()
+  now = Date.now(),
 ): WaitingRoomState {
   const lastUpdated = asTimestamp(room.last_updated, now);
   const createdAt = asTimestamp(room.createdAt, lastUpdated);
@@ -17,9 +17,7 @@ export function applyWaitingRoomLifecycle(
     typeof room.startedAt === "number" && Number.isFinite(room.startedAt)
       ? room.startedAt
       : undefined;
-  const baseStatus =
-    room.status ??
-    (room.gameRoomKey ? "in-game" : "waiting");
+  const baseStatus = room.status ?? (room.gameRoomKey ? "in-game" : "waiting");
   const activeSessionCount = Object.keys(room.active || {}).length;
 
   const expiresAt =
@@ -34,10 +32,7 @@ export function applyWaitingRoomLifecycle(
 
   return {
     ...room,
-    archivedAt:
-      status === "archived"
-        ? asTimestamp(room.archivedAt, now)
-        : undefined,
+    archivedAt: status === "archived" ? asTimestamp(room.archivedAt, now) : undefined,
     createdAt,
     expiresAt,
     last_updated: lastUpdated,
@@ -46,10 +41,7 @@ export function applyWaitingRoomLifecycle(
   };
 }
 
-export function applyGameRoomLifecycle(
-  room: GameState,
-  now = Date.now()
-): GameState {
+export function applyGameRoomLifecycle(room: GameState, now = Date.now()): GameState {
   const lastUpdated = asTimestamp(room.last_updated, now);
   const createdAt = asTimestamp(room.createdAt, lastUpdated);
   const startedAt = asTimestamp(room.startedAt, createdAt);
@@ -57,14 +49,11 @@ export function applyGameRoomLifecycle(
     typeof room.expiresAt === "number" && Number.isFinite(room.expiresAt)
       ? room.expiresAt
       : lastUpdated + GAME_ROOM_IDLE_TTL_MS;
-  const status = expiresAt <= now ? "archived" : room.status ?? "active";
+  const status = expiresAt <= now ? "archived" : (room.status ?? "active");
 
   return {
     ...room,
-    archivedAt:
-      status === "archived"
-        ? asTimestamp(room.archivedAt, now)
-        : undefined,
+    archivedAt: status === "archived" ? asTimestamp(room.archivedAt, now) : undefined,
     createdAt,
     expiresAt,
     last_updated: lastUpdated,

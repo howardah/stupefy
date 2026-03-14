@@ -5,13 +5,11 @@ import { cardIndex, cardsInclude } from "~/utils/gameplay/core";
 import { tableauProblems } from "~/utils/gameplay/events";
 import { hasPower } from "~/utils/gameplay/powers";
 import { cycleCleanse } from "~/utils/gameplay/turn-cycle";
-import {
-  cloneSelectedCards,
-  ensureTurnCyclePlayerState,
-  viewerPlayer,
-} from "./helpers";
+import { cloneSelectedCards, ensureTurnCyclePlayerState, viewerPlayer } from "./helpers";
 
-function useBoardSelections(pushAlert: (message: string, tone?: "info" | "warning" | "error") => void) {
+function useBoardSelections(
+  pushAlert: (message: string, tone?: "info" | "warning" | "error") => void,
+) {
   function selectOwnHandCard(state: BoardViewState, card: GameCard) {
     const { turnCycle } = state;
 
@@ -67,8 +65,7 @@ function useBoardSelections(pushAlert: (message: string, tone?: "info" | "warnin
         turnCycle.action = "felix";
       } else if (turnCycle.cards.length === 1) {
         turnCycle.action =
-          hasPower(viewerPlayer(state), "ginny_weasley") &&
-          turnCycle.cards[0]!.name === "protego"
+          hasPower(viewerPlayer(state), "ginny_weasley") && turnCycle.cards[0]!.name === "protego"
             ? "stupefy"
             : toTurnActionName(turnCycle.cards[0]!.name);
       } else if (turnCycle.cards.length === 0) {
@@ -127,7 +124,9 @@ function useBoardSelections(pushAlert: (message: string, tone?: "info" | "warnin
         continue;
       }
 
-      const tableauLocation = currentPlayer.tableau.findIndex((card) => card.id === selectedCard.id);
+      const tableauLocation = currentPlayer.tableau.findIndex(
+        (card) => card.id === selectedCard.id,
+      );
       if (tableauLocation !== -1) {
         const [discardedCard] = currentPlayer.tableau.splice(tableauLocation, 1);
         if (discardedCard) {

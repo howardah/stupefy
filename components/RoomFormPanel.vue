@@ -19,7 +19,7 @@ const props = withDefaults(
     errorMessage: "",
     passwordLabel: "Password",
     submitIcon: undefined,
-  }
+  },
 );
 
 const emit = defineEmits<{
@@ -38,7 +38,7 @@ watch(
     formState.player = "";
     formState.pw = "";
     formState.room = "";
-  }
+  },
 );
 
 const canSubmit = computed(() => {
@@ -82,10 +82,20 @@ defineExpose({
 
     <div class="grid gap-4">
       <UFormField label="Player name">
-        <UInput v-model="formState.player" autocomplete="off" :placeholder="playerPlaceholder" size="xl" />
+        <UInput
+          v-model="formState.player"
+          autocomplete="off"
+          :placeholder="playerPlaceholder"
+          size="xl"
+        />
       </UFormField>
       <UFormField label="Room Name">
-        <UInput v-model="formState.room" autocomplete="off" :placeholder="roomPlaceholder" size="xl" />
+        <UInput
+          v-model="formState.room"
+          autocomplete="off"
+          :placeholder="roomPlaceholder"
+          size="xl"
+        />
       </UFormField>
       <UFormField :label="passwordLabel">
         <UInput
@@ -105,12 +115,7 @@ defineExpose({
         size="xl"
         @click="submit"
       />
-      <UAlert
-        v-if="errorMessage"
-        color="error"
-        variant="soft"
-        :title="errorMessage"
-      />
+      <UAlert v-if="errorMessage" color="error" variant="soft" :title="errorMessage" />
     </div>
   </UCard>
 </template>

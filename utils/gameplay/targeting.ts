@@ -74,10 +74,9 @@ export function getCardTargets(name: string, turnCycle: TurnCycle): GameplayTarg
   return targets;
 }
 
-export function getAvailableTargets(state: Pick<
-  BoardViewState,
-  "events" | "playerId" | "turn" | "turnCycle"
->): GameplayTarget[] {
+export function getAvailableTargets(
+  state: Pick<BoardViewState, "events" | "playerId" | "turn" | "turnCycle">,
+): GameplayTarget[] {
   const turnCycle = state.turnCycle;
   const targets: GameplayTarget[] = [];
 
@@ -118,14 +117,8 @@ export function getAvailableTargets(state: Pick<
       return targets;
     }
 
-    if (
-      turnCycle.action === "ressurection_stone" ||
-      turnCycle.action === "resurrection_stone"
-    ) {
-      if (
-        turnCycle.phase === "ressurection_stone" ||
-        turnCycle.phase === "resurrection_stone"
-      ) {
+    if (turnCycle.action === "ressurection_stone" || turnCycle.action === "resurrection_stone") {
+      if (turnCycle.phase === "ressurection_stone" || turnCycle.phase === "resurrection_stone") {
         targets.push("my-tableau", "discard", "characters", "table-empty");
       }
 
@@ -144,10 +137,7 @@ export function getAvailableTargets(state: Pick<
     targets.push("my-hand");
   }
 
-  if (
-    turnCycle.phase === "diagon_alley" &&
-    state.events[0]?.target.includes(state.playerId)
-  ) {
+  if (turnCycle.phase === "diagon_alley" && state.events[0]?.target.includes(state.playerId)) {
     targets.push("table");
   }
 

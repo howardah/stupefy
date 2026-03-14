@@ -1,10 +1,4 @@
-import type {
-  BoardViewState,
-  CharacterCard,
-  DeckState,
-  GameCard,
-  PlayerState,
-} from "../types";
+import type { BoardViewState, CharacterCard, DeckState, GameCard, PlayerState } from "../types";
 
 export function titleCase(value: string): string {
   return value
@@ -24,9 +18,7 @@ export function cardsIncludeName(cards: GameCard[], name: string): boolean {
 
 export function cardIndex(cards: GameCard[], findCard: GameCard | GameCard[]): number {
   if (Array.isArray(findCard)) {
-    return cards.findIndex((card) =>
-      findCard.some((candidate) => card.id === candidate.id)
-    );
+    return cards.findIndex((card) => findCard.some((candidate) => card.id === candidate.id));
   }
 
   return cards.findIndex((card) => card.id === findCard.id);
@@ -59,19 +51,14 @@ export function cloneDeck(deck: DeckState): DeckState {
 export function clonePlayers(players: PlayerState[]): PlayerState[] {
   return players.map((player) => ({
     ...player,
-    character: Array.isArray(player.character)
-      ? [...player.character]
-      : { ...player.character },
+    character: Array.isArray(player.character) ? [...player.character] : { ...player.character },
     hand: [...player.hand],
     power: [...player.power],
     tableau: [...player.tableau],
   }));
 }
 
-export function sortPlayers(
-  givenPlayers: PlayerState[],
-  givenOrder: number[]
-): PlayerState[] {
+export function sortPlayers(givenPlayers: PlayerState[], givenOrder: number[]): PlayerState[] {
   const players = clonePlayers(givenPlayers);
   const sortedPlayers: PlayerState[] = [];
 

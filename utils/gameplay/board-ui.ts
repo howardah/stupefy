@@ -9,10 +9,7 @@ export const EMPTY_CARD: GameCard = {
   power: {},
 };
 
-export function rotatePlayersForViewer(
-  players: PlayerState[],
-  viewerId: number
-): PlayerState[] {
+export function rotatePlayersForViewer(players: PlayerState[], viewerId: number): PlayerState[] {
   const index = players.findIndex((player) => player.id === viewerId);
 
   if (index <= 0) {
@@ -26,7 +23,7 @@ export function checkPlayerDistance(
   orderedPlayers: PlayerState[],
   viewerId: number,
   targetPlayerId: number,
-  rangeOverride?: number
+  rangeOverride?: number,
 ): boolean {
   const alivePlayers = orderedPlayers.filter((player) => {
     const character = getPrimaryCharacter(player);
@@ -75,7 +72,7 @@ export function isHandTargetClickable(
   player: PlayerState,
   viewerId: number,
   targets: GameplayTarget[],
-  orderedPlayers: PlayerState[]
+  orderedPlayers: PlayerState[],
 ): boolean {
   if (targets.includes("range") && !checkPlayerDistance(orderedPlayers, viewerId, player.id, 1)) {
     return false;
@@ -92,7 +89,7 @@ export function isTableauTargetClickable(
   viewerId: number,
   targets: GameplayTarget[],
   orderedPlayers: PlayerState[],
-  card: GameCard
+  card: GameCard,
 ): boolean {
   if (card.fileName === "azkaban") return false;
 
@@ -117,7 +114,7 @@ export function isCharacterTargetClickable(
   player: PlayerState,
   viewerId: number,
   targets: GameplayTarget[],
-  orderedPlayers: PlayerState[]
+  orderedPlayers: PlayerState[],
 ): boolean {
   const character = getPrimaryCharacter(player);
 
@@ -146,11 +143,18 @@ export function isTableCardClickable(card: GameCard, targets: GameplayTarget[]):
   return false;
 }
 
-export function isDeckTargetClickable(targets: GameplayTarget[], pile: "draw" | "discard"): boolean {
+export function isDeckTargetClickable(
+  targets: GameplayTarget[],
+  pile: "draw" | "discard",
+): boolean {
   return pile === "draw" ? targets.includes("draw") : targets.includes("discard");
 }
 
-export function canApparateBetween(index: number, players: PlayerState[], targets: GameplayTarget[]) {
+export function canApparateBetween(
+  index: number,
+  players: PlayerState[],
+  targets: GameplayTarget[],
+) {
   if (!targets.includes("between-characters")) return false;
   if (index === 0 || index === players.length - 1) return false;
 

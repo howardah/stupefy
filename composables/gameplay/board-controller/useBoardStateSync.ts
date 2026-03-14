@@ -30,7 +30,9 @@ function useBoardStateSync(
   );
 
   function resetBoard() {
-    localBoardState.value = sourceBoardState.value ? cloneBoardViewState(sourceBoardState.value) : null;
+    localBoardState.value = sourceBoardState.value
+      ? cloneBoardViewState(sourceBoardState.value)
+      : null;
     clearAlerts();
   }
 
@@ -54,8 +56,7 @@ function useBoardStateSync(
       return;
     }
 
-    localBoardState.value =
-      result && typeof result === "object" && result !== next ? result : next;
+    localBoardState.value = result && typeof result === "object" && result !== next ? result : next;
     syncActions(localBoardState.value);
 
     if (kind === "gameplay") {

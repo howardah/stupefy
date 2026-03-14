@@ -1,10 +1,4 @@
-import type {
-  CharacterCard,
-  GameCard,
-  GameState,
-  PlayerState,
-  TurnCycle,
-} from "./types";
+import type { CharacterCard, GameCard, GameState, PlayerState, TurnCycle } from "./types";
 import Deck from "./deck";
 import { characters, mainDeck } from "./stupefy-decks";
 import roles from "./roles";

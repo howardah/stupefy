@@ -24,6 +24,8 @@ describe("card setup", () => {
       expect(player.role).toBeTruthy();
     }
 
-    expect(game.players.some((player) => player.role === "minister" && player.id === game.turn)).toBe(true);
+    expect(
+      game.players.some((player) => player.role === "minister" && player.id === game.turn),
+    ).toBe(true);
   });
 });

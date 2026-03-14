@@ -66,10 +66,7 @@ async function writeWaitingRoom(
   return pruned;
 }
 
-async function readGameRoom(
-  client: MongoClient,
-  room: string,
-): Promise<GameState | null> {
+async function readGameRoom(client: MongoClient, room: string): Promise<GameState | null> {
   const collection = await getGameCollection(client, room);
   const parsed = parseGameState(await collection.findOne(ROOM_DOCUMENT_FILTER));
   return normalizeGameRoom(parsed);

@@ -1,5 +1,13 @@
 <script setup lang="ts">
-import type { BoardAlert, BoardViewState, CharacterCard, GameCard, GameplayTarget, PlayerState, PopupState } from "~/utils/types";
+import type {
+  BoardAlert,
+  BoardViewState,
+  CharacterCard,
+  GameCard,
+  GameplayTarget,
+  PlayerState,
+  PopupState,
+} from "~/utils/types";
 
 defineProps<{
   actions: PopupState;
@@ -90,10 +98,18 @@ function onClickTableau(playerId: number, card: GameCard) {
           <template #header>
             <div class="text-xs uppercase tracking-[0.2em] text-[rgba(33,22,15,0.55)]">Deck</div>
           </template>
-          <GameplayCardDeck :deck="boardState.deck" :targets="targets" @click-pile="emit('clickDeckPile', $event)" />
+          <GameplayCardDeck
+            :deck="boardState.deck"
+            :targets="targets"
+            @click-pile="emit('clickDeckPile', $event)"
+          />
         </UCard>
 
-        <GameplayTable :table="boardState.table" :targets="targets" @click-card="emit('clickTable', $event)" />
+        <GameplayTable
+          :table="boardState.table"
+          :targets="targets"
+          @click-card="emit('clickTable', $event)"
+        />
       </div>
 
       <GameplayPlayer

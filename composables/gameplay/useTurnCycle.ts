@@ -21,7 +21,7 @@ export function useTurnCycle(boardState: ComputedRef<BoardViewState | null>) {
     return incrementTurn(
       boardState.value.turn,
       boardState.value.turnOrder,
-      boardState.value.deadPlayers
+      boardState.value.deadPlayers,
     );
   });
 

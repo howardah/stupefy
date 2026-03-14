@@ -1,5 +1,4 @@
 import type {
-  GameState,
   GameRoomApiResponse,
   GameRoomSyncRequest,
   GameRoomSyncResponse,
@@ -27,14 +26,9 @@ export function useDatabaseApi() {
   const joinRoom = (params: { player: string; pw?: string; room: string }) =>
     request<WaitingRoomApiResponse>("/database/wait/join/", { params });
 
-  const getOpenRooms = () =>
-    request<OpenWaitingRoomSummary[]>("/database/wait/open/");
+  const getOpenRooms = () => request<OpenWaitingRoomSummary[]>("/database/wait/open/");
 
-  const updateActive = (body: {
-    playerId: number | string;
-    room: string;
-    sessionId: string;
-  }) =>
+  const updateActive = (body: { playerId: number | string; room: string; sessionId: string }) =>
     request<WaitingRoomApiResponse>("/database/wait/active/", {
       body,
       method: "POST",
@@ -52,11 +46,7 @@ export function useDatabaseApi() {
       method: "POST",
     });
 
-  const setReady = (body: {
-    playerId: number | string;
-    ready: boolean;
-    room: string;
-  }) =>
+  const setReady = (body: { playerId: number | string; ready: boolean; room: string }) =>
     request<WaitingRoomApiResponse>("/database/wait/ready/", {
       body,
       method: "POST",

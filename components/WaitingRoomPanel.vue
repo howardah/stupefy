@@ -39,9 +39,7 @@ function isReady(playerId: number) {
   return props.readyState[String(playerId)] === true;
 }
 
-const readyCount = computed(() =>
-  props.players.filter((player) => isReady(player.id)).length
-);
+const readyCount = computed(() => props.players.filter((player) => isReady(player.id)).length);
 </script>
 
 <template>
@@ -66,13 +64,7 @@ const readyCount = computed(() =>
         </div>
       </template>
 
-      <UAlert
-        v-if="errorMessage"
-        color="error"
-        variant="soft"
-        :title="errorMessage"
-        class="mb-4"
-      />
+      <UAlert v-if="errorMessage" color="error" variant="soft" :title="errorMessage" class="mb-4" />
 
       <div class="mb-4 rounded-2xl bg-white/60 px-4 py-3 text-sm text-[rgba(33,22,15,0.68)]">
         {{ readyCount }} / {{ players.length }} players ready
@@ -125,9 +117,7 @@ const readyCount = computed(() =>
       <template #header>
         <div>
           <h2 class="text-2xl font-semibold">Chat</h2>
-          <p class="text-sm text-[rgba(33,22,15,0.6)]">
-            Keep it quick while everyone gets ready.
-          </p>
+          <p class="text-sm text-[rgba(33,22,15,0.6)]">Keep it quick while everyone gets ready.</p>
         </div>
       </template>
 
@@ -141,7 +131,9 @@ const readyCount = computed(() =>
           <div class="mb-1 flex items-center justify-between gap-4 text-sm">
             <span class="font-semibold">{{ playerName(entry) }}</span>
             <span class="text-[rgba(33,22,15,0.5)]">
-              {{ new Date(entry.time).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) }}
+              {{
+                new Date(entry.time).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
+              }}
             </span>
           </div>
           <div class="text-sm">{{ entry.text }}</div>
@@ -164,7 +156,13 @@ const readyCount = computed(() =>
             @update:model-value="emit('update', $event)"
             @keyup.enter="emit('send')"
           />
-          <UButton color="secondary" icon="i-lucide-send" label="Send" size="xl" @click="emit('send')" />
+          <UButton
+            color="secondary"
+            icon="i-lucide-send"
+            label="Send"
+            size="xl"
+            @click="emit('send')"
+          />
         </div>
       </template>
     </UCard>

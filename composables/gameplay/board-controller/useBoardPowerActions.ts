@@ -26,7 +26,10 @@ function useBoardPowerActions(boardState: ComputedRef<BoardViewState | null>) {
     const copiedPower = copiedPowerName(player);
 
     if (isTurnPlayer && boardState.value.turnCycle.phase === "initial") {
-      if (hasPower(player, "james_potter") && !boardState.value.turnCycle.used.includes("james_potter")) {
+      if (
+        hasPower(player, "james_potter") &&
+        !boardState.value.turnCycle.used.includes("james_potter")
+      ) {
         actions.push({ id: "james_potter", label: "James: Lose 1, draw 2" });
       }
 
@@ -47,7 +50,8 @@ function useBoardPowerActions(boardState: ComputedRef<BoardViewState | null>) {
 
     if (
       isTurnPlayer &&
-      (boardState.value.turnCycle.phase === "initial" || boardState.value.turnCycle.phase === "selected") &&
+      (boardState.value.turnCycle.phase === "initial" ||
+        boardState.value.turnCycle.phase === "selected") &&
       selectedCards.length === 2 &&
       hasPower(player, "fenrir_greyback")
     ) {
@@ -56,7 +60,8 @@ function useBoardPowerActions(boardState: ComputedRef<BoardViewState | null>) {
 
     if (
       isTurnPlayer &&
-      (boardState.value.turnCycle.phase === "initial" || boardState.value.turnCycle.phase === "selected") &&
+      (boardState.value.turnCycle.phase === "initial" ||
+        boardState.value.turnCycle.phase === "selected") &&
       selectedCards.length === 2 &&
       hasPower(player, "neville_longbottom")
     ) {
@@ -65,7 +70,8 @@ function useBoardPowerActions(boardState: ComputedRef<BoardViewState | null>) {
 
     if (
       isTurnPlayer &&
-      (boardState.value.turnCycle.phase === "initial" || boardState.value.turnCycle.phase === "selected") &&
+      (boardState.value.turnCycle.phase === "initial" ||
+        boardState.value.turnCycle.phase === "selected") &&
       selectedCards.length === 1 &&
       hasPower(player, "minerva_mchonagall") &&
       isGrayCard(selectedCards[0]!) &&
@@ -74,7 +80,11 @@ function useBoardPowerActions(boardState: ComputedRef<BoardViewState | null>) {
       actions.push({ id: "minerva_mchonagall", label: "Minerva: Discard gray, draw 2" });
     }
 
-    if (selectedCards.length === 1 && selectedCards[0]?.name === "protego" && hasPower(player, "molly_weasley")) {
+    if (
+      selectedCards.length === 1 &&
+      selectedCards[0]?.name === "protego" &&
+      hasPower(player, "molly_weasley")
+    ) {
       actions.push({ id: "molly_protego", label: "Molly: Give Protego" });
     }
 

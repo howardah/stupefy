@@ -3,11 +3,7 @@ import type { MainDeckCatalogEntry } from "./catalog-types";
 import { MAIN_DECK_CATALOG } from "./main-deck-catalog";
 
 function createHousePool(): House[] {
-  return Array(82)
-    .fill("G", 0, 20)
-    .fill("R", 20, 41)
-    .fill("S", 41, 61)
-    .fill("H", 61, 82);
+  return Array(82).fill("G", 0, 20).fill("R", 20, 41).fill("S", 41, 61).fill("H", 61, 82);
 }
 
 function chooseFileName(entry: MainDeckCatalogEntry): string {

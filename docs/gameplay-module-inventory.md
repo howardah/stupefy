@@ -36,6 +36,7 @@ This inventory groups the recovered React gameplay code into migration units for
 - `.recovered-react/components/utils/turn-tools/discard-selected.js`
 
 Ported into:
+
 - `utils/gameplay/core.ts`
 - `utils/gameplay/turn-cycle.ts`
 - `utils/gameplay/bootstrap.ts`
@@ -46,6 +47,7 @@ Ported into:
 - `.recovered-react/components/utils/card-targets.js`
 
 Ported into:
+
 - `utils/gameplay/targeting.ts`
 
 ## Event / Popup Helpers
@@ -55,6 +57,7 @@ Ported into:
 - `.recovered-react/components/utils/character-events.jsx`
 
 Ported into:
+
 - `utils/gameplay/events.ts`
 
 ## Card Rule Handlers

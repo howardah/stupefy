@@ -1,9 +1,5 @@
 import type { MaybeRefOrGetter } from "vue";
-import type {
-  GameRoomSyncRequest,
-  GameRoomSyncResponse,
-  RealtimeRoomStatus,
-} from "~/utils/types";
+import type { GameRoomSyncRequest, GameRoomSyncResponse, RealtimeRoomStatus } from "~/utils/types";
 
 interface UseRealtimeRoomOptions {
   enabled?: MaybeRefOrGetter<boolean>;
@@ -27,7 +23,7 @@ function asErrorMessage(error: unknown) {
 export function useRealtimeRoom(options: UseRealtimeRoomOptions) {
   const roomName = computed(() => toValue(options.room).trim());
   const enabled = computed(() =>
-    roomName.value ? Boolean(toValue(options.enabled) ?? true) : false
+    roomName.value ? Boolean(toValue(options.enabled) ?? true) : false,
   );
   const status = ref<RealtimeRoomStatus>("disabled");
   const errorMessage = ref<string | null>(null);
@@ -177,7 +173,7 @@ export function useRealtimeRoom(options: UseRealtimeRoomOptions) {
 
         disconnect();
       },
-      { immediate: true }
+      { immediate: true },
     );
   }
 
