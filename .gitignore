@@ -3,3 +3,8 @@ archives/
 .DS_Store
 .env
 app.yaml
+.nuxt/
+.output/
+.claude/
+.codex/
+.recovered-react/

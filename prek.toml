@@ -1,0 +1,20 @@
+minimum_prek_version = "0.3.2"
+
+[[repos]]
+repo = "local"
+hooks = [
+  { id = "lint", name = "lint", language = "system", entry = "bun run lint", files = { glob = [
+    "**/*.js",
+    "**/*.ts",
+    "**/*.jsx",
+    "**/*.tsx",
+    "**/*.vue",
+  ] }, priority = 10 },
+  { id = "fmt-check", name = "fmt:check", language = "system", entry = "bun run fmt:check", files = { glob = [
+    "**/*.js",
+    "**/*.ts",
+    "**/*.jsx",
+    "**/*.tsx",
+    "**/*.vue",
+  ] }, priority = 20 },
+]

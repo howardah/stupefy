@@ -1,0 +1,191 @@
+export const encode = (message: string, key: string): string => {
+  const messageArr = message.split("");
+  const keyArr = key.split("");
+
+  const returnArr: string[] = [];
+
+  messageArr.forEach((letter, i) => {
+    const thisIn = indexArr.indexOf(letter);
+    const keyIn = indexArr.indexOf(keyArr[i % keyArr.length]!);
+
+    returnArr.push(printArr[(thisIn + keyIn) % printArr.length] ?? "");
+  });
+
+  return returnArr.join("");
+};
+
+export const decode = (message: string, key: string): string => {
+  const messageArr = message.split("");
+  const keyArr = key.split("");
+
+  const returnArr: string[] = [];
+
+  messageArr.forEach((letter, i) => {
+    const thisIn = printArr.indexOf(letter);
+    const keyIn = indexArr.indexOf(keyArr[i % keyArr.length]!);
+    const length = indexArr.length;
+
+    returnArr.push(indexArr[(((thisIn - keyIn) % length) + length) % length] ?? "");
+  });
+
+  return returnArr.join("");
+};
+
+const indexArr = [
+  "a",
+  "b",
+  "c",
+  "d",
+  "e",
+  "f",
+  "g",
+  "h",
+  "i",
+  "j",
+  "k",
+  "l",
+  "m",
+  "n",
+  "o",
+  "p",
+  "q",
+  "r",
+  "s",
+  "t",
+  "u",
+  "v",
+  "w",
+  "x",
+  "y",
+  "z",
+  "A",
+  "B",
+  "C",
+  "D",
+  "E",
+  "F",
+  "G",
+  "H",
+  "I",
+  "J",
+  "K",
+  "L",
+  "M",
+  "N",
+  "O",
+  "P",
+  "Q",
+  "R",
+  "S",
+  "T",
+  "U",
+  "V",
+  "W",
+  "X",
+  "Y",
+  "Z",
+  "1",
+  "2",
+  "3",
+  "4",
+  "5",
+  "6",
+  "7",
+  "8",
+  "9",
+  "0",
+  "!",
+  "@",
+  "$",
+  "%",
+  "^",
+  "&",
+  "*",
+  "(",
+  ")",
+  "_",
+  "+",
+  ",",
+  ".",
+  "<",
+  ">",
+];
+const printArr = [
+  "a",
+  "b",
+  "c",
+  "d",
+  "e",
+  "f",
+  "g",
+  "h",
+  "i",
+  "j",
+  "k",
+  "l",
+  "m",
+  "n",
+  "o",
+  "p",
+  "q",
+  "r",
+  "s",
+  "t",
+  "u",
+  "v",
+  "w",
+  "x",
+  "y",
+  "z",
+  "A",
+  "B",
+  "C",
+  "D",
+  "E",
+  "F",
+  "G",
+  "H",
+  "I",
+  "J",
+  "K",
+  "L",
+  "M",
+  "N",
+  "O",
+  "P",
+  "Q",
+  "R",
+  "S",
+  "T",
+  "U",
+  "V",
+  "W",
+  "X",
+  "Y",
+  "Z",
+  "1",
+  "2",
+  "3",
+  "4",
+  "5",
+  "6",
+  "7",
+  "8",
+  "9",
+  "0",
+  "æ",
+  "ç",
+  "œ",
+  "å",
+  "ß",
+  "À",
+  "Ü",
+  "Î",
+  "ï",
+  "Œ",
+  "Ø",
+  "Æ",
+  "Ę",
+  "Ç",
+  "∂",
+];

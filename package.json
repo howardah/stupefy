@@ -1,25 +1,40 @@
 {
   "name": "stupefy-backend",
   "version": "2.0.0",
-  "description": "The Server for the Stupefy card game App",
-  "main": "server.js",
-  "scripts": {
-    "deploy": "gcloud app deploy",
-    "start": "node server",
-    "dev": "nodemon server"
-  },
-  "author": "Adam Howard",
+  "private": true,
+  "description": "Nuxt-based Stupefy application",
   "license": "MIT",
+  "author": "Adam Howard",
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "preview": "nuxt preview",
+    "typecheck": "nuxt typecheck && bun run tsc --noEmit",
+    "lint": "oxlint --deny-warnings",
+    "lint:fix": "oxlint --fix",
+    "fmt": "oxfmt",
+    "fmt:check": "oxfmt --check"
+  },
   "dependencies": {
-    "dotenv": "^8.2.0",
-    "express": "^4.17.1",
-    "lodash": "^4.17.21",
-    "mongodb": "^3.5.7",
-    "socket.io": "^2.4.0",
-    "socket.io-redis": "^5.3.0",
-    "sticky-session": "^1.1.2"
+    "@nuxt/ui": "^4.1.0",
+    "dotenv": "^17.3.1",
+    "lodash": "^4.17.23",
+    "mongodb": "^7.1.0",
+    "nuxt": "^4.1.2",
+    "socket.io": "^4.8.3",
+    "socket.io-client": "^4.8.1",
+    "tailwindcss": "^4.1.12",
+    "vue": "^3.5.13"
   },
   "devDependencies": {
-    "nodemon": "^2.0.2"
+    "@j178/prek": "^0.3.5",
+    "@types/bun": "latest",
+    "nodemon": "^3.1.14",
+    "oxfmt": "^0.40.0",
+    "oxlint": "^1.55.0",
+    "vue-tsc": "^3.2.5"
+  },
+  "peerDependencies": {
+    "typescript": "^5.9.3"
   }
 }

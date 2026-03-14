@@ -1,0 +1,49 @@
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+:root {
+  --stupefy-bg: #f5efe2;
+  --stupefy-ink: #21160f;
+  --stupefy-panel: rgba(255, 248, 237, 0.88);
+  --stupefy-accent: #b45309;
+}
+
+body {
+  background:
+    radial-gradient(circle at top, rgba(180, 83, 9, 0.16), transparent 36%),
+    linear-gradient(180deg, #f8f1e7 0%, #efe0ca 100%);
+  color: var(--stupefy-ink);
+  font-family: Georgia, "Times New Roman", serif;
+  min-height: 100vh;
+}
+
+a {
+  color: inherit;
+}
+
+.stu-shell {
+  margin: 0 auto;
+  max-width: 1100px;
+  min-height: 100vh;
+  padding: 32px 16px 48px;
+}
+
+.stu-panel {
+  backdrop-filter: blur(14px);
+  background: var(--stupefy-panel);
+  border: 1px solid rgba(33, 22, 15, 0.1);
+  box-shadow: 0 24px 80px rgba(62, 39, 15, 0.12);
+}
+
+.stu-title {
+  font-size: clamp(2.8rem, 7vw, 5.5rem);
+  letter-spacing: 0.04em;
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+
+.stu-subtitle {
+  color: rgba(33, 22, 15, 0.72);
+  font-size: 1rem;
+  max-width: 38rem;
+}
