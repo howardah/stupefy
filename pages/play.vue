@@ -83,6 +83,8 @@ const { statusItems } = usePlayStatusItems({
   lastSyncedAt: realtimeRoom.lastSyncedAt,
   playerId,
 });
+const realtimeStatus = computed(() => realtimeRoom.status.value);
+const realtimeErrorMessage = computed(() => realtimeRoom.errorMessage.value);
 
 function onTableClick(card: GameCard) {
   handleTableClick(card);
@@ -98,7 +100,7 @@ function onTableClick(card: GameCard) {
       </div>
 
       <div class="flex flex-wrap items-center gap-2">
-        <UBadge color="secondary" variant="subtle">Connection: {{ realtimeRoom.status }}</UBadge>
+        <UBadge color="secondary" variant="subtle">Connection: {{ realtimeStatus }}</UBadge>
         <UButton color="neutral" variant="ghost" icon="i-lucide-refresh-cw" label="Refresh" @click="reloadRoom" />
         <UButton to="/" color="neutral" variant="soft" icon="i-lucide-arrow-left" label="Leave table" />
       </div>
@@ -127,13 +129,13 @@ function onTableClick(card: GameCard) {
     <div v-else class="space-y-6">
       <UAlert
         v-if="
-          realtimeRoom.errorMessage &&
-          (realtimeRoom.status === 'error' || realtimeRoom.status === 'reconnecting')
+          realtimeErrorMessage &&
+          (realtimeStatus === 'error' || realtimeStatus === 'reconnecting')
         "
         color="warning"
         variant="subtle"
         title="Connection needs attention"
-        :description="realtimeRoom.errorMessage"
+        :description="realtimeErrorMessage"
       />
 
       <div class="flex flex-wrap gap-x-5 gap-y-2 text-sm text-[rgba(33,22,15,0.72)]">

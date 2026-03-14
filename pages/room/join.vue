@@ -5,7 +5,7 @@ import type { OpenWaitingRoomSummary } from "~/utils/types";
 const toast = useToast();
 const router = useRouter();
 const api = useDatabaseApi();
-const formPanel = ref<InstanceType<typeof import("~/components/RoomFormPanel.vue")> | null>(null);
+const formPanel = ref<{ setRoom: (room: string) => void } | null>(null);
 
 const isSubmitting = ref(false);
 const isRefreshingRooms = ref(false);
