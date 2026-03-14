@@ -8,7 +8,11 @@ export default defineNuxtPlugin(async () => {
 
     await Promise.all(
       registrations.map(async (registration) => {
-        const scriptUrl = registration.active?.scriptURL || registration.waiting?.scriptURL || registration.installing?.scriptURL || "";
+        const scriptUrl =
+          registration.active?.scriptURL ||
+          registration.waiting?.scriptURL ||
+          registration.installing?.scriptURL ||
+          "";
 
         if (
           scriptUrl.includes("/service-worker.js") ||
@@ -17,7 +21,7 @@ export default defineNuxtPlugin(async () => {
         ) {
           await registration.unregister();
         }
-      })
+      }),
     );
 
     if ("caches" in window) {
@@ -25,10 +29,8 @@ export default defineNuxtPlugin(async () => {
 
       await Promise.all(
         cacheNames
-          .filter((cacheName) =>
-            cacheName.includes("workbox") || cacheName.includes("precache")
-          )
-          .map((cacheName) => caches.delete(cacheName))
+          .filter((cacheName) => cacheName.includes("workbox") || cacheName.includes("precache"))
+          .map((cacheName) => caches.delete(cacheName)),
       );
     }
   } catch (error) {
