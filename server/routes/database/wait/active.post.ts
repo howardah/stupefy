@@ -1,5 +1,5 @@
 import { readBody, setResponseHeader } from "h3";
-import { updateActive } from "~/utils/waitingRoomDB";
+import { updateActive } from "@shared/utils/waitingRoomDB";
 
 export default defineEventHandler(async (event) => {
   setResponseHeader(event, "Access-Control-Allow-Origin", "*");

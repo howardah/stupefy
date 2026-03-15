@@ -1,5 +1,5 @@
 import { createError, readBody, setResponseHeader } from "h3";
-import { startWaitRoomGame } from "~/utils/waitingRoomDB";
+import { startWaitRoomGame } from "@shared/utils/waitingRoomDB";
 
 export default defineEventHandler(async (event) => {
   setResponseHeader(event, "Access-Control-Allow-Origin", "*");

@@ -1,6 +1,6 @@
 import { createError, readBody, setResponseHeader } from "h3";
-import type { GameRoomSyncRequest } from "~/utils/types";
-import { updateRoom } from "~/utils/stupefyDB";
+import type { GameRoomSyncRequest } from "@shared/utils/types";
+import { updateRoom } from "@shared/utils/stupefyDB";
 
 export default defineEventHandler(async (event) => {
   setResponseHeader(event, "Access-Control-Allow-Origin", "*");

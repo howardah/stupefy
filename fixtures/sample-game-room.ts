@@ -1,4 +1,4 @@
-import type { GameState } from "~/utils/types";
+import type { GameState } from "@shared/utils/types";
 
 export const sampleGameRoomSnapshot: GameState = {
   _id: 0,

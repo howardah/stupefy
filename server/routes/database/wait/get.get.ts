@@ -1,7 +1,7 @@
 import { getQuery, setResponseHeader } from "h3";
-import { encode } from "~/utils/encrypt";
-import { roomPasswordKey } from "~/utils/room";
-import { getWaitRoom } from "~/utils/waitingRoomDB";
+import { encode } from "@shared/utils/encrypt";
+import { roomPasswordKey } from "@shared/utils/room";
+import { getWaitRoom } from "@shared/utils/waitingRoomDB";
 
 export default defineEventHandler(async (event) => {
   setResponseHeader(event, "Access-Control-Allow-Origin", "*");

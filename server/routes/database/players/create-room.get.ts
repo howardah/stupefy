@@ -1,5 +1,5 @@
 import { getQuery, setResponseHeader } from "h3";
-import { makeRoom } from "~/utils/stupefyDB";
+import { makeRoom } from "@shared/utils/stupefyDB";
 
 export default defineEventHandler(async (event) => {
   setResponseHeader(event, "Access-Control-Allow-Origin", "*");
