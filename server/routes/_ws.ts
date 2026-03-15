@@ -1,18 +1,23 @@
+import {
+  cleanupPeer,
+  handleWsMessage,
+  registerPeer,
+  unregisterPeer,
+} from "@server/utils/wsChannels";
+
 export default defineWebSocketHandler({
   open(peer) {
-    console.log(`[ws] connected: ${peer.id}`);
+    registerPeer(peer);
   },
 
   message(peer, message) {
     const text = typeof message === "string" ? message : message.text();
-    console.log(`[ws] message from ${peer.id}: ${text}`);
-
-    // Echo back for now — replaced in Step 2 with real handling
-    peer.send(JSON.stringify({ type: "pong" }));
+    handleWsMessage(peer, text);
   },
 
-  close(peer, event) {
-    console.log(`[ws] disconnected: ${peer.id} (code: ${event.code})`);
+  close(peer) {
+    cleanupPeer(peer);
+    unregisterPeer(peer);
   },
 
   error(peer, error) {

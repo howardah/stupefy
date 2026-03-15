@@ -234,7 +234,25 @@ export interface TurnCycleResumeState {
   phase: TurnCyclePhase;
 }
 
-export type RealtimeTransportStrategy = "polling";
+export type RealtimeTransportStrategy = "polling" | "websocket";
+
+/** Notification sources for WebSocket room-updated events. */
+export type WsNotificationSource = "gameplay" | "chat" | "presence" | "ready" | "start";
+
+/** Messages the client sends to the WebSocket server. */
+export interface WsClientMessage {
+  type: "subscribe" | "unsubscribe" | "ping";
+  room?: string;
+  playerId?: number;
+}
+
+/** Messages the server sends to WebSocket clients. */
+export interface WsServerMessage {
+  type: "room-updated" | "pong" | "error" | "subscribed" | "unsubscribed";
+  room?: string;
+  source?: WsNotificationSource;
+  message?: string;
+}
 
 export type GameRoomStatus = "active" | "archived";
 export type WaitingRoomStatus = "waiting" | "in-game" | "archived";

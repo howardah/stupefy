@@ -32,7 +32,14 @@ interface WsClientMessage {
  * Message types sent by the server.
  */
 export interface WsServerMessage {
-  type: "room-updated" | "player-joined" | "player-left" | "pong" | "error" | "subscribed" | "unsubscribed";
+  type:
+    | "room-updated"
+    | "player-joined"
+    | "player-left"
+    | "pong"
+    | "error"
+    | "subscribed"
+    | "unsubscribed";
   room?: string;
   source?: "gameplay" | "chat" | "presence" | "ready" | "start";
   playerId?: number;
@@ -66,7 +73,9 @@ export function handleWsMessage(peer: Peer, raw: string): void {
   switch (msg.type) {
     case "subscribe": {
       if (!msg.room) {
-        peer.send(JSON.stringify({ type: "error", message: "Missing room" } satisfies WsServerMessage));
+        peer.send(
+          JSON.stringify({ type: "error", message: "Missing room" } satisfies WsServerMessage),
+        );
         return;
       }
       const channel = roomChannel(msg.room);
@@ -100,7 +109,12 @@ export function handleWsMessage(peer: Peer, raw: string): void {
     }
 
     default: {
-      peer.send(JSON.stringify({ type: "error", message: `Unknown type: ${msg.type}` } satisfies WsServerMessage));
+      peer.send(
+        JSON.stringify({
+          type: "error",
+          message: `Unknown type: ${msg.type}`,
+        } satisfies WsServerMessage),
+      );
     }
   }
 }
@@ -165,7 +179,12 @@ Wire the handler into the channel manager:
 
 ```typescript
 // server/routes/_ws.ts
-import { cleanupPeer, handleWsMessage, registerPeer, unregisterPeer } from "~/server/utils/wsChannels";
+import {
+  cleanupPeer,
+  handleWsMessage,
+  registerPeer,
+  unregisterPeer,
+} from "~/server/utils/wsChannels";
 
 export default defineWebSocketHandler({
   open(peer) {

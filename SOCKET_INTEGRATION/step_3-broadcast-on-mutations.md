@@ -97,5 +97,5 @@ WS: { type: "room-updated", room: "your-room-key", source: "ready" }
 ## Notes
 
 - The `room` parameter in `broadcastToRoom` must match the room key that clients subscribe to. For gameplay routes this is `body.room`. For waiting room routes, use the same normalized room key.
-- The `source` field tells the client *what* changed so it can be smart about what to refetch. A "chat" notification doesn't need to trigger a full game state fetch — just a chat refresh.
+- The `source` field tells the client _what_ changed so it can be smart about what to refetch. A "chat" notification doesn't need to trigger a full game state fetch — just a chat refresh.
 - If a route has multiple mutation paths (e.g., start game creates the game room AND archives the waiting room), broadcast once at the end, not for each sub-operation.

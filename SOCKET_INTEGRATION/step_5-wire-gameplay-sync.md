@@ -56,7 +56,7 @@ Add `"push"` to the `pullLatest` reason type:
 
 ```typescript
 // Update the reason parameter type:
-function pullLatest(reason?: "connect" | "manual" | "poll" | "retry" | "push"): Promise<void>
+function pullLatest(reason?: "connect" | "manual" | "poll" | "retry" | "push"): Promise<void>;
 ```
 
 ### 2. Modify `usePlayRoomSync.ts` — Create WebSocket and Connect It
@@ -161,6 +161,7 @@ The acting player (Player A) already has the correct state locally (optimistic m
 ## Fallback Behavior
 
 If the WebSocket disconnects:
+
 - `websocket.status` becomes `"disconnected"` → `"reconnecting"`
 - The composable automatically attempts reconnection with exponential backoff
 - Meanwhile, the polling timer continues at its configured interval (3s or 15s)
@@ -181,6 +182,7 @@ If the WebSocket disconnects:
 ## Risk Assessment
 
 **What could go wrong:**
+
 - WebSocket trigger fires but HTTP fetch fails → existing retry logic in `useRealtimeRoom` handles this
 - Double fetches (WebSocket trigger + poll timer fire close together) → signature comparison deduplicates, no harm, just one extra HTTP request
 - WebSocket never connects (firewall, proxy issues) → polling fallback keeps everything working exactly as before

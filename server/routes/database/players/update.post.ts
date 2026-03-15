@@ -1,6 +1,7 @@
 import { createError, readBody, setResponseHeader } from "h3";
 import type { GameRoomSyncRequest } from "@shared/utils/types";
 import { updateRoom } from "@shared/utils/stupefyDB";
+import { broadcastToRoom } from "@server/utils/wsChannels";
 
 export default defineEventHandler(async (event) => {
   setResponseHeader(event, "Access-Control-Allow-Origin", "*");
@@ -23,6 +24,8 @@ export default defineEventHandler(async (event) => {
       data: result,
     });
   }
+
+  broadcastToRoom(body.room, "gameplay");
 
   return result;
 });

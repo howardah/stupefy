@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { WaitingPlayer, WaitingRoomApiResponse, WaitingRoomState } from "@shared/utils/types";
 import { normalizeRoomKey } from "@shared/utils/room";
+import { useRealtimeWebSocket } from "~/composables/gameplay/useRealtimeWebSocket";
 
 definePageMeta({
   middleware: "waiting-room-query",
@@ -23,6 +24,23 @@ const isStarting = ref(false);
 const isUpdatingReady = ref(false);
 const pageError = ref("");
 const hasLoaded = ref(false);
+
+const websocket = useRealtimeWebSocket({
+  autoConnect: true,
+  onRoomUpdated(room, source) {
+    if (room === roomKey.value && hasLoaded.value) {
+      void refreshRoom();
+    }
+  },
+});
+
+watch(
+  roomKey,
+  (key) => {
+    if (key) websocket.subscribe(key);
+  },
+  { immediate: true },
+);
 
 const allPlayers = computed<WaitingPlayer[]>(() => roomState.value?.players || []);
 
@@ -190,11 +208,13 @@ let refreshTimer: ReturnType<typeof setInterval> | undefined;
 onMounted(() => {
   refreshTimer = setInterval(() => {
     void refreshRoom();
-  }, 4000);
+  }, 15_000);
 });
 
 onBeforeUnmount(async () => {
   if (refreshTimer) clearInterval(refreshTimer);
+  websocket.unsubscribe();
+  websocket.disconnect();
   await api.removeActive({
     room: roomName.value,
     sessionId: sessionId.value,

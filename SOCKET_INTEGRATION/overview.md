@@ -104,11 +104,11 @@ No game state travels over WebSocket. Ever. State is always fetched over HTTP to
 | Step      | Finished | Effort          | Can Ship Independently |
 | --------- | -------- | --------------- | ---------------------- |
 | 1         | [x]      | 30 min          | Yes                    |
-| 2         | [ ]      | 1 hour          | Yes                    |
-| 3         | [ ]      | 1 hour          | Yes                    |
-| 4         | [ ]      | 2 hours         | Yes                    |
-| 5         | [ ]      | 2-3 hours       | Yes                    |
-| 6         | [ ]      | 1-2 hours       | Yes                    |
+| 2         | [x]      | 1 hour          | Yes                    |
+| 3         | [x]      | 1 hour          | Yes                    |
+| 4         | [x]      | 2 hours         | Yes                    |
+| 5         | [x]      | 2-3 hours       | Yes                    |
+| 6         | [x]      | 1-2 hours       | Yes                    |
 | 7         | [ ]      | 1 hour          | Yes                    |
 | **Total** |          | **~1.5-2 days** |                        |
 

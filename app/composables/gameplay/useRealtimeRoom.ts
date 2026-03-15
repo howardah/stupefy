@@ -3,6 +3,7 @@ import type {
   GameRoomSyncRequest,
   GameRoomSyncResponse,
   RealtimeRoomStatus,
+  RealtimeTransportStrategy,
 } from "@shared/utils/types";
 
 interface UseRealtimeRoomOptions {
@@ -11,6 +12,8 @@ interface UseRealtimeRoomOptions {
   pollIntervalMs?: number;
   pushUpdate: (payload: GameRoomSyncRequest) => Promise<GameRoomSyncResponse>;
   room: MaybeRefOrGetter<string>;
+  /** A reactive counter that triggers an immediate pull when incremented (used by WebSocket notifications). */
+  externalPullTrigger?: Ref<number>;
 }
 
 const BASE_RETRY_DELAY_MS = 1500;
@@ -32,7 +35,7 @@ export function useRealtimeRoom(options: UseRealtimeRoomOptions) {
   const status = ref<RealtimeRoomStatus>("disabled");
   const errorMessage = ref<string | null>(null);
   const lastSyncedAt = ref<number | null>(null);
-  const transport = ref<"polling">("polling");
+  const transport = ref<RealtimeTransportStrategy>("polling");
 
   const pollIntervalMs = options.pollIntervalMs ?? 3000;
   const retryDelayMs = ref(BASE_RETRY_DELAY_MS);
@@ -72,7 +75,7 @@ export function useRealtimeRoom(options: UseRealtimeRoomOptions) {
     retryDelayMs.value = Math.min(retryDelayMs.value * 2, MAX_RETRY_DELAY_MS);
   }
 
-  async function pullLatest(reason: "connect" | "manual" | "poll" | "retry" = "poll") {
+  async function pullLatest(reason: "connect" | "manual" | "poll" | "push" | "retry" = "poll") {
     if (!enabled.value) {
       return;
     }
@@ -179,6 +182,14 @@ export function useRealtimeRoom(options: UseRealtimeRoomOptions) {
       },
       { immediate: true },
     );
+
+    if (options.externalPullTrigger) {
+      watch(options.externalPullTrigger, (next, prev) => {
+        if (next !== prev && next > 0) {
+          void pullLatest("push");
+        }
+      });
+    }
   }
 
   return {

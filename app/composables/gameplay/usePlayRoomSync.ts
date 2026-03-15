@@ -8,6 +8,7 @@ import type {
   PlayQuery,
 } from "@shared/utils/types";
 import { useRealtimeRoom } from "~/composables/gameplay/useRealtimeRoom";
+import { useRealtimeWebSocket } from "~/composables/gameplay/useRealtimeWebSocket";
 import { createBoardViewState } from "@shared/utils/gameplay/bootstrap";
 import { createGameStatePatch, getGameplaySyncSignature } from "@shared/utils/gameplay/sync";
 
@@ -41,6 +42,31 @@ function extractConflictRoom(error: unknown) {
 
 export function usePlayRoomSync(options: UsePlayRoomSyncOptions) {
   const isApplyingAuthoritativeState = ref(false);
+  const wsPullTrigger = ref(0);
+
+  const websocket = useRealtimeWebSocket({
+    autoConnect: true,
+    onRoomUpdated(room, source) {
+      if (
+        room === options.normalizedRoomKey.value &&
+        (source === "gameplay" || source === "start")
+      ) {
+        wsPullTrigger.value++;
+      }
+    },
+  });
+
+  watch(
+    () => options.normalizedRoomKey.value,
+    (roomKey) => {
+      if (roomKey) {
+        websocket.subscribe(roomKey);
+      } else {
+        websocket.unsubscribe();
+      }
+    },
+    { immediate: true },
+  );
 
   async function applyAuthoritativeRoom(room: GameState | null) {
     isApplyingAuthoritativeState.value = true;
@@ -94,6 +120,7 @@ export function usePlayRoomSync(options: UsePlayRoomSyncOptions) {
 
   const realtimeRoom = useRealtimeRoom({
     enabled: computed(() => Boolean(options.normalizedRoomKey.value && options.playerId.value > 0)),
+    externalPullTrigger: wsPullTrigger,
     fetchLatest: fetchLatestRoom,
     pushUpdate: options.api.updateGameRoom,
     room: options.normalizedRoomKey,
@@ -154,6 +181,9 @@ export function usePlayRoomSync(options: UsePlayRoomSyncOptions) {
   });
 
   onBeforeUnmount(() => {
+    websocket.unsubscribe();
+    websocket.disconnect();
+
     if (realtimeRoom.status.value !== "disabled") {
       realtimeRoom.disconnect();
     }
@@ -162,5 +192,6 @@ export function usePlayRoomSync(options: UsePlayRoomSyncOptions) {
   return {
     realtimeRoom,
     reloadRoom,
+    wsStatus: websocket.status,
   };
 }

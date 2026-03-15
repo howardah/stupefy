@@ -29,6 +29,7 @@ These were never used — just occupying space in `node_modules` and `bun.lock`.
 Remove the polling timer entirely. The composable becomes a thin wrapper around "fetch on demand":
 
 **Remove:**
+
 - `setInterval` / `clearInterval` polling loop
 - `pollIntervalMs` option
 - `fallbackPollIntervalMs` option
@@ -36,6 +37,7 @@ Remove the polling timer entirely. The composable becomes a thin wrapper around 
 - `"poll"` and `"retry"` as pull reasons
 
 **Keep:**
+
 - `pullLatest("push")` — triggered by WebSocket notifications
 - `pullLatest("connect")` — initial fetch on mount
 - `pullLatest("manual")` — for explicit refresh buttons
@@ -44,12 +46,14 @@ Remove the polling timer entirely. The composable becomes a thin wrapper around 
 - Error handling for individual fetch failures
 
 The composable should still:
+
 - Fetch on connect
 - Fetch when `externalPullTrigger` changes
 - Handle fetch errors gracefully
 - Track last-synced timestamp
 
 **Remove:**
+
 - `"reconnecting"` status (that's the WebSocket's job now)
 - Visibility change and online event listeners for polling (the WebSocket reconnect handles this)
 

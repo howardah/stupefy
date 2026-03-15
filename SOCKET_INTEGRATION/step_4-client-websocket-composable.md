@@ -24,7 +24,14 @@ export interface WsClientMessage {
 
 /** Messages the server sends to the client. */
 export interface WsServerMessage {
-  type: "room-updated" | "player-joined" | "player-left" | "pong" | "error" | "subscribed" | "unsubscribed";
+  type:
+    | "room-updated"
+    | "player-joined"
+    | "player-left"
+    | "pong"
+    | "error"
+    | "subscribed"
+    | "unsubscribed";
   room?: string;
   source?: "gameplay" | "chat" | "presence" | "ready" | "start";
   playerId?: number;
