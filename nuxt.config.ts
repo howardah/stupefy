@@ -4,6 +4,19 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   modules: ["@nuxt/ui"],
 
+  typescript: {
+    sharedTsConfig: {
+      compilerOptions: {
+        types: ["bun"],
+      },
+    },
+    tsConfig: {
+      compilerOptions: {
+        types: ["bun"],
+      },
+    },
+  },
+
   alias: {
     "@": new URL("./", import.meta.url).pathname,
     "@app": new URL("./app", import.meta.url).pathname,
