@@ -29,26 +29,29 @@ The WebSocket carries **only lightweight notification messages** (room name + ev
 
 ## Steps
 
-| Step | Title | What Changes | Risk |
-|------|-------|-------------|------|
-| 1 | Enable Nitro WebSocket support | `nuxt.config.ts`, new server route | None — no client changes |
-| 2 | Build the server-side room channel manager | New `server/utils/` module | None — unused until Step 4 |
-| 3 | Broadcast notifications on state mutations | `update.post.ts`, waiting room endpoints | None — broadcasts go nowhere until clients connect |
-| 4 | Build the client WebSocket composable | New `useRealtimeWebSocket.ts` composable | None — not wired to gameplay yet |
-| 5 | Wire WebSocket notifications into gameplay sync | `usePlayRoomSync.ts`, `useRealtimeRoom.ts` | Medium — changes the sync trigger. Polling fallback active. |
-| 6 | Wire WebSocket notifications into waiting room | `waiting-room.vue` | Medium — same as above for waiting room |
-| 7 | Remove polling fallback and clean up | Remove `socket.io` deps, old polling code, type cleanup | Low — polling already proven unnecessary at this point |
+| Step | Title                                           | What Changes                                            | Risk                                                        |
+| ---- | ----------------------------------------------- | ------------------------------------------------------- | ----------------------------------------------------------- |
+| 1    | Enable Nitro WebSocket support                  | `nuxt.config.ts`, new server route                      | None — no client changes                                    |
+| 2    | Build the server-side room channel manager      | New `server/utils/` module                              | None — unused until Step 4                                  |
+| 3    | Broadcast notifications on state mutations      | `update.post.ts`, waiting room endpoints                | None — broadcasts go nowhere until clients connect          |
+| 4    | Build the client WebSocket composable           | New `useRealtimeWebSocket.ts` composable                | None — not wired to gameplay yet                            |
+| 5    | Wire WebSocket notifications into gameplay sync | `usePlayRoomSync.ts`, `useRealtimeRoom.ts`              | Medium — changes the sync trigger. Polling fallback active. |
+| 6    | Wire WebSocket notifications into waiting room  | `waiting-room.vue`                                      | Medium — same as above for waiting room                     |
+| 7    | Remove polling fallback and clean up            | Remove `socket.io` deps, old polling code, type cleanup | Low — polling already proven unnecessary at this point      |
 
 ## Files Touched Per Step
 
 ### Step 1 — Nitro WebSocket Config
+
 - `nuxt.config.ts` (add `nitro.experimental.websocket`)
 - `server/routes/_ws.ts` (new — WebSocket endpoint)
 
 ### Step 2 — Room Channel Manager
+
 - `server/utils/roomChannels.ts` (new — in-memory room subscription map)
 
 ### Step 3 — Server Broadcasts
+
 - `server/routes/database/players/update.post.ts` (add broadcast after successful write)
 - `server/routes/database/wait/chat.post.ts` (add broadcast)
 - `server/routes/database/wait/ready.post.ts` (add broadcast)
@@ -56,17 +59,21 @@ The WebSocket carries **only lightweight notification messages** (room name + ev
 - `server/routes/database/wait/start.post.ts` (add broadcast)
 
 ### Step 4 — Client WebSocket Composable
+
 - `composables/gameplay/useRealtimeWebSocket.ts` (new)
 - `utils/types.ts` (extend `RealtimeTransportStrategy`, add WebSocket message types)
 
 ### Step 5 — Gameplay Integration
+
 - `composables/gameplay/useRealtimeRoom.ts` (accept WebSocket trigger alongside poll timer)
 - `composables/gameplay/usePlayRoomSync.ts` (pass WebSocket instance, react to push notifications)
 
 ### Step 6 — Waiting Room Integration
+
 - `pages/waiting-room.vue` (replace `setInterval` with WebSocket listener + fallback poll)
 
 ### Step 7 — Cleanup
+
 - `package.json` (remove `socket.io`, `socket.io-client`)
 - `composables/gameplay/useRealtimeRoom.ts` (remove polling timer code)
 - `utils/types.ts` (remove `"polling"` transport, simplify)
@@ -94,16 +101,16 @@ No game state travels over WebSocket. Ever. State is always fetched over HTTP to
 
 ## Estimated Effort
 
-| Step | Effort | Can Ship Independently |
-|------|--------|----------------------|
-| 1 | 30 min | Yes |
-| 2 | 1 hour | Yes |
-| 3 | 1 hour | Yes |
-| 4 | 2 hours | Yes |
-| 5 | 2-3 hours | Yes |
-| 6 | 1-2 hours | Yes |
-| 7 | 1 hour | Yes |
-| **Total** | **~1.5-2 days** | |
+| Step      | Finished | Effort          | Can Ship Independently |
+| --------- | -------- | --------------- | ---------------------- |
+| 1         | [x]      | 30 min          | Yes                    |
+| 2         | [ ]      | 1 hour          | Yes                    |
+| 3         | [ ]      | 1 hour          | Yes                    |
+| 4         | [ ]      | 2 hours         | Yes                    |
+| 5         | [ ]      | 2-3 hours       | Yes                    |
+| 6         | [ ]      | 1-2 hours       | Yes                    |
+| 7         | [ ]      | 1 hour          | Yes                    |
+| **Total** |          | **~1.5-2 days** |                        |
 
 ## Rollback Plan
 

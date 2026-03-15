@@ -3,5 +3,10 @@ export default defineNuxtConfig({
   css: ["~/assets/css/main.css"],
   devtools: { enabled: true },
   modules: ["@nuxt/ui"],
+  nitro: {
+    experimental: {
+      websocket: true,
+    },
+  },
   srcDir: ".",
 });
